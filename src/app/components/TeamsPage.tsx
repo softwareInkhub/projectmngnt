@@ -1020,110 +1020,204 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           )}
         </div>
 
-        {/* Team Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '400ms' }}>
-          {filteredTeams.map((team) => (
-            <div key={team.id} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group">
-              <div className="p-6">
-                {/* Team Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
-                      {team.name}
-                    </h3>
-                    <p className="text-sm text-slate-600 line-clamp-2">
-                      {team.description}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
-                      <Heart className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Team Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-900">{team.members.length}</div>
-                    <div className="text-xs text-slate-500">Members</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-900">{team.performance}%</div>
-                    <div className="text-xs text-slate-500">Performance</div>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="w-full bg-slate-200 rounded-full h-2 mb-4">
-                  <div 
-                    className="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(team.tasksCompleted / team.totalTasks) * 100}%` }}
-                  ></div>
-                </div>
-
-                {/* Team Details */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      team.health === 'excellent' ? 'bg-green-100 text-green-700' :
-                      team.health === 'good' ? 'bg-blue-100 text-blue-700' :
-                      team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {team.health}
-                    </span>
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                      {team.budget}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-400">
-                    <div className="flex items-center gap-1">
-                      <MessageSquare className="w-3 h-3" />
-                      <span className="text-xs">{team.tasksCompleted}</span>
+        {/* Team Grid/List View */}
+        <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
+          {viewMode === "grid" ? (
+            // Grid View
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredTeams.map((team) => (
+                <div key={team.id} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group">
+                  <div className="p-6">
+                    {/* Team Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
+                          {team.name}
+                        </h3>
+                        <p className="text-sm text-slate-600 line-clamp-2">
+                          {team.description}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+                          <Heart className="w-4 h-4" />
+                        </button>
+                        <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      <span className="text-xs">{team.totalTasks}</span>
+
+                    {/* Team Stats */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-slate-900">{team.members.length}</div>
+                        <div className="text-xs text-slate-500">Members</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-slate-900">{team.performance}%</div>
+                        <div className="text-xs text-slate-500">Performance</div>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full bg-slate-200 rounded-full h-2 mb-4">
+                      <div 
+                        className="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(team.tasksCompleted / team.totalTasks) * 100}%` }}
+                      ></div>
+                    </div>
+
+                    {/* Team Details */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          team.health === 'excellent' ? 'bg-green-100 text-green-700' :
+                          team.health === 'good' ? 'bg-blue-100 text-blue-700' :
+                          team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {team.health}
+                        </span>
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                          {team.budget}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-slate-400">
+                        <div className="flex items-center gap-1">
+                          <MessageSquare className="w-3 h-3" />
+                          <span className="text-xs">{team.tasksCompleted}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          <span className="text-xs">{team.totalTasks}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Project and Date */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-700">{team.project}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-700">{team.startDate}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between">
+                      <button className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors">
+                        View Team
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                        <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                          <ExternalLink className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Project and Date */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-700">{team.project}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-700">{team.startDate}</span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center justify-between">
-                  <button className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors">
-                    View Team
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                      <Share2 className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                      <ExternalLink className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            // List View
+            <div className="space-y-4">
+              {filteredTeams.map((team) => (
+                <div key={team.id} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4 flex-1">
+                        {/* Team Icon */}
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <Users className="w-6 h-6 text-purple-600" />
+                          </div>
+                        </div>
+                        
+                        {/* Team Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-slate-900 group-hover:text-purple-600 transition-colors truncate">
+                              {team.name}
+                            </h3>
+                            <div className="flex items-center gap-2 ml-4">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                team.health === 'excellent' ? 'bg-green-100 text-green-700' :
+                                team.health === 'good' ? 'bg-blue-100 text-blue-700' :
+                                team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {team.health}
+                              </span>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                {team.budget}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm text-slate-600 mt-1 line-clamp-2">
+                            {team.description}
+                          </p>
+                          
+                          <div className="flex items-center gap-6 mt-3 text-sm text-slate-500">
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4" />
+                              <span>{team.members.length} members</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Building className="w-4 h-4" />
+                              <span>{team.project}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4" />
+                              <span>Started: {team.startDate}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Target className="w-4 h-4" />
+                              <span>{team.performance}% performance</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 ml-4">
+                        <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+                          <Heart className="w-4 h-4" />
+                        </button>
+                        <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Progress Bar for List View */}
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
+                        <span>Task Progress</span>
+                        <span>{team.tasksCompleted}/{team.totalTasks} tasks</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(team.tasksCompleted / team.totalTasks) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Empty State */}

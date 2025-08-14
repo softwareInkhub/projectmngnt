@@ -467,96 +467,95 @@ Members: ${company.members}
         </div>
       </div>
 
-      {/* Companies Grid */}
-      <div className={`grid gap-6 ${
-        viewMode === "grid" 
-          ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3" 
-          : "grid-cols-1"
-      }`}>
-        {filteredCompanies.map((company, index) => (
-          <div 
-            key={company.id}
-            className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in"
-            style={{ animationDelay: `${300 + index * 100}ms` }}
-          >
-            {/* Company Header */}
-            <div className="p-6 border-b border-white/20">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
-                    {company.name}
-                  </h3>
-                  <p className="text-sm text-slate-600 mb-3 line-clamp-2">
-                    {company.description}
-              </p>
-            </div>
-                <div className="flex items-center gap-2">
-                  <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
-                    <Heart size={16} />
-          </button>
-                  <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
-                    <MoreHorizontal size={16} />
-                  </button>
-                  </div>
-                </div>
-
-              {/* Company Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center">
-                  <div className="text-2xl font-bold text-slate-900">{company.totalProjects}</div>
-                  <div className="text-xs text-slate-500">Projects</div>
-                  </div>
-                  <div className="text-center">
-                  <div className="text-2xl font-bold text-slate-900">{company.members}</div>
-                  <div className="text-xs text-slate-500">Members</div>
-                </div>
-              </div>
-              
-              {/* Company Meta */}
-              <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    company.status === "Active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
-                          }`}>
-                    {company.status}
-                          </span>
-                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                    {company.type}
-                          </span>
-                        </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <TrendingUp size={12} />
-                    {company.growth}
-                  </span>
-                      </div>
-                                </div>
-
-              {/* Company Details */}
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                              <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1">
-                    <MapPin size={12} />
-                    {company.location}
-                                </span>
-                  <span className="flex items-center gap-1">
-                    <Users size={12} />
-                    {company.employees} employees
-                                </span>
-                              </div>
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1">
-                    <Clock size={12} />
-                    {company.lastActivity}
-                  </span>
-                            </div>
-                        </div>
+      {/* Companies Grid/List View */}
+      <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
+        {viewMode === "grid" ? (
+          // Grid View
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredCompanies.map((company, index) => (
+              <div 
+                key={company.id}
+                className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in"
+                style={{ animationDelay: `${300 + index * 100}ms` }}
+              >
+                {/* Company Header */}
+                <div className="p-6 border-b border-white/20">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
+                        {company.name}
+                      </h3>
+                      <p className="text-sm text-slate-600 mb-3 line-clamp-2">
+                        {company.description}
+                      </p>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
+                        <Heart size={16} />
+                      </button>
+                      <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
+                        <MoreHorizontal size={16} />
+                      </button>
+                    </div>
+                  </div>
 
-            {/* Company Actions */}
-            <div className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                  <button
+                  {/* Company Stats */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-slate-900">{company.totalProjects}</div>
+                      <div className="text-xs text-slate-500">Projects</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-slate-900">{company.members}</div>
+                      <div className="text-xs text-slate-500">Members</div>
+                    </div>
+                  </div>
+                  
+                  {/* Company Meta */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        company.status === "Active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
+                      }`}>
+                        {company.status}
+                      </span>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                        {company.type}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <TrendingUp size={12} />
+                        {company.growth}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Company Details */}
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <div className="flex items-center gap-4">
+                      <span className="flex items-center gap-1">
+                        <MapPin size={12} />
+                        {company.location}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users size={12} />
+                        {company.employees} employees
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} />
+                        {company.lastActivity}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Company Actions */}
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
                   className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
                   onClick={() => setSelectedCompany(company.id)}
                 >
@@ -576,9 +575,109 @@ Members: ${company.members}
                     </button>
                         </div>
                       </div>
+                                    </div>
+              ))}
+            </div>
+          ) : (
+            // List View
+            <div className="space-y-4">
+              {filteredCompanies.map((company) => (
+                <div key={company.id} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4 flex-1">
+                        {/* Company Icon */}
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-6 h-6 text-blue-600" />
+                          </div>
+                        </div>
+                        
+                        {/* Company Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                              {company.name}
+                            </h3>
+                            <div className="flex items-center gap-2 ml-4">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                company.status === "Active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
+                              }`}>
+                                {company.status}
+                              </span>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                {company.type}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm text-slate-600 mt-1 line-clamp-2">
+                            {company.description}
+                          </p>
+                          
+                          <div className="flex items-center gap-6 mt-3 text-sm text-slate-500">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4" />
+                              <span>{company.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4" />
+                              <span>{company.employees} employees</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FolderKanban className="w-4 h-4" />
+                              <span>{company.totalProjects} projects</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="w-4 h-4" />
+                              <span>{company.growth} growth</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 ml-4">
+                        <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+                          <Heart className="w-4 h-4" />
+                        </button>
+                        <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                    
+                    {/* Company Stats for List View */}
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
+                        <span>Company Overview</span>
+                        <span>Last activity: {company.lastActivity}</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-4 text-center">
+                        <div>
+                          <div className="text-lg font-semibold text-slate-900">{company.totalProjects}</div>
+                          <div className="text-xs text-slate-500">Projects</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold text-slate-900">{company.members}</div>
+                          <div className="text-xs text-slate-500">Members</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold text-slate-900">{company.totalTeams}</div>
+                          <div className="text-xs text-slate-500">Teams</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-semibold text-slate-900">{company.satisfaction}%</div>
+                          <div className="text-xs text-slate-500">Satisfaction</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       {/* Empty State */}
       {filteredCompanies.length === 0 && (

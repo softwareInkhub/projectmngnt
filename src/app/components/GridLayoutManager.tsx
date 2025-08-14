@@ -23,6 +23,9 @@ import {
   HelpCircle
 } from 'lucide-react';
 
+// Import responsive sheet content component
+import ResponsiveSheetContent from './ResponsiveSheetContent';
+
 // Import actual sheet components
 import DashboardPage from './DashboardPage';
 import ProjectsPage from './ProjectsPage';
@@ -96,6 +99,37 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
     { type: 'projects-analytics', title: 'Projects Analytics', component: ProjectsAnalyticsPage },
   ];
 
+  // Add new sheet
+  const addSheet = useCallback((type: string, component: React.ComponentType<Record<string, unknown>>, context?: Record<string, unknown>) => {
+    const newSheet: GridSheet = {
+      id: `${type}-${Date.now()}`,
+      type,
+      title: type.charAt(0).toUpperCase() + type.slice(1),
+      component,
+      context,
+      layout: { 
+        x: 0, 
+        y: Math.max(...sheets.map(s => s.layout.y + s.layout.h), 0), 
+        w: 6, 
+        h: 4, 
+        minW: 4, 
+        minH: 3 
+      }
+    };
+
+    setSheets(prev => [...prev, newSheet]);
+    
+    // Update layouts
+    const newLayout = { i: newSheet.id, ...newSheet.layout };
+    setLayouts(prev => ({
+      lg: [...(prev.lg as Record<string, unknown>[] || []), newLayout],
+      md: [...(prev.md as Record<string, unknown>[] || []), { ...newLayout, w: Math.min(newLayout.w, 10) }],
+      sm: [...(prev.sm as Record<string, unknown>[] || []), { ...newLayout, w: Math.min(newLayout.w, 6) }],
+      xs: [...(prev.xs as Record<string, unknown>[] || []), { ...newLayout, w: Math.min(newLayout.w, 4) }],
+      xxs: [...(prev.xxs as Record<string, unknown>[] || []), { ...newLayout, w: Math.min(newLayout.w, 2) }]
+    }));
+  }, [sheets]);
+
   // Handle drop from sidebar or tabs
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -120,7 +154,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
         }
       }
     }
-  }, [draggedItem, onDropItem, availableSheets]);
+  }, [draggedItem, onDropItem, availableSheets, addSheet]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -180,46 +214,15 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
     setCurrentBreakpoint(breakpoint);
   }, []);
 
-  // Add new sheet
-  const addSheet = useCallback((type: string, component: React.ComponentType<Record<string, unknown>>, context?: Record<string, unknown>) => {
-    const newSheet: GridSheet = {
-      id: `${type}-${Date.now()}`,
-      type,
-      title: type.charAt(0).toUpperCase() + type.slice(1),
-      component,
-      context,
-      layout: { 
-        x: 0, 
-        y: Math.max(...sheets.map(s => s.layout.y + s.layout.h), 0), 
-        w: 6, 
-        h: 4, 
-        minW: 4, 
-        minH: 3 
-      }
-    };
-
-    setSheets(prev => [...prev, newSheet]);
-    
-    // Update layouts
-    const newLayout = { i: newSheet.id, ...newSheet.layout };
-    setLayouts(prev => ({
-      lg: [...(prev.lg || []), newLayout],
-      md: [...(prev.md || []), { ...newLayout, w: Math.min(newLayout.w, 10) }],
-      sm: [...(prev.sm || []), { ...newLayout, w: Math.min(newLayout.w, 6) }],
-      xs: [...(prev.xs || []), { ...newLayout, w: Math.min(newLayout.w, 4) }],
-      xxs: [...(prev.xxs || []), { ...newLayout, w: Math.min(newLayout.w, 2) }]
-    }));
-  }, [sheets]);
-
   // Remove sheet
   const removeSheet = useCallback((sheetId: string) => {
     setSheets(prev => prev.filter(sheet => sheet.id !== sheetId));
     setLayouts(prev => ({
-      lg: prev.lg?.filter((item: any) => item.i !== sheetId) || [],
-      md: prev.md?.filter((item: any) => item.i !== sheetId) || [],
-      sm: prev.sm?.filter((item: any) => item.i !== sheetId) || [],
-      xs: prev.xs?.filter((item: any) => item.i !== sheetId) || [],
-      xxs: prev.xxs?.filter((item: any) => item.i !== sheetId) || []
+      lg: (prev.lg as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || [],
+      md: (prev.md as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || [],
+      sm: (prev.sm as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || [],
+      xs: (prev.xs as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || [],
+      xxs: (prev.xxs as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || []
     }));
     // Remove zoom level when sheet is removed
     setSheetZoomLevels(prev => {
@@ -404,8 +407,13 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
   }, []);
 
   const renderSheetContent = (sheet: GridSheet) => {
-    const SheetComponent = sheet.component;
     const zoomLevel = sheetZoomLevels[sheet.id] || 1;
+    
+    // Get current layout for this sheet to determine dimensions
+    const currentLayout = layouts[currentBreakpoint] as Record<string, unknown>[] || [];
+    const sheetLayout = currentLayout.find((item: Record<string, unknown>) => item.i === sheet.id);
+    const width = (sheetLayout?.w as number) || sheet.layout.w;
+    const height = (sheetLayout?.h as number) || sheet.layout.h;
     
     return (
       <div 
@@ -433,6 +441,9 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
             </span>
             <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">
               {Math.round(zoomLevel * 100)}%
+            </span>
+            <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
+              {width}×{height}
             </span>
           </div>
           <div className="flex items-center gap-1">
@@ -480,7 +491,9 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onOpenTab && onOpenTab(sheet.type, sheet.title, sheet.context);
+                if (onOpenTab) {
+                  onOpenTab(sheet.type, sheet.title, sheet.context);
+                }
               }}
               onMouseDown={(e) => e.stopPropagation()}
               className="p-1 text-gray-400 hover:text-gray-600 rounded"
@@ -503,7 +516,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
           </div>
         </div>
         
-        {/* Sheet Content */}
+        {/* Responsive Sheet Content */}
         <div 
           className="h-full overflow-auto relative sheet-content"
           onMouseDown={(e) => {
@@ -539,9 +552,12 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
               }
             }}
           >
-            <SheetComponent
-              open={true}
-              onClose={() => removeSheet(sheet.id)}
+            <ResponsiveSheetContent
+              sheetType={sheet.type}
+              sheetTitle={sheet.title}
+              width={width}
+              height={height}
+              breakpoint={currentBreakpoint}
               onOpenTab={onOpenTab}
               project={sheet.project}
               context={sheet.context}
@@ -697,7 +713,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
               <button
                 key={sheet.type}
                 onClick={() => {
-                  addSheet(sheet.type, sheet.title, sheet.component);
+                  addSheet(sheet.type, sheet.component);
                   setShowSheetSelector(false);
                 }}
                 className="flex items-center gap-3 p-2 text-left text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"

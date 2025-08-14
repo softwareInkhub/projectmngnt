@@ -32,11 +32,13 @@ import {
   ArrowLeft,
   Plus
 } from "lucide-react";
+import { TaskApiService, validateTaskData } from "../utils/api";
 
 interface CreateTaskModalProps {
   open: boolean;
   onClose: () => void;
   context?: { company: string };
+  onTaskCreated?: (task: any) => void;
 }
 
 const assignees = [
@@ -65,7 +67,7 @@ const tags = [
   "Documentation", "Bug Fix", "Feature", "Refactor", "UI/UX"
 ];
 
-export default function CreateTaskModal({ open, onClose, context }: CreateTaskModalProps) {
+export default function CreateTaskModal({ open, onClose, context, onTaskCreated }: CreateTaskModalProps) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -87,10 +89,64 @@ export default function CreateTaskModal({ open, onClose, context }: CreateTaskMo
 
   if (!open) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Creating task:", formData);
-    onClose();
+    setIsSubmitting(true);
+    setError(null);
+
+    // Prepare task data for API
+    const taskData = {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      project: formData.project.trim(),
+      assignee: formData.assignee.trim(),
+      status: formData.status,
+      priority: formData.priority,
+      startDate: formData.startDate,
+      dueDate: formData.dueDate,
+      estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
+      tags: formData.tags.join(','), // Convert array to comma-separated string
+      subtasks: JSON.stringify(formData.subtasks), // Convert to JSON string
+      comments: formData.comments.trim(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Validate task data
+    const validation = validateTaskData(taskData);
+    if (!validation.isValid) {
+      setError(validation.errors.join(', '));
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // Use API service to create task
+      const response = await TaskApiService.createTask(taskData);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to create task');
+      }
+
+      console.log("Task created successfully:", response.data);
+      
+      // Call success callback if provided
+      if (onTaskCreated) {
+        onTaskCreated(response.data);
+      }
+      
+      // Close modal and reset form
+      onClose();
+      
+    } catch (err) {
+      console.error("Error creating task:", err);
+      setError(err instanceof Error ? err.message : 'Failed to create task');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const addSubtask = () => {
@@ -472,12 +528,24 @@ export default function CreateTaskModal({ open, onClose, context }: CreateTaskMo
             </div>
           </div>
 
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+                <span className="text-red-800 font-medium">Error</span>
+              </div>
+              <p className="text-red-700 mt-1">{error}</p>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex items-center justify-between pt-6 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2"
+              disabled={isSubmitting}
+              className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Cancel</span>
@@ -486,17 +554,28 @@ export default function CreateTaskModal({ open, onClose, context }: CreateTaskMo
             <div className="flex items-center space-x-3">
               <button
                 type="button"
-                className="px-6 py-3 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors flex items-center space-x-2"
+                disabled={isSubmitting}
+                className="px-6 py-3 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="w-4 h-4" />
                 <span>Save Draft</span>
               </button>
               <button
                 type="submit"
-                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold flex items-center space-x-2"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CheckSquare className="w-4 h-4" />
-                <span>Create Task</span>
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="w-4 h-4" />
+                    <span>Create Task</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

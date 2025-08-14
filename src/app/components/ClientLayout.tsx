@@ -45,7 +45,6 @@ import CreateSprintPage from "./CreateSprintPage";
 import CreateDepartmentPage from "./CreateDepartmentPage";
 import CreateStoryPage from "./CreateStoryPage";
 import GridDashboard from "./GridDashboard";
-import GridTasksPage from "./GridTasksPage";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,7 +59,7 @@ const geistMono = Geist_Mono({
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const SHEET_COMPONENTS: Record<string, any> = {
+const SHEET_COMPONENTS: Record<string, React.ComponentType<Record<string, unknown>>> = {
   project: ProjectsPage,
   departments: DepartmentsPage,
   teams: TeamsPageSheet,
@@ -216,30 +215,6 @@ export default function ClientLayout() {
       // If tab doesn't exist, add it at the end and set as active
       const newTabs = [...prev, { ...tab, key: `${tab.type}-${Date.now()}`, title: customTitle }];
       setActiveTabIdx(newTabs.length - 1); // Set to the new tab
-      return newTabs;
-    });
-  };
-
-  // Handler to open a project details tab from analytics sheet
-  const onViewProject = (project: Project) => {
-    setOpenTabs((prev) => {
-      const existingIdx = prev.findIndex((t) => t.type === "project-details" && t.project?.name === project.name);
-      if (existingIdx !== -1) {
-        setActiveTabIdx(existingIdx);
-        return prev;
-      }
-      // Add project tab at the end
-      const newTabs = [
-        ...prev,
-        {
-          type: "project-details",
-          key: `project-details-${project.name}-${Date.now()}`,
-          title: "Project", // Fixed title to show "Project" instead of project name
-          component: ProjectsPage,
-          project,
-        },
-      ];
-      setActiveTabIdx(newTabs.length - 1);
       return newTabs;
     });
   };

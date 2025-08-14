@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   CheckCircle, 
   AlertCircle, 
@@ -53,156 +53,10 @@ import {
   Save,
   ArrowLeft
 } from "lucide-react";
+import { TaskApiService, validateTaskData } from "../utils/api";
 
-// Sample task data
-const initialTasks = [
-  {
-    id: 1,
-    title: "Design User Interface Components",
-    description: "Create reusable UI components for the dashboard with modern design patterns and accessibility features",
-    status: "In Progress",
-    priority: "High",
-    assignee: "Sarah Johnson",
-    dueDate: "2024-02-15",
-    project: "Whapi Project Management",
-    tags: ["Design", "Frontend"],
-    progress: 75,
-    timeSpent: "12h",
-    estimatedTime: "16h",
-    comments: 8,
-    likes: 5,
-    views: 24,
-    created: "2024-01-20",
-    lastActivity: "2 hours ago",
-    subtasks: [
-      { id: 1, title: "Button Components", completed: true },
-      { id: 2, title: "Form Components", completed: true },
-      { id: 3, title: "Navigation Components", completed: false },
-      { id: 4, title: "Modal Components", completed: false }
-    ]
-  },
-  {
-    id: 2,
-    title: "Implement Authentication System",
-    description: "Set up JWT authentication with role-based access control and security best practices",
-    status: "To Do",
-    priority: "High",
-    assignee: "Mike Chen",
-    dueDate: "2024-02-20",
-    project: "Whapi Project Management",
-    tags: ["Backend", "Security"],
-    progress: 0,
-    timeSpent: "0h",
-    estimatedTime: "24h",
-    comments: 3,
-    likes: 2,
-    views: 18,
-    created: "2024-01-22",
-    lastActivity: "1 day ago",
-    subtasks: [
-      { id: 1, title: "JWT Implementation", completed: false },
-      { id: 2, title: "Role Management", completed: false },
-      { id: 3, title: "Security Testing", completed: false }
-    ]
-  },
-  {
-    id: 3,
-    title: "Database Schema Optimization",
-    description: "Optimize database queries and indexes for better performance and scalability",
-    status: "Done",
-    priority: "Medium",
-    assignee: "Alex Rodriguez",
-    dueDate: "2024-02-10",
-    project: "Whapi Project Management",
-    tags: ["Database", "Performance"],
-    progress: 100,
-    timeSpent: "18h",
-    estimatedTime: "20h",
-    comments: 12,
-    likes: 7,
-    views: 31,
-    created: "2024-01-15",
-    lastActivity: "3 days ago",
-    subtasks: [
-      { id: 1, title: "Query Analysis", completed: true },
-      { id: 2, title: "Index Optimization", completed: true },
-      { id: 3, title: "Performance Testing", completed: true }
-    ]
-  },
-  {
-    id: 4,
-    title: "API Documentation",
-    description: "Create comprehensive API documentation with examples and integration guides",
-    status: "In Progress",
-    priority: "Low",
-    assignee: "Emma Wilson",
-    dueDate: "2024-02-25",
-    project: "Client Portal",
-    tags: ["Documentation", "API"],
-    progress: 40,
-    timeSpent: "6h",
-    estimatedTime: "12h",
-    comments: 5,
-    likes: 3,
-    views: 15,
-    created: "2024-01-25",
-    lastActivity: "4 hours ago",
-    subtasks: [
-      { id: 1, title: "Endpoint Documentation", completed: true },
-      { id: 2, title: "Code Examples", completed: false },
-      { id: 3, title: "Integration Guide", completed: false }
-    ]
-  },
-  {
-    id: 5,
-    title: "Mobile App Testing",
-    description: "Perform comprehensive testing on mobile devices across different platforms",
-    status: "To Do",
-    priority: "Medium",
-    assignee: "David Kim",
-    dueDate: "2024-02-28",
-    project: "Client Portal",
-    tags: ["Testing", "Mobile"],
-    progress: 0,
-    timeSpent: "0h",
-    estimatedTime: "16h",
-    comments: 2,
-    likes: 1,
-    views: 12,
-    created: "2024-01-28",
-    lastActivity: "2 days ago",
-    subtasks: [
-      { id: 1, title: "iOS Testing", completed: false },
-      { id: 2, title: "Android Testing", completed: false },
-      { id: 3, title: "Cross-platform Testing", completed: false }
-    ]
-  },
-  {
-    id: 6,
-    title: "Performance Monitoring Setup",
-    description: "Implement comprehensive performance monitoring and alerting system",
-    status: "In Progress",
-    priority: "High",
-    assignee: "Lisa Chen",
-    dueDate: "2024-02-18",
-    project: "Analytics Platform",
-    tags: ["Monitoring", "Performance"],
-    progress: 60,
-    timeSpent: "14h",
-    estimatedTime: "20h",
-    comments: 9,
-    likes: 6,
-    views: 28,
-    created: "2024-01-18",
-    lastActivity: "6 hours ago",
-    subtasks: [
-      { id: 1, title: "Metrics Collection", completed: true },
-      { id: 2, title: "Alert Configuration", completed: true },
-      { id: 3, title: "Dashboard Setup", completed: false },
-      { id: 4, title: "Integration Testing", completed: false }
-    ]
-  }
-];
+// Empty initial tasks - will be populated from API
+const initialTasks: any[] = [];
 
 const statusColors = {
   "To Do": "bg-slate-100 text-slate-700",
@@ -254,6 +108,66 @@ export default function TasksPage({ context }: { context?: { company: string } }
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
   const [newProject, setNewProject] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editingTask, setEditingTask] = useState<any | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+
+  // Function to fetch tasks from API
+  const fetchTasks = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('http://54.85.164.84:5001/crud?tableName=project-management-tasks');
+      const data = await response.json();
+      
+      if (data.success && data.items) {
+        // Filter only tasks that have the required fields (real tasks, not test data)
+        const realTasks = data.items.filter((item: any) => 
+          item.title && 
+          item.assignee && 
+          item.status && 
+          item.priority && 
+          item.project &&
+          !item._metadata // Exclude items with _metadata (test data)
+        ).map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description || '',
+          status: item.status,
+          priority: item.priority,
+          assignee: item.assignee,
+          dueDate: item.dueDate,
+          project: item.project,
+          tags: item.tags ? item.tags.split(',').filter((tag: string): boolean => tag.trim() !== '') : [],
+          progress: 0, // Default progress for new tasks
+          timeSpent: "0h",
+          estimatedTime: item.estimatedHours ? `${item.estimatedHours}h` : "0h",
+          comments: 0,
+          likes: 0,
+          views: 0,
+          created: item.createdAt ? item.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
+          lastActivity: "Just now",
+          subtasks: item.subtasks ? JSON.parse(item.subtasks) : []
+        }));
+        
+        setTasks(realTasks);
+        console.log('Fetched real tasks from API:', realTasks);
+      }
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+      setError('Failed to load tasks');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load tasks on component mount
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -276,15 +190,21 @@ export default function TasksPage({ context }: { context?: { company: string } }
     inProgressTasks: tasks.filter(t => t.status === "In Progress").length,
     overdueTasks: tasks.filter(t => new Date(t.dueDate) < new Date() && t.status !== "Done").length,
     avgProgress: Math.round(tasks.reduce((sum, t) => sum + t.progress, 0) / tasks.length),
-    totalTimeSpent: tasks.reduce((sum, t) => sum + parseInt(t.timeSpent.replace('h', '')), 0),
-    totalEstimatedTime: tasks.reduce((sum, t) => sum + parseInt(t.estimatedTime.replace('h', '')), 0)
+    totalTimeSpent: tasks.reduce((sum, t) => {
+      const timeSpent = t.timeSpent || '0h';
+      return sum + parseInt(timeSpent.replace('h', '') || '0');
+    }, 0),
+    totalEstimatedTime: tasks.reduce((sum, t) => {
+      const estimatedTime = t.estimatedTime || '0h';
+      return sum + parseInt(estimatedTime.replace('h', '') || '0');
+    }, 0)
   };
 
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.assignee.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = (task.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (task.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (task.assignee?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (task.tags || []).some((tag: string) => (tag?.toLowerCase() || '').includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === "All" || task.status === statusFilter;
     const matchesPriority = priorityFilter === "All" || task.priority === priorityFilter;
     
@@ -322,48 +242,100 @@ export default function TasksPage({ context }: { context?: { company: string } }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Creating task:", formData);
-    
-    // Create new task object
-    const newTask = {
-      id: Date.now(), // Generate unique ID
-      title: formData.title,
-      description: formData.description,
-      project: formData.project,
-      assignee: formData.assignee,
+    setIsSubmitting(true);
+    setError(null);
+
+    // Prepare task data for API
+    const taskData = {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      project: formData.project.trim(),
+      assignee: formData.assignee.trim(),
       status: formData.status,
       priority: formData.priority,
-      dueDate: formData.dueDate,
       startDate: formData.startDate,
+      dueDate: formData.dueDate,
       estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : 0,
-      tags: formData.tags,
-      subtasks: formData.subtasks,
-      comments: formData.comments,
+      tags: formData.tags.join(','), // Convert array to comma-separated string
+      subtasks: JSON.stringify(formData.subtasks), // Convert to JSON string
+      comments: formData.comments.trim(),
       createdAt: new Date().toISOString(),
-      lastActivity: "Just now"
+      updatedAt: new Date().toISOString()
     };
 
-    // Add the new task to the tasks array
-    setTasks(prevTasks => [newTask, ...prevTasks]);
-    
-    // Reset form and hide it
-    setShowCreateForm(false);
-    setFormData({
-      title: "",
-      description: "",
-      project: context?.company || projects[0],
-      assignee: assignees[0],
-      status: statuses[0],
-      priority: priorities[1],
-      dueDate: "",
-      startDate: "",
-      estimatedHours: "",
-      tags: [],
-      subtasks: [],
-      comments: ""
+    console.log('Form data being sent to API:', taskData);
+    console.log('Form data type check:', {
+      title: typeof taskData.title,
+      description: typeof taskData.description,
+      project: typeof taskData.project,
+      assignee: typeof taskData.assignee,
+      status: typeof taskData.status,
+      priority: typeof taskData.priority,
+      startDate: typeof taskData.startDate,
+      dueDate: typeof taskData.dueDate,
+      estimatedHours: typeof taskData.estimatedHours,
+      tags: typeof taskData.tags,
+      subtasks: typeof taskData.subtasks,
+      comments: typeof taskData.comments
     });
+
+    // Validate task data
+    const validation = validateTaskData(taskData);
+    if (!validation.isValid) {
+      setError(validation.errors.join(', '));
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      console.log("About to call TaskApiService.createTask...");
+      console.log("TaskApiService available:", typeof TaskApiService);
+      console.log("TaskApiService.createTask available:", typeof TaskApiService.createTask);
+      
+      // Use API service to create task
+      const response = await TaskApiService.createTask(taskData);
+      console.log("API response received:", response);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to create task');
+      }
+
+      console.log("Task created successfully:", response.data);
+      
+      // Show success message
+      setSuccessMessage(`Task "${formData.title}" created successfully!`);
+      
+      // Refresh tasks from API to show the newly created task
+      await fetchTasks();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+      
+      // Reset form and hide it
+      setShowCreateForm(false);
+      setFormData({
+        title: "",
+        description: "",
+        project: context?.company || projects[0],
+        assignee: assignees[0],
+        status: statuses[0],
+        priority: priorities[1],
+        dueDate: "",
+        startDate: "",
+        estimatedHours: "",
+        tags: [],
+        subtasks: [],
+        comments: ""
+      });
+      
+    } catch (err) {
+      console.error("Error creating task:", err);
+      setError(err instanceof Error ? err.message : 'Failed to create task');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const addSubtask = () => {
@@ -398,10 +370,143 @@ export default function TasksPage({ context }: { context?: { company: string } }
     setFormData(prev => ({
       ...prev,
       tags: prev.tags.includes(tag) 
-        ? prev.tags.filter(t => t !== tag)
+        ? prev.tags.filter((t: string) => t !== tag)
         : [...prev.tags, tag]
     }));
   };
+
+  // CRUD Operations
+  const deleteTask = async (taskId: string) => {
+    try {
+      const response = await fetch(`http://54.85.164.84:5001/crud?tableName=project-management-tasks`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: taskId
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSuccessMessage('Task deleted successfully!');
+        await fetchTasks(); // Refresh the task list
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setError('Failed to delete task');
+      }
+    } catch (err) {
+      console.error('Error deleting task:', err);
+      setError('Failed to delete task');
+    }
+    setOpenMenuId(null);
+  };
+
+  const updateTask = async (taskData: any) => {
+    try {
+      const response = await fetch(`http://54.85.164.84:5001/crud?tableName=project-management-tasks`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          item: {
+            ...taskData,
+            updatedAt: new Date().toISOString()
+          }
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSuccessMessage('Task updated successfully!');
+        await fetchTasks(); // Refresh the task list
+        setTimeout(() => setSuccessMessage(null), 3000);
+        setShowEditForm(false);
+        setEditingTask(null);
+      } else {
+        setError('Failed to update task');
+      }
+    } catch (err) {
+      console.error('Error updating task:', err);
+      setError('Failed to update task');
+    }
+  };
+
+  const handleEditTask = (task: any) => {
+    setEditingTask(task);
+    setFormData({
+      title: task.title,
+      description: task.description,
+      project: task.project,
+      assignee: task.assignee,
+      status: task.status,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      startDate: task.startDate || '',
+      estimatedHours: task.estimatedHours ? task.estimatedHours.toString() : '',
+      tags: task.tags || [],
+      subtasks: task.subtasks || [],
+      comments: task.comments || ''
+    });
+    setShowEditForm(true);
+    setOpenMenuId(null);
+  };
+
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    if (!editingTask) return;
+
+    const updatedTaskData = {
+      id: editingTask.id,
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      project: formData.project.trim(),
+      assignee: formData.assignee.trim(),
+      status: formData.status,
+      priority: formData.priority,
+      startDate: formData.startDate,
+      dueDate: formData.dueDate,
+      estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : 0,
+      tags: formData.tags.join(','),
+      subtasks: JSON.stringify(formData.subtasks),
+      comments: formData.comments.trim(),
+      createdAt: editingTask.createdAt,
+      updatedAt: new Date().toISOString()
+    };
+
+    await updateTask(updatedTaskData);
+    setIsSubmitting(false);
+  };
+
+  const toggleMenu = (taskId: string) => {
+    setOpenMenuId(openMenuId === taskId ? null : taskId);
+  };
+
+  const closeMenu = () => {
+    setOpenMenuId(null);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.task-menu')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
@@ -435,23 +540,44 @@ export default function TasksPage({ context }: { context?: { company: string } }
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* Task Creation Form */}
-        {showCreateForm && (
+             <div className="p-6 space-y-6">
+         {/* Loading State */}
+         {isLoading && (
+           <div className="flex items-center justify-center py-12">
+             <div className="flex items-center space-x-3">
+               <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+               <span className="text-lg text-slate-600">Loading tasks from database...</span>
+             </div>
+           </div>
+         )}
+
+         {/* Success Message */}
+         {successMessage && (
+           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+             <div className="flex items-center space-x-2">
+               <CheckCircle className="w-5 h-5 text-green-600" />
+               <span className="text-green-800 font-medium">Success!</span>
+             </div>
+             <p className="text-green-700 mt-1">{successMessage}</p>
+           </div>
+         )}
+
+                   {/* Task Creation Form */}
+         {(showCreateForm || showEditForm) && (
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 animate-fade-in">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                   <CheckSquare className="w-5 h-5 text-green-600" />
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Create New Task</h2>
-                  <p className="text-slate-600">Fill in the details below to create a new task.</p>
-                </div>
+                                 <div>
+                   <h2 className="text-2xl font-bold text-slate-900">{showEditForm ? 'Edit Task' : 'Create New Task'}</h2>
+                   <p className="text-slate-600">{showEditForm ? 'Update the task details below.' : 'Fill in the details below to create a new task.'}</p>
+                 </div>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+                         <form onSubmit={showEditForm ? handleUpdateSubmit : handleSubmit} className="space-y-8">
               {/* Task Information */}
               <div className="space-y-6">
                 <div className="flex items-center space-x-3 mb-6">
@@ -769,40 +895,68 @@ export default function TasksPage({ context }: { context?: { company: string } }
                 </div>
               </div>
 
+              {/* Error Display */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <span className="text-red-800 font-medium">Error</span>
+                  </div>
+                  <p className="text-red-700 mt-1">{error}</p>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex items-center justify-between pt-6 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateForm(false)}
-                  className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Cancel</span>
-                </button>
+                                 <button
+                   type="button"
+                   onClick={() => {
+                     setShowCreateForm(false);
+                     setShowEditForm(false);
+                     setEditingTask(null);
+                   }}
+                   disabled={isSubmitting}
+                   className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                 >
+                   <ArrowLeft className="w-4 h-4" />
+                   <span>Cancel</span>
+                 </button>
 
                 <div className="flex items-center space-x-3">
                   <button
                     type="button"
-                    className="px-6 py-3 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors flex items-center space-x-2"
+                    disabled={isSubmitting}
+                    className="px-6 py-3 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />
                     <span>Save Draft</span>
                   </button>
-                  <button
-                    type="submit"
-                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold flex items-center space-x-2"
-                  >
-                    <CheckSquare className="w-4 h-4" />
-                    <span>Create Task</span>
-                  </button>
+                                     <button
+                     type="submit"
+                     disabled={isSubmitting}
+                     className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     {isSubmitting ? (
+                       <>
+                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                         <span>{showEditForm ? 'Updating...' : 'Creating...'}</span>
+                       </>
+                     ) : (
+                       <>
+                         <CheckSquare className="w-4 h-4" />
+                         <span>{showEditForm ? 'Update Task' : 'Create Task'}</span>
+                       </>
+                     )}
+                   </button>
                 </div>
               </div>
             </form>
           </div>
         )}
 
-        {/* Enhanced Analytics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 animate-fade-in">
+                 {/* Enhanced Analytics Cards */}
+         {!isLoading && (
+           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 animate-fade-in">
           <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
             <div className="w-6 h-6 bg-green-50 rounded-md flex items-center justify-center mr-3">
               <CheckSquare className="w-3 h-3 text-green-600" />
@@ -859,8 +1013,10 @@ export default function TasksPage({ context }: { context?: { company: string } }
             </div>
           </div>
         </div>
+        )}
 
         {/* Enhanced Search and Filters */}
+        {!isLoading && (
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 animate-fade-in" style={{ animationDelay: '200ms' }}>
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
@@ -954,116 +1110,318 @@ export default function TasksPage({ context }: { context?: { company: string } }
             </div>
           )}
         </div>
+        )}
 
-        {/* Task Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '400ms' }}>
-          {filteredTasks.map((task) => (
-            <div key={task.id} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group">
-              <div className="p-6">
-                {/* Task Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-                      {task.title}
-                    </h3>
-                    <p className="text-sm text-slate-600 line-clamp-2">
-                      {task.description}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
-                      <Heart className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
+                 {/* Task Grid/List View */}
+         {!isLoading && (
+           <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
+             {viewMode === "grid" ? (
+               // Grid View
+               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                 {filteredTasks.map((task) => (
+                   <div key={task.id} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group">
+                     <div className="p-6">
+                       {/* Task Header */}
+                       <div className="flex items-start justify-between mb-4">
+                         <div className="flex-1">
+                           <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                             {task.title}
+                           </h3>
+                           <p className="text-sm text-slate-600 line-clamp-2">
+                             {task.description}
+                           </p>
+                         </div>
+                         <div className="flex items-center gap-2 ml-4 relative">
+                           <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+                             <Heart className="w-4 h-4" />
+                           </button>
+                           <div className="relative task-menu">
+                             <button 
+                               onClick={() => toggleMenu(task.id)}
+                               className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                             >
+                               <MoreHorizontal className="w-4 h-4" />
+                             </button>
+                             
+                             {/* Dropdown Menu */}
+                             {openMenuId === task.id && (
+                               <div className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-fade-in">
+                                 <div className="py-1">
+                                   <button
+                                     onClick={() => handleEditTask(task)}
+                                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                   >
+                                     <Edit className="w-4 h-4" />
+                                     Edit Task
+                                   </button>
+                                   <button
+                                     onClick={() => {
+                                       navigator.clipboard.writeText(JSON.stringify(task, null, 2));
+                                       setSuccessMessage('Task details copied to clipboard!');
+                                       setTimeout(() => setSuccessMessage(null), 2000);
+                                       closeMenu();
+                                     }}
+                                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                   >
+                                     <Copy className="w-4 h-4" />
+                                     Copy Details
+                                   </button>
+                                   <button
+                                     onClick={() => {
+                                       setSuccessMessage('Archive feature coming soon!');
+                                       setTimeout(() => setSuccessMessage(null), 2000);
+                                       closeMenu();
+                                     }}
+                                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                   >
+                                     <Archive className="w-4 h-4" />
+                                     Archive
+                                   </button>
+                                   <div className="border-t border-slate-200 my-1"></div>
+                                   <button
+                                     onClick={() => {
+                                       if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+                                         deleteTask(task.id);
+                                       }
+                                     }}
+                                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                   >
+                                     <Trash2 className="w-4 h-4" />
+                                     Delete Task
+                                   </button>
+                                 </div>
+                               </div>
+                             )}
+                           </div>
+                         </div>
+                       </div>
 
-                {/* Progress and Time */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-900">{task.progress}%</div>
-                    <div className="text-xs text-slate-500">Progress</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-900">{task.timeSpent}</div>
-                    <div className="text-xs text-slate-500">Time Spent</div>
-                  </div>
-                </div>
+                       {/* Progress and Time */}
+                       <div className="grid grid-cols-2 gap-4 mb-4">
+                         <div className="text-center">
+                           <div className="text-2xl font-bold text-slate-900">{task.progress}%</div>
+                           <div className="text-xs text-slate-500">Progress</div>
+                         </div>
+                         <div className="text-center">
+                           <div className="text-2xl font-bold text-slate-900">{task.timeSpent}</div>
+                           <div className="text-xs text-slate-500">Time Spent</div>
+                         </div>
+                       </div>
 
-                {/* Progress Bar */}
-                <div className="w-full bg-slate-200 rounded-full h-2 mb-4">
-                  <div 
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${task.progress}%` }}
-                  ></div>
-                </div>
+                       {/* Progress Bar */}
+                       <div className="w-full bg-slate-200 rounded-full h-2 mb-4">
+                         <div 
+                           className="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-300"
+                           style={{ width: `${task.progress}%` }}
+                         ></div>
+                       </div>
 
-                {/* Task Details */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[task.status as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'}`}>
-                      {task.status}
-                    </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700'}`}>
-                      {task.priority}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-400">
-                    <div className="flex items-center gap-1">
-                      <MessageSquare className="w-3 h-3" />
-                      <span className="text-xs">{task.comments}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      <span className="text-xs">{task.views}</span>
-                    </div>
-                  </div>
-                </div>
+                       {/* Task Details */}
+                       <div className="flex items-center justify-between mb-4">
+                         <div className="flex items-center gap-2">
+                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[task.status as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'}`}>
+                             {task.status}
+                           </span>
+                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700'}`}>
+                             {task.priority}
+                           </span>
+                         </div>
+                         <div className="flex items-center gap-3 text-slate-400">
+                           <div className="flex items-center gap-1">
+                             <MessageSquare className="w-3 h-3" />
+                             <span className="text-xs">{task.comments}</span>
+                           </div>
+                           <div className="flex items-center gap-1">
+                             <Eye className="w-3 h-3" />
+                             <span className="text-xs">{task.views}</span>
+                           </div>
+                         </div>
+                       </div>
 
-                {/* Assignee and Date */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-700">{task.assignee}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-700">{task.dueDate}</span>
-                  </div>
-                </div>
+                       {/* Assignee and Date */}
+                       <div className="flex items-center justify-between mb-4">
+                         <div className="flex items-center gap-2">
+                           <User className="w-4 h-4 text-slate-400" />
+                           <span className="text-sm text-slate-700">{task.assignee}</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <Calendar className="w-4 h-4 text-slate-400" />
+                           <span className="text-sm text-slate-700">{task.dueDate}</span>
+                         </div>
+                       </div>
 
-                {/* Project */}
-                <div className="flex items-center gap-2 mb-4">
-                  <Building className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm text-slate-700">{task.project}</span>
-                </div>
+                       {/* Project */}
+                       <div className="flex items-center gap-2 mb-4">
+                         <Building className="w-4 h-4 text-slate-400" />
+                         <span className="text-sm text-slate-700">{task.project}</span>
+                       </div>
 
-                {/* Action Buttons */}
-                <div className="flex items-center justify-between">
-                  <button className="text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
-                    Show Details
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                      <Share2 className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                      <ExternalLink className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                       {/* Action Buttons */}
+                       <div className="flex items-center justify-between">
+                         <button className="text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+                           Show Details
+                         </button>
+                         <div className="flex items-center gap-2">
+                           <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                             <Edit className="w-4 h-4" />
+                           </button>
+                           <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                             <Share2 className="w-4 h-4" />
+                           </button>
+                           <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                             <ExternalLink className="w-4 h-4" />
+                           </button>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             ) : (
+               // List View
+               <div className="space-y-4">
+                 {filteredTasks.map((task) => (
+                   <div key={task.id} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group">
+                     <div className="p-6">
+                       <div className="flex items-center justify-between">
+                         <div className="flex items-center space-x-4 flex-1">
+                           {/* Status Icon */}
+                           <div className="flex-shrink-0">
+                             {React.createElement(getStatusIcon(task.status), { 
+                               className: "w-6 h-6 text-slate-400" 
+                             })}
+                           </div>
+                           
+                           {/* Task Info */}
+                           <div className="flex-1 min-w-0">
+                             <div className="flex items-center justify-between">
+                               <h3 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors truncate">
+                                 {task.title}
+                               </h3>
+                               <div className="flex items-center gap-2 ml-4">
+                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[task.status as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'}`}>
+                                   {task.status}
+                                 </span>
+                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700'}`}>
+                                   {task.priority}
+                                 </span>
+                               </div>
+                             </div>
+                             
+                             <p className="text-sm text-slate-600 mt-1 line-clamp-2">
+                               {task.description}
+                             </p>
+                             
+                             <div className="flex items-center gap-6 mt-3 text-sm text-slate-500">
+                               <div className="flex items-center gap-2">
+                                 <User className="w-4 h-4" />
+                                 <span>{task.assignee}</span>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                 <Building className="w-4 h-4" />
+                                 <span>{task.project}</span>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                 <Calendar className="w-4 h-4" />
+                                 <span>Due: {task.dueDate}</span>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                 <Clock className="w-4 h-4" />
+                                 <span>{task.timeSpent}</span>
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                         
+                         {/* Actions */}
+                         <div className="flex items-center gap-2 ml-4">
+                           <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+                             <Heart className="w-4 h-4" />
+                           </button>
+                           <div className="relative task-menu">
+                             <button 
+                               onClick={() => toggleMenu(task.id)}
+                               className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                             >
+                               <MoreHorizontal className="w-4 h-4" />
+                             </button>
+                             
+                             {/* Dropdown Menu */}
+                             {openMenuId === task.id && (
+                               <div className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-fade-in">
+                                 <div className="py-1">
+                                   <button
+                                     onClick={() => handleEditTask(task)}
+                                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                   >
+                                     <Edit className="w-4 h-4" />
+                                     Edit Task
+                                   </button>
+                                   <button
+                                     onClick={() => {
+                                       navigator.clipboard.writeText(JSON.stringify(task, null, 2));
+                                       setSuccessMessage('Task details copied to clipboard!');
+                                       setTimeout(() => setSuccessMessage(null), 2000);
+                                       closeMenu();
+                                     }}
+                                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                   >
+                                     <Copy className="w-4 h-4" />
+                                     Copy Details
+                                   </button>
+                                   <button
+                                     onClick={() => {
+                                       setSuccessMessage('Archive feature coming soon!');
+                                       setTimeout(() => setSuccessMessage(null), 2000);
+                                       closeMenu();
+                                     }}
+                                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                   >
+                                     <Archive className="w-4 h-4" />
+                                     Archive
+                                   </button>
+                                   <div className="border-t border-slate-200 my-1"></div>
+                                   <button
+                                     onClick={() => {
+                                       if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+                                         deleteTask(task.id);
+                                       }
+                                     }}
+                                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                   >
+                                     <Trash2 className="w-4 h-4" />
+                                     Delete Task
+                                   </button>
+                                 </div>
+                               </div>
+                             )}
+                           </div>
+                         </div>
+                       </div>
+                       
+                       {/* Progress Bar for List View */}
+                       <div className="mt-4">
+                         <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
+                           <span>Progress</span>
+                           <span>{task.progress}%</span>
+                         </div>
+                         <div className="w-full bg-slate-200 rounded-full h-2">
+                           <div 
+                             className="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-300"
+                             style={{ width: `${task.progress}%` }}
+                           ></div>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             )}
+           </div>
+         )}
 
         {/* Empty State */}
-        {filteredTasks.length === 0 && (
+        {!isLoading && filteredTasks.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckSquare className="w-8 h-8 text-slate-400" />

@@ -9,9 +9,9 @@ export default function CreateTaskPage({ onClose }: { onClose?: () => void }) {
     onClose?.();
   };
 
-  const handleCreate = (task: any) => {
+  const handleCreate = async (task: any) => {
     console.log("Creating task:", task);
-    // Here you would typically save the task to your state or API
+    // The actual API call is now handled in CreateTaskModal
     handleClose();
   };
 
@@ -21,6 +21,7 @@ export default function CreateTaskPage({ onClose }: { onClose?: () => void }) {
         open={showModal}
         onClose={handleClose}
         context={{ company: "Whapi Project Management" }}
+        onTaskCreated={handleCreate}
       />
     </div>
   );

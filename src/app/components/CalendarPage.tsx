@@ -3,45 +3,42 @@
 import React, { useState } from 'react';
 import { 
   Calendar, 
-  ChevronLeft, 
-  ChevronRight, 
+  Clock, 
+  Users, 
+  CheckCircle, 
+  AlertCircle, 
+  MoreHorizontal,
   Plus,
-  Clock,
-  User,
-  Tag,
-  X,
-  Save,
-  ArrowLeft,
-  AlertCircle,
-  MessageSquare,
-  Building,
-  Target,
-  CheckSquare,
-  Users,
-  MapPin,
-  DollarSign,
-  CalendarDays,
-  UserPlus,
-  FileText,
-  Bell,
-  Star,
-  Eye,
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  Edit,
+  Trash2,
+  Archive,
+  Copy,
   Share2,
   Download,
-  FilterX,
+  Eye,
+  EyeOff,
   Grid3X3,
   List,
+  Bell,
+  MessageSquare,
   Heart,
   ExternalLink,
   GitCommit,
   Activity,
+  DollarSign,
+  UserCheck,
   Timer,
   Flag,
   Layers,
   Zap,
   TrendingDown,
   SortAsc,
-  CheckCircle,
+  CheckSquare,
   Square,
   Play,
   Pause,
@@ -61,9 +58,112 @@ import {
   UserPlus2,
   Settings,
   Globe,
-  MapPin as MapPinIcon,
+  Building,
+  Briefcase,
+  Video,
+  Phone,
+  User,
+  MapPin,
+  MessageSquare as MessageSquareIcon,
+  AlertCircle as AlertCircleIcon,
+  Info,
+  Award,
+  Paperclip,
+  FileText as FileTextIcon,
+  BarChart as BarChartIcon,
+  PieChart as PieChartIcon,
+  ScatterChart,
+  AreaChart,
+  Gauge,
+  Target,
+  TrendingDown as TrendingDownIcon,
+  Activity as ActivityIcon,
+  Filter as FilterIcon,
+  Share2 as Share2Icon,
+  Download as DownloadIcon,
+  FilterX as FilterXIcon,
+  Grid3X3 as Grid3X3Icon,
+  List as ListIcon,
+  Heart as HeartIcon,
+  ExternalLink as ExternalLinkIcon,
+  GitCommit as GitCommitIcon,
+  DollarSign as DollarSignIcon,
+  UserCheck as UserCheckIcon,
+  Timer as TimerIcon,
+  Flag as FlagIcon,
+  Layers as LayersIcon,
+  Zap as ZapIcon,
+  TrendingDown as TrendingDownIcon2,
+  SortAsc as SortAscIcon,
+  Square as SquareIcon,
+  Play as PlayIcon,
+  Pause as PauseIcon,
+  StopCircle as StopCircleIcon,
+  RotateCcw as RotateCcwIcon,
+  LineChart as LineChartIcon,
+  Crown as CrownIcon,
+  Shield as ShieldIcon,
+  Trophy as TrophyIcon,
+  Medal as MedalIcon,
+  Users2 as Users2Icon,
+  UserX as UserXIcon,
+  UserCheck2 as UserCheck2Icon,
+  UserMinus as UserMinusIcon,
+  UserPlus2 as UserPlus2Icon,
+  Briefcase as BriefcaseIcon,
+  Video as VideoIcon,
+  MessageSquare as MessageSquareIcon2,
+  AlertCircle as AlertCircleIcon2,
+  Info as InfoIcon,
+  Award as AwardIcon,
+  Paperclip as PaperclipIcon,
+  FileText as FileTextIcon2,
+  BarChart as BarChartIcon2,
+  PieChart as PieChartIcon3,
+  ScatterChart as ScatterChartIcon,
+  AreaChart as AreaChartIcon,
+  Gauge as GaugeIcon,
+  Target as TargetIcon2,
+  TrendingDown as TrendingDownIcon3,
+  Activity as ActivityIcon2,
+  Filter as FilterIcon2,
+  Share2 as Share2Icon2,
+  Archive as ArchiveIcon,
+  Copy as CopyIcon,
+  Trash2 as Trash2Icon,
+  ArrowUpRight as ArrowUpRightIcon,
+  ArrowDownRight as ArrowDownRightIcon,
+  Minus as MinusIcon,
+  X,
   Building as BuildingIcon,
-  Briefcase
+  Globe as GlobeIcon,
+  Settings as SettingsIcon,
+  Upload,
+  Key,
+  Lock,
+  Unlock,
+  Database,
+  Server,
+  Cloud,
+  Wifi,
+  WifiOff,
+  Volume2,
+  VolumeX,
+  Languages,
+  Home,
+  School,
+  ThumbsUp,
+  ThumbsDown,
+  HelpCircle,
+  BookOpen,
+  File,
+  FileImage,
+  FileVideo,
+  FileAudio,
+  FileArchive,
+  ArrowLeft,
+  Save,
+  CalendarDays
 } from 'lucide-react';
 
 interface CalendarEvent {
@@ -133,24 +233,36 @@ const projects = [
   "API Integration"
 ];
 
-export default function CalendarPage({ onOpenTab, context }: { onOpenTab?: (tabType: string, context?: any) => void; context?: { company: string } }) {
+export default function CalendarPage({ 
+  open, 
+  onClose, 
+  onOpenTab 
+}: { 
+  open: boolean; 
+  onClose: () => void; 
+  onOpenTab?: (type: string, title?: string, context?: Record<string, unknown>) => void;
+}) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    date: "",
-    time: "",
     type: "meeting",
     attendees: [] as string[],
-    project: context?.company || projects[0],
+    project: projects[0],
     location: "",
     duration: "",
     priority: "medium",
-    notes: ""
+    date: "",
+    time: "",
+    startDate: new Date(),
+    endDate: new Date(),
+    notes: "",
   });
 
   const getDaysInMonth = (date: Date) => {
@@ -176,8 +288,8 @@ export default function CalendarPage({ onOpenTab, context }: { onOpenTab?: (tabT
     const newEvent = {
       id: Date.now().toString(), // Generate unique ID
       title: formData.title,
-      date: formData.date,
-      time: formData.time,
+      date: formData.startDate.toISOString().split('T')[0], // Convert Date to string
+      time: formData.startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
       type: formData.type as 'meeting' | 'deadline' | 'reminder',
       attendees: formData.attendees,
       description: formData.description
@@ -191,15 +303,17 @@ export default function CalendarPage({ onOpenTab, context }: { onOpenTab?: (tabT
     setFormData({
       title: "",
       description: "",
-      date: "",
-      time: "",
       type: "meeting",
       attendees: [],
-      project: context?.company || projects[0],
+      project: projects[0],
       location: "",
       duration: "",
       priority: "medium",
-      notes: ""
+      date: "",
+      time: "",
+      startDate: new Date(),
+      endDate: new Date(),
+      notes: "",
     });
   };
 
@@ -227,9 +341,9 @@ export default function CalendarPage({ onOpenTab, context }: { onOpenTab?: (tabT
 
   const getEventTypeIcon = (type: string) => {
     switch (type) {
-      case 'meeting': return <User size={12} />;
+      case 'meeting': return <Users size={12} />;
       case 'deadline': return <Clock size={12} />;
-      case 'reminder': return <Tag size={12} />;
+      case 'reminder': return <Bell size={12} />;
       default: return <Calendar size={12} />;
     }
   };
@@ -336,7 +450,7 @@ export default function CalendarPage({ onOpenTab, context }: { onOpenTab?: (tabT
                                 : "border-slate-200 hover:border-slate-300"
                             }`}
                           >
-                            <type.icon className="w-5 h-5" />
+                            {getEventTypeIcon(type.value)}
                             <span className="text-sm font-medium">{type.label}</span>
                           </button>
                         ))}
@@ -534,9 +648,9 @@ export default function CalendarPage({ onOpenTab, context }: { onOpenTab?: (tabT
                         placeholder="Enter location or meeting link"
                         className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <MapPinIcon className="w-4 h-4 text-slate-400" />
-                      </div>
+                                             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                         <MapPin className="w-4 h-4 text-slate-400" />
+                       </div>
                     </div>
                   </div>
 
