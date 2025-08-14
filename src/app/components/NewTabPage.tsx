@@ -1,17 +1,59 @@
 "use client";
-import { useState } from "react";
-import {
-  Building2, FolderKanban, Users, Calendar, Plus, Search, ArrowRight, Star, Target, CheckCircle, TrendingUp, Clock, Heart, ExternalLink, GitCommit, DollarSign, UserCheck, Timer, Flag, Layers, Zap, SortAsc, CheckSquare, Square, Play, Pause, StopCircle, RotateCcw, LineChart, Crown, Shield, Trophy, Medal, Users2, UserX, UserCheck2, UserMinus, UserPlus2, Briefcase, Video, Phone, MessageSquare, Mail, AlertCircle, Info, Award, Paperclip, FileText, BarChart, PieChart, ScatterChart, AreaChart, Gauge, TrendingDown, Activity, Filter, Eye, Share2, Archive, Copy, Trash2, ArrowUpRight, ArrowDownRight, Minus, Building, Globe, Settings, Download, Upload, Key, Lock, Unlock, Database, Server, Cloud, Wifi, WifiOff, Volume2, VolumeX, Languages, MapPin, Home, School, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, File, FileImage, FileVideo, FileAudio, FileArchive, MoreHorizontal
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { 
+  Search, 
+  Filter, 
+  Plus, 
+  MoreHorizontal, 
+  Edit, 
+  Trash2, 
+  Eye, 
+  Download, 
+  Share, 
+  Archive, 
+  Copy, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Minus, 
+  Building, 
+  Globe, 
+  Settings, 
+  Upload, 
+  Key, 
+  Lock, 
+  Unlock, 
+  Database, 
+  Server, 
+  Cloud, 
+  Wifi, 
+  WifiOff, 
+  Volume2, 
+  VolumeX, 
+  Languages, 
+  MapPin, 
+  Home, 
+  School, 
+  ThumbsUp, 
+  ThumbsDown, 
+  HelpCircle, 
+  BookOpen, 
+  File, 
+  FileImage, 
+  FileVideo, 
+  FileAudio, 
+  FileArchive,
+  Users,
+  Calendar
+} from 'lucide-react';
 
 export default function NewTabPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const categories = [
-    { id: "all", label: "All", icon: Star, count: 12, description: "View all recent items" },
-    { id: "companies", label: "Companies", icon: Building2, count: 3, description: "Manage organizations" },
-    { id: "projects", label: "Projects", icon: FolderKanban, count: 4, description: "Track project progress" },
+    { id: "all", label: "All", icon: ThumbsUp, count: 12, description: "View all recent items" },
+    { id: "companies", label: "Companies", icon: Building, count: 3, description: "Manage organizations" },
+    { id: "projects", label: "Projects", icon: FileImage, count: 4, description: "Track project progress" },
     { id: "teams", label: "Teams", icon: Users, count: 2, description: "Team collaboration" },
     { id: "sprints", label: "Sprints", icon: Calendar, count: 3, description: "Agile development" }
   ];
@@ -21,7 +63,7 @@ export default function NewTabPage() {
       id: "new-company",
       title: "New Company",
       description: "Create a new company organization with departments and teams",
-      icon: Building2,
+      icon: Building,
       color: "blue",
       category: "companies",
       priority: "high"
@@ -30,7 +72,7 @@ export default function NewTabPage() {
       id: "new-project",
       title: "New Project",
       description: "Start a new project with team collaboration and task management",
-      icon: FolderKanban,
+      icon: FileImage,
       color: "green",
       category: "projects",
       priority: "high"
@@ -78,7 +120,7 @@ export default function NewTabPage() {
       id: 1,
       title: "Whapi Project Management",
       type: "Company",
-      icon: Building2,
+      icon: Building,
       lastModified: "2 hours ago",
       status: "Active",
       description: "Leading project management solutions for enterprise teams",
@@ -89,7 +131,7 @@ export default function NewTabPage() {
       id: 2,
       title: "Mobile App Development",
       type: "Project",
-      icon: FolderKanban,
+      icon: FileImage,
       lastModified: "1 day ago",
       status: "In Progress",
       description: "Cross-platform mobile application development",
@@ -122,7 +164,7 @@ export default function NewTabPage() {
       id: 5,
       title: "TechCorp Solutions",
       type: "Company",
-      icon: Building2,
+      icon: Building,
       lastModified: "1 week ago",
       status: "Active",
       description: "Innovative technology solutions provider",
@@ -133,7 +175,7 @@ export default function NewTabPage() {
       id: 6,
       title: "UI/UX Redesign",
       type: "Project",
-      icon: FolderKanban,
+      icon: FileImage,
       lastModified: "2 days ago",
       status: "Planning",
       description: "Complete user interface redesign project",

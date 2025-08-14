@@ -46,7 +46,11 @@ import {
   RotateCcw,
   BarChart3 as BarChart3Icon,
   PieChart,
-  LineChart
+  LineChart,
+  Filter,
+  Star,
+  UserCheck,
+  UserPlus
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
@@ -381,14 +385,18 @@ const allReports = [
 
 
 export default function ContextSidebar({ 
-  activeTab,
+  activeTab, 
   onOpenTab, 
   onAddDepartments, 
   onAddTeams, 
   onAddSprints, 
   onAddStories, 
   onAddTasks,
-  onOpenCompanyProjects
+  onOpenCompanyProjects,
+  onClose,
+  isMobile,
+  isMobileOpen,
+  onMobileClose
 }: {
   activeTab: number;
   onOpenTab: (tabName: string, context?: any) => void;
@@ -398,6 +406,10 @@ export default function ContextSidebar({
   onAddStories?: () => void;
   onAddTasks?: () => void;
   onOpenCompanyProjects?: (companyName: string) => void;
+  onClose: () => void;
+  isMobile: boolean;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
 }) {
   const [expandedTeams, setExpandedTeams] = useState<number[]>([]);
   const [expandedSprints, setExpandedSprints] = useState<number[]>([]);
@@ -475,20 +487,17 @@ export default function ContextSidebar({
               ...c, 
               sections: { 
                 ...c.sections, 
-                                [parentSection]: {
+                [parentSection]: {
                   ...c.sections[parentSection as keyof typeof c.sections],
                   [nestedSection]: {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    ...(c.sections[parentSection as keyof typeof c.sections] as any)[nestedSection],
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    expanded: !(c.sections[parentSection as keyof typeof c.sections] as any)[nestedSection].expanded
+                    ...c.sections[parentSection as keyof typeof c.sections][nestedSection as keyof typeof c.sections[typeof parentSection]],
+                    expanded: !c.sections[parentSection as keyof typeof c.sections][nestedSection as keyof typeof c.sections[typeof parentSection]].expanded
                   }
-                } 
-              } 
+                }
+              }
             }
           : c
       );
-      console.log('New companies list:', newList);
       return newList;
     });
   };
@@ -530,6 +539,267 @@ export default function ContextSidebar({
     // as the reports are now fetched dynamically.
     console.log('Toggling report:', reportId);
   };
+
+  // Mobile context sidebar
+  if (isMobile) {
+    return (
+      <aside className={`mobile-sidebar mobile-right-0 mobile-left-auto ${isMobileOpen ? 'open' : ''}`}>
+        <div className="mobile-flex mobile-items-center mobile-justify-between p-3 border-b border-neutral-200 flex-shrink-0">
+          <h2 className="mobile-h3">Context</h2>
+          <button 
+            onClick={onMobileClose || onClose}
+            className="mobile-btn mobile-btn-secondary mobile-text-xs"
+          >
+            <X size={14} />
+          </button>
+        </div>
+        
+        <div className="mobile-space-y-3 p-3 flex-1 overflow-y-auto">
+          {/* Dynamic content based on active tab */}
+          {activeTab === 1 && (
+            <div className="mobile-space-y-3">
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Project Filters</h3>
+                <div className="mobile-space-y-2">
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Filter size={12} />
+                    All Projects
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Clock size={12} />
+                    Recent
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Star size={12} />
+                    Favorites
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Categories</h3>
+                <div className="mobile-space-y-2">
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Development</span>
+                    <span className="mobile-text-secondary">12</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Design</span>
+                    <span className="mobile-text-secondary">8</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Marketing</span>
+                    <span className="mobile-text-secondary">5</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 2 && (
+            <div className="mobile-space-y-3">
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Task Filters</h3>
+                <div className="mobile-space-y-2">
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <CheckCircle size={12} />
+                    Completed
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Clock size={12} />
+                    In Progress
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <AlertCircle size={12} />
+                    Overdue
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Priority</h3>
+                <div className="mobile-space-y-2">
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span className="mobile-text-red-600">High</span>
+                    <span className="mobile-text-secondary">3</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span className="mobile-text-yellow-600">Medium</span>
+                    <span className="mobile-text-secondary">7</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span className="mobile-text-green-600">Low</span>
+                    <span className="mobile-text-secondary">4</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 3 && (
+            <div className="mobile-space-y-3">
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Team Filters</h3>
+                <div className="mobile-space-y-2">
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Users size={12} />
+                    All Teams
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <UserCheck size={12} />
+                    Active
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <UserPlus size={12} />
+                    Invite New
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Departments</h3>
+                <div className="mobile-space-y-2">
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Engineering</span>
+                    <span className="mobile-text-secondary">15</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Design</span>
+                    <span className="mobile-text-secondary">8</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Marketing</span>
+                    <span className="mobile-text-secondary">6</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 4 && (
+            <div className="mobile-space-y-3">
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Company Filters</h3>
+                <div className="mobile-space-y-2">
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Building size={12} />
+                    All Companies
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Star size={12} />
+                    Favorites
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <UserPlus size={12} />
+                    Add Company
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Recent Companies</h3>
+                <div className="mobile-space-y-2">
+                  {companiesList.slice(0, 3).map((company, idx) => (
+                    <div key={idx} className="mobile-flex mobile-items-center mobile-gap-2 mobile-p-2 mobile-rounded-lg mobile-bg-neutral-50">
+                      <div className="mobile-w-6 mobile-h-6 mobile-rounded-full mobile-bg-blue-100 mobile-flex mobile-items-center mobile-justify-center">
+                        <span className="mobile-text-xs font-medium text-blue-600">
+                          {company.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div className="mobile-flex-1">
+                        <div className="mobile-text-xs font-medium">{company.name}</div>
+                        <div className="mobile-text-xs mobile-text-secondary">{company.industry}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 5 && (
+            <div className="mobile-space-y-3">
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Calendar Filters</h3>
+                <div className="mobile-space-y-2">
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Calendar size={12} />
+                    All Events
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Clock size={12} />
+                    Today
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <CalendarDays size={12} />
+                    This Week
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Event Types</h3>
+                <div className="mobile-space-y-2">
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Meetings</span>
+                    <span className="mobile-text-secondary">8</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Deadlines</span>
+                    <span className="mobile-text-secondary">3</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Milestones</span>
+                    <span className="mobile-text-secondary">5</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 6 && (
+            <div className="mobile-space-y-3">
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Report Filters</h3>
+                <div className="mobile-space-y-2">
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <BarChart3 size={12} />
+                    Analytics
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <TrendingUp size={12} />
+                    Performance
+                  </button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Download size={12} />
+                    Export
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Quick Stats</h3>
+                <div className="mobile-space-y-2">
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Total Projects</span>
+                    <span className="mobile-text-secondary">24</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Active Tasks</span>
+                    <span className="mobile-text-secondary">156</span>
+                  </div>
+                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs">
+                    <span>Team Members</span>
+                    <span className="mobile-text-secondary">18</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <>

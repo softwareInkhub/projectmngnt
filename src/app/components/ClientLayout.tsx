@@ -1,10 +1,11 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import Sidebar from "./Sidebar";
 import ContextSidebar from "./ContextSidebar";
 import SnapLayoutManager from "./SnapLayoutManager";
 import GridLayoutManager from "./GridLayoutManager";
+import { Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen, CheckCircle, Users, Building, Calendar } from "lucide-react";
 
 interface Project {
   name: string;
@@ -97,6 +98,40 @@ export default function ClientLayout() {
   const [pinnedTabs, setPinnedTabs] = useState<Set<string>>(new Set());
   const [isGridMode, setIsGridMode] = useState(false);
   const [draggedItem, setDraggedItem] = useState<any>(null);
+  
+  // Mobile state
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isMobileContextSidebarOpen, setIsMobileContextSidebarOpen] = useState(false);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close mobile sidebars when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.mobile-sidebar') && !target.closest('.mobile-sidebar-toggle')) {
+        setIsMobileSidebarOpen(false);
+        setIsMobileContextSidebarOpen(false);
+      }
+    };
+
+    if (isMobile) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobile]);
 
   // Map sidebar index to tab type and title
   const sidebarTabMap = [
@@ -295,7 +330,194 @@ export default function ClientLayout() {
   };
   const sidebarActiveTab = sidebarIndexMap[openTabs[activeTabIdx]?.type] ?? 0;
 
-  // Pass these handlers to ContextSidebar
+  // Mobile navigation items
+  const mobileNavItems = [
+    { label: "Dashboard", icon: "📊", type: "dashboard" },
+    { label: "Projects", icon: "📁", type: "projects" },
+    { label: "Tasks", icon: "✅", type: "tasks" },
+    { label: "Teams", icon: "👥", type: "teams" },
+    { label: "Companies", icon: "🏢", type: "companies" },
+    { label: "Calendar", icon: "📅", type: "calendar" },
+    { label: "Reports", icon: "📈", type: "reports" },
+  ];
+
+  // Mobile layout
+  if (isMobile) {
+    return (
+      <div className={`mobile-page ${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
+        {/* Mobile Header */}
+        <header className="mobile-header">
+          <button 
+            onClick={() => {
+              console.log('Hamburger clicked, current state:', isMobileSidebarOpen);
+              setIsMobileSidebarOpen(!isMobileSidebarOpen);
+            }}
+            className="mobile-btn mobile-btn-secondary mobile-text-xs"
+          >
+            <Menu size={16} />
+          </button>
+          <h1 className="mobile-h3 mobile-flex-1 mobile-text-center">
+            {sidebarActiveTab === 0 && "Dashboard"}
+            {sidebarActiveTab === 1 && "All Projects"}
+            {sidebarActiveTab === 2 && "Tasks"}
+            {sidebarActiveTab === 3 && "Teams"}
+            {sidebarActiveTab === 4 && "Companies"}
+            {sidebarActiveTab === 5 && "Calendar"}
+            {sidebarActiveTab === 6 && "Reports"}
+          </h1>
+          <button 
+            onClick={() => {
+              console.log('Context button clicked, current state:', isMobileContextSidebarOpen);
+              setIsMobileContextSidebarOpen(!isMobileContextSidebarOpen);
+            }}
+            className="mobile-btn mobile-btn-secondary mobile-text-xs"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </header>
+
+        {/* Mobile Main Sidebar */}
+        <Sidebar
+          activeTab={sidebarActiveTab}
+          onNavClick={onSidebarNavClick}
+          onToggleGridMode={() => setIsGridMode(!isGridMode)}
+          isGridMode={isGridMode}
+          onDragStart={() => {}}
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
+        />
+
+        {/* Mobile Context Sidebar */}
+        {sidebarActiveTab !== 0 && (
+          <ContextSidebar
+            activeTab={sidebarActiveTab}
+            onOpenTab={(tabName, context) => openTab(tabName, undefined, context)}
+            onAddDepartments={() => {
+              openTab("departments", "Company Departments", { company: "whapi project management" });
+              setIsMobileContextSidebarOpen(false);
+            }}
+            onAddTeams={() => {
+              openTab("company-teams", "Company Teams", { company: "whapi project management" });
+              setIsMobileContextSidebarOpen(false);
+            }}
+            onAddSprints={() => {
+              openTab("sprints", "Company Sprints", { company: "whapi project management" });
+              setIsMobileContextSidebarOpen(false);
+            }}
+            onAddStories={() => {
+              openTab("stories", "Company Stories", { company: "whapi project management" });
+              setIsMobileContextSidebarOpen(false);
+            }}
+            onAddTasks={() => {
+              openTab("company-tasks", "Company Tasks", { company: "whapi project management" });
+              setIsMobileContextSidebarOpen(false);
+            }}
+            onOpenCompanyProjects={onOpenCompanyProjects}
+            onClose={() => setIsMobileContextSidebarOpen(false)}
+            isMobile={true}
+            isMobileOpen={isMobileContextSidebarOpen}
+            onMobileClose={() => setIsMobileContextSidebarOpen(false)}
+          />
+        )}
+
+        {/* Mobile Overlay */}
+        <div 
+          className={`mobile-overlay ${(isMobileSidebarOpen || isMobileContextSidebarOpen) ? 'open' : ''}`}
+          onClick={() => {
+            setIsMobileSidebarOpen(false);
+            setIsMobileContextSidebarOpen(false);
+          }}
+        />
+
+        {/* Mobile Content */}
+        <main className="mobile-content">
+          {openTabs[activeTabIdx] && (() => {
+            const TabComponent = openTabs[activeTabIdx].component;
+            return (
+              <div className="mobile-animate-fade-in">
+                <TabComponent
+                  open={true}
+                  onClose={() => closeTab(activeTabIdx)}
+                  onOpenTab={openTab}
+                  project={openTabs[activeTabIdx].project}
+                  context={openTabs[activeTabIdx].context}
+                />
+              </div>
+            );
+          })()}
+        </main>
+
+        {/* Mobile Tab Bar */}
+        <nav className="mobile-tab-bar">
+          <button 
+            onClick={() => onSidebarNavClick(0)}
+            className={`mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs ${
+              sidebarActiveTab === 0 ? 'mobile-text-primary' : 'mobile-text-secondary'
+            }`}
+          >
+            <BarChart3 size={16} />
+            <span>Dashboard</span>
+          </button>
+          <button 
+            onClick={() => onSidebarNavClick(1)}
+            className={`mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs ${
+              sidebarActiveTab === 1 ? 'mobile-text-primary' : 'mobile-text-secondary'
+            }`}
+          >
+            <FolderOpen size={16} />
+            <span>Projects</span>
+          </button>
+          <button 
+            onClick={() => onSidebarNavClick(2)}
+            className={`mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs ${
+              sidebarActiveTab === 2 ? 'mobile-text-primary' : 'mobile-text-secondary'
+            }`}
+          >
+            <CheckCircle size={16} />
+            <span>Tasks</span>
+          </button>
+          <button 
+            onClick={() => onSidebarNavClick(3)}
+            className={`mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs ${
+              sidebarActiveTab === 3 ? 'mobile-text-primary' : 'mobile-text-secondary'
+            }`}
+          >
+            <Users size={16} />
+            <span>Teams</span>
+          </button>
+          <button 
+            onClick={() => onSidebarNavClick(4)}
+            className={`mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs ${
+              sidebarActiveTab === 4 ? 'mobile-text-primary' : 'mobile-text-secondary'
+            }`}
+          >
+            <Building size={16} />
+            <span>Companies</span>
+          </button>
+          <button 
+            onClick={() => onSidebarNavClick(5)}
+            className={`mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs ${
+              sidebarActiveTab === 5 ? 'mobile-text-primary' : 'mobile-text-secondary'
+            }`}
+          >
+            <Calendar size={16} />
+            <span>Calendar</span>
+          </button>
+          <button 
+            onClick={() => onSidebarNavClick(6)}
+            className={`mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs ${
+              sidebarActiveTab === 6 ? 'mobile-text-primary' : 'mobile-text-secondary'
+            }`}
+          >
+            <BarChart3 size={16} />
+            <span>Reports</span>
+          </button>
+        </nav>
+      </div>
+    );
+  }
+
+  // Desktop layout (existing code)
   return (
     <div className={`flex h-screen w-screen overflow-hidden ${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
       <Sidebar
@@ -305,11 +527,11 @@ export default function ClientLayout() {
         isGridMode={isGridMode}
         onDragStart={handleSidebarDragStart}
       />
-      {/* Show ContextSidebar for all tabs */}
-      {(sidebarActiveTab === 1 || sidebarActiveTab === 2 || sidebarActiveTab === 3 || sidebarActiveTab === 4 || sidebarActiveTab === 5 || sidebarActiveTab === 6) && (
+      {/* Show ContextSidebar for all tabs except Dashboard */}
+      {sidebarActiveTab !== 0 && (
         <ContextSidebar
           activeTab={sidebarActiveTab}
-          onAddProject={() => openTab("company-projects", "Company Projects", { company: "whapi project management" })}
+          onOpenTab={openTab}
           onAddDepartments={() => openTab("departments", "Company Departments", { company: "whapi project management" })}
           onAddTeams={() => openTab("company-teams", "Company Teams", { company: "whapi project management" })}
           onAddSprints={() => openTab("sprints", "Company Sprints", { company: "whapi project management" })}
