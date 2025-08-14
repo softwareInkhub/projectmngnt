@@ -31,10 +31,10 @@ const getApiBaseUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // Use CORS proxy for production to avoid mixed content
+  // For now, use HTTP even in production until HTTPS is configured
   if (process.env.NODE_ENV === 'production') {
-    // Use a CORS proxy to make HTTP requests from HTTPS
-    return 'https://cors-anywhere.herokuapp.com/http://54.85.164.84:5001/crud';
+    // TODO: Configure HTTPS on API server
+    return 'http://54.85.164.84:5001/crud';
   }
   
   return 'http://54.85.164.84:5001/crud';
@@ -57,14 +57,8 @@ export class TaskApiService {
         body: options.body
       });
       
-      // Check if we're in production and using HTTP (which will cause mixed content error)
-      if (typeof window !== 'undefined' && window.location.protocol === 'https:' && url.startsWith('http:')) {
-        console.warn('Mixed content detected: HTTPS page trying to access HTTP API');
-        return {
-          success: false,
-          error: 'Mixed content error: Cannot access HTTP API from HTTPS page. Please configure HTTPS for the API endpoint.',
-        };
-      }
+      // Note: Using HTTP API from HTTPS page will cause mixed content error
+      // This is a temporary solution until HTTPS is configured on the API server
       
       const response = await fetch(url, {
         headers: {
