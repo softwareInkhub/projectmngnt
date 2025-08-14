@@ -1,53 +1,103 @@
-import React, { useState } from "react";
-import { X, ChevronDown, Plus } from "lucide-react";
+"use client";
+import { useState, useEffect } from "react";
+import { X, Plus, Building2 } from "lucide-react";
+import { CompanyApiService, CompanyData } from "../utils/companyApi";
 
 interface CreateProjectModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
-  onCreate?: (project: {
-    name: string;
-    description: string;
-    company: string;
-    status: string;
-    priority: string;
-    startDate: string;
-    endDate: string;
-    budget: string;
-    teamMembers: string[];
-  }) => void;
+  onCreate?: (projectData: any) => void;
 }
 
-const statuses = ["Planning", "Active", "Completed", "On Hold", "Cancelled"];
-const priorities = ["Low", "Medium", "High", "Critical"];
-const availableMembers = ["Alice Johnson", "Bob Smith", "Charlie Davis", "Diana Wilson", "Emma Chen", "Frank Miller"];
-const existingCompanies = ["Whapi Corp", "Inkhub", "Acme Corp", "Globex Inc."];
-
-export default function CreateProjectModal({ open, onClose, onCreate }: CreateProjectModalProps) {
+export default function CreateProjectModal({ isOpen, onClose, onCreate }: CreateProjectModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [company, setCompany] = useState("");
-  const [status, setStatus] = useState(statuses[0]);
-  const [priority, setPriority] = useState(priorities[1]);
+  const [status, setStatus] = useState("Planning");
+  const [priority, setPriority] = useState("Medium");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [budget, setBudget] = useState("");
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
+  const [team, setTeam] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [notes, setNotes] = useState("");
+  
+  // Company dropdown states
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   
   // New company modal states
   const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState("");
   const [newCompanyDescription, setNewCompanyDescription] = useState("");
+  
+  // State for companies from API
+  const [companies, setCompanies] = useState<CompanyData[]>([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
+  const [companiesError, setCompaniesError] = useState<string | null>(null);
 
-  const toggleMember = (member: string) => {
-    setSelectedMembers(prev => 
-      prev.includes(member) 
-        ? prev.filter(m => m !== member) 
-        : [...prev, member]
-    );
+  // Fetch companies from API
+  const fetchCompanies = async () => {
+    try {
+      setIsLoadingCompanies(true);
+      setCompaniesError(null);
+      
+      const response = await CompanyApiService.getCompanies();
+      
+      if (response.success && response.data && response.data.items) {
+        const realCompanies = response.data.items
+          .filter((item: any) => item.name && item.id) // Filter out invalid items
+          .map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            description: item.description || '',
+            type: item.type || '',
+            industry: item.industry || '',
+            status: item.status || 'Active',
+            founded: item.founded || '',
+            employees: item.employees || 0,
+            location: item.location || '',
+            website: item.website || '',
+            email: item.email || '',
+            phone: item.phone || '',
+            revenue: item.revenue || '',
+            tags: item.tags || '',
+            notes: item.notes || '',
+            createdAt: item.createdAt || new Date().toISOString(),
+            updatedAt: item.updatedAt || new Date().toISOString()
+          }));
+        
+        setCompanies(realCompanies);
+        
+        // Set the first company as default if available
+        if (realCompanies.length > 0 && !company) {
+          setCompany(realCompanies[0].name);
+        }
+        
+        console.log('Fetched companies from API:', realCompanies);
+      } else {
+        console.log('No companies found or API error:', response);
+        setCompanies([]);
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      setCompaniesError('Failed to load companies');
+      setCompanies([]);
+    } finally {
+      setIsLoadingCompanies(false);
+    }
   };
+
+  // Load companies on component mount
+  useEffect(() => {
+    if (isOpen) {
+      fetchCompanies();
+    }
+  }, [isOpen]);
+
+  const availableTags = [
+    "Frontend", "Backend", "Mobile", "Web", "API", 
+    "Database", "UI/UX", "Testing", "DevOps", "Security"
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,8 +111,11 @@ export default function CreateProjectModal({ open, onClose, onCreate }: CreatePr
         startDate,
         endDate,
         budget,
-        teamMembers: selectedMembers
+        team,
+        tags,
+        notes
       });
+      onClose();
     }
   };
 
@@ -70,297 +123,294 @@ export default function CreateProjectModal({ open, onClose, onCreate }: CreatePr
     if (newCompanyName.trim()) {
       const newCompany = newCompanyName.trim();
       setCompany(newCompany);
-      // Add the new company to the existing companies list
-      if (!existingCompanies.includes(newCompany)) {
-        existingCompanies.push(newCompany);
-      }
+      setShowNewCompanyModal(false);
       setNewCompanyName("");
       setNewCompanyDescription("");
-      setShowNewCompanyModal(false);
-      setShowCompanyDropdown(false);
     }
   };
 
-  if (!open) return null;
+  const toggleTag = (tag: string) => {
+    setTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs mx-4 relative max-h-[80vh] overflow-y-auto border border-gray-200/50">
-          <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-5 py-3 rounded-t-2xl">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-900">New Project</h2>
-              <button 
-                onClick={onClose} 
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-              >
-                <X size={16} />
-        </button>
-            </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-neutral-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-slate-900">Create New Project</h2>
+            <button
+              onClick={onClose}
+              className="p-1 rounded hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700"
+            >
+              <X size={20} />
+            </button>
           </div>
-        
-          <form className="p-5 space-y-3" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Project Name *</label>
-              <input 
-                value={name} 
-                onChange={e => setName(e.target.value)} 
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50/50 placeholder:text-gray-400 transition-all"
-                placeholder="Enter project name"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
-              <textarea 
-                value={description} 
-                onChange={e => setDescription(e.target.value)} 
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50/50 placeholder:text-gray-400 transition-all resize-none"
-                rows={2}
-                placeholder="Brief description..."
-              />
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Project Name */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Project Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter project name"
+              required
+            />
           </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-gray-700">Company *</label>
+          {/* Company Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Company</label>
+            {isLoadingCompanies ? (
+              <div className="w-full border border-neutral-200 rounded-lg px-3 py-2 bg-neutral-50">
+                Loading companies...
+              </div>
+            ) : companiesError ? (
+              <div className="w-full border border-red-200 rounded-lg px-3 py-2 bg-red-50 text-red-600">
+                {companiesError}
+              </div>
+            ) : (
+              <div className="relative">
+                <select 
+                  value={company} 
+                  onChange={e => setCompany(e.target.value)} 
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select a company</option>
+                  {companies.map((comp) => (
+                    <option key={comp.id} value={comp.name}>
+                      {comp.name}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   onClick={() => setShowNewCompanyModal(true)}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-blue-600 hover:bg-blue-50 rounded"
                 >
-                  <Plus size={12} />
-                  Add New
+                  <Plus size={16} />
                 </button>
               </div>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
-                  className="w-full flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                  <span className={company ? "text-gray-900 text-xs" : "text-gray-400 text-xs"}>
-                    {company || "Select a company"}
-                  </span>
-                  <ChevronDown size={12} className="text-gray-400" />
-                </button>
-                {showCompanyDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-28 overflow-y-auto">
-                    {existingCompanies.map((companyOption) => (
-                      <button
-                        key={companyOption}
-                        type="button"
-                        onClick={() => {
-                          setCompany(companyOption);
-                          setShowCompanyDropdown(false);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors"
-                      >
-                        {companyOption}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            )}
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              rows={3}
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Describe the project goals, scope, and key deliverables..."
+            />
+          </div>
+
+          {/* Status and Priority */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <select 
+                value={status} 
+                onChange={e => setStatus(e.target.value)} 
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Planning">Planning</option>
+                <option value="Active">Active</option>
+                <option value="On Hold">On Hold</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
             <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                    className="w-full flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                    <span className="text-gray-900 text-xs">{status}</span>
-                    <ChevronDown size={12} className="text-gray-400" />
-                </button>
-                {showStatusDropdown && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-28 overflow-y-auto">
-                    {statuses.map((statusOption) => (
-                      <button
-                        key={statusOption}
-                        type="button"
-                        onClick={() => {
-                          setStatus(statusOption);
-                          setShowStatusDropdown(false);
-                        }}
-                          className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors"
-                      >
-                        {statusOption}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <label className="block text-sm font-medium mb-1">Priority</label>
+              <select 
+                value={priority} 
+                onChange={e => setPriority(e.target.value)} 
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
             </div>
           </div>
 
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowPriorityDropdown(!showPriorityDropdown)}
-                    className="w-full flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                    <span className="text-gray-900 text-xs">{priority}</span>
-                    <ChevronDown size={12} className="text-gray-400" />
-                </button>
-                {showPriorityDropdown && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-28 overflow-y-auto">
-                    {priorities.map((priorityOption) => (
-                      <button
-                        key={priorityOption}
-                        type="button"
-                        onClick={() => {
-                          setPriority(priorityOption);
-                          setShowPriorityDropdown(false);
-                        }}
-                          className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors"
-                      >
-                        {priorityOption}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-            <div className="grid grid-cols-2 gap-2">
-            <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
-              <input 
-                type="date"
-                value={startDate} 
-                onChange={e => setStartDate(e.target.value)} 
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50/50 transition-all"
-              />
-            </div>
-            
-            <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
-              <input 
-                type="date"
-                value={endDate} 
-                onChange={e => setEndDate(e.target.value)} 
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50/50 transition-all"
-              />
-            </div>
-          </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Budget</label>
+              <label className="block text-sm font-medium mb-1">Start Date</label>
               <input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">End Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Budget and Team */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Budget</label>
+              <input
+                type="text"
                 value={budget}
                 onChange={e => setBudget(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50/50 placeholder:text-gray-400 transition-all"
-                placeholder="$50,000"
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., $50,000"
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium mb-1">Team</label>
+              <input
+                type="text"
+                value={team}
+                onChange={e => setTeam(e.target.value)}
+                className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter team name"
+              />
+            </div>
+          </div>
+
+          {/* Tags */}
           <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5">Team Members</label>
-              <div className="flex flex-wrap gap-1">
-              {availableMembers.map(member => (
+            <label className="block text-sm font-medium mb-2">Tags</label>
+            <div className="flex flex-wrap gap-2">
+              {availableTags.map(tag => (
                 <button
-                  key={member}
+                  key={tag}
                   type="button"
-                  onClick={() => toggleMember(member)}
-                    className={`px-2 py-1 rounded-md border text-xs font-medium transition-all ${
-                    selectedMembers.includes(member) 
-                        ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
-                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:border-gray-300'
+                  onClick={() => toggleTag(tag)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    tags.includes(tag)
+                      ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                      : 'bg-neutral-100 text-neutral-600 border border-neutral-200 hover:bg-neutral-200'
                   }`}
                 >
-                  {member}
+                  {tag}
                 </button>
               ))}
             </div>
           </div>
 
-            <div className="flex gap-2 pt-3">
-            <button 
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Notes</label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              rows={2}
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Additional notes or comments..."
+            />
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
               type="button"
               onClick={onClose}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
-                disabled={!name || !company}
-                className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            <button
+              type="submit"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-                Create
+              Create Project
             </button>
           </div>
         </form>
-      </div>
-    </div>
 
-      {/* New Company Modal */}
-      {showNewCompanyModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 relative border border-gray-200/50">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-gray-900">Add New Company</h3>
-                <button 
-                  onClick={() => setShowNewCompanyModal(false)} 
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-5 space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Company Name *</label>
-                <input
-                  value={newCompanyName}
-                  onChange={e => setNewCompanyName(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50/50 placeholder:text-gray-400 transition-all"
-                  placeholder="Enter company name"
-                  required
-                />
+        {/* New Company Modal */}
+        {showNewCompanyModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+              <div className="p-6 border-b border-neutral-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-slate-900">Create New Company</h3>
+                  <button
+                    onClick={() => setShowNewCompanyModal(false)}
+                    className="p-1 rounded hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={newCompanyDescription}
-                  onChange={e => setNewCompanyDescription(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50/50 placeholder:text-gray-400 transition-all resize-none"
-                  rows={2}
-                  placeholder="Brief company description..."
-                />
-              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Company Name</label>
+                  <input
+                    type="text"
+                    value={newCompanyName}
+                    onChange={e => setNewCompanyName(e.target.value)}
+                    className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter company name"
+                    required
+                  />
+                </div>
 
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowNewCompanyModal(false)}
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreateNewCompany}
-                  disabled={!newCompanyName.trim()}
-                  className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                >
-                  Add Company
-                </button>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <textarea
+                    value={newCompanyDescription}
+                    onChange={e => setNewCompanyDescription(e.target.value)}
+                    rows={3}
+                    className="w-full border border-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter company description"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewCompanyModal(false)}
+                    className="px-4 py-2 border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateNewCompany}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Create Company
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </>
+        )}
+      </div>
+    </div>
   );
 } 

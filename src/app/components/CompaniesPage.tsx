@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Building2, Building, ChevronRight, ChevronDown, Plus, Users, User, FolderKanban, Calendar, BarChart3, Settings, Search, MoreHorizontal, TrendingUp, Clock, CheckCircle, Mail, Phone, MapPin, Globe, Edit, Eye, Download, BookOpen, CheckSquare, Star, FilterX, Grid3X3, List, Heart, ExternalLink, GitCommit, DollarSign, UserCheck, Timer, Flag, Layers, Zap, SortAsc, Square, Play, Pause, StopCircle, RotateCcw, LineChart, Crown, Shield, Trophy, Medal, Users2, UserX, UserCheck2, UserMinus, UserPlus2, Briefcase, Video, MessageSquare, AlertCircle, Info, Award, Paperclip, FileText, BarChart, PieChart, ScatterChart, AreaChart, Gauge, Target, TrendingDown, Activity, Filter, Share2, Archive, Copy, Trash2, ArrowUpRight, ArrowDownRight, Minus, X, Save, ArrowLeft, Tag, AlertCircle as AlertCircleIcon, Calendar as CalendarIcon, Target as TargetIcon, MessageSquare as MessageSquareIcon, CheckSquare as CheckSquareIcon, UserPlus, FileText as FileTextIcon, Bell, Star as StarIcon, Eye as EyeIcon, Share2 as Share2Icon, Download as DownloadIcon, FilterX as FilterXIcon, Grid3X3 as Grid3X3Icon, List as ListIcon, Heart as HeartIcon, ExternalLink as ExternalLinkIcon, GitCommit as GitCommitIcon, DollarSign as DollarSignIcon, UserCheck as UserCheckIcon, Timer as TimerIcon, Flag as FlagIcon, Layers as LayersIcon, Zap as ZapIcon, TrendingDown as TrendingDownIcon, SortAsc as SortAscIcon, Square as SquareIcon, Play as PlayIcon, Pause as PauseIcon, StopCircle as StopCircleIcon, RotateCcw as RotateCcwIcon, LineChart as LineChartIcon, Crown as CrownIcon, Shield as ShieldIcon, Trophy as TrophyIcon, Medal as MedalIcon, Users2 as Users2Icon, UserX as UserXIcon, UserCheck2 as UserCheck2Icon, UserMinus as UserMinusIcon, UserPlus2 as UserPlus2Icon, Briefcase as BriefcaseIcon, Video as VideoIcon, MessageSquare as MessageSquareIcon2, AlertCircle as AlertCircleIcon2, Info as InfoIcon, Award as AwardIcon, Paperclip as PaperclipIcon, FileText as FileTextIcon2, BarChart as BarChartIcon, PieChart as PieChartIcon, ScatterChart as ScatterChartIcon, AreaChart as AreaChartIcon, Gauge as GaugeIcon, Target as TargetIcon2, TrendingDown as TrendingDownIcon2, Activity as ActivityIcon, Filter as FilterIcon, Share2 as Share2Icon2, Archive as ArchiveIcon, Copy as CopyIcon, Trash2 as Trash2Icon, ArrowUpRight as ArrowUpRightIcon, ArrowDownRight as ArrowDownRightIcon, Minus as MinusIcon
 } from "lucide-react";
+import { CompanyApiService, CompanyData } from "../utils/companyApi";
 
 const companyTypes = [
   "Technology",
@@ -47,233 +48,134 @@ export default function CompaniesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    type: companyTypes[0],
-    industry: industries[0],
-    status: "Active",
-    founded: "",
-    employees: "",
-    location: "",
-    website: "",
-    email: "",
-    phone: "",
-    revenue: "",
-    priority: priorities[1],
-    tags: [] as string[],
-    notes: ""
-  });
+
 
   const availableTags = [
     "AI", "Enterprise", "SaaS", "Cloud", "Startup", 
     "Innovation", "Research", "Consulting", "Manufacturing", "Healthcare"
   ];
 
-  const [companies, setCompanies] = useState([
-    {
-      id: 1,
-      name: "Whapi Project Management",
-      description: "Leading project management solutions for enterprise teams with AI-powered insights and advanced collaboration features",
-      status: "Active",
-      type: "Technology",
-      industry: "Software Development",
-      founded: "2020",
-      employees: 150,
-      location: "San Francisco, CA",
-      website: "https://whapi.com",
-      email: "contact@whapi.com",
-      phone: "+1 (555) 123-4567",
-      totalProjects: 12,
-      activeProjects: 8,
-      completedProjects: 4,
-      totalTeams: 6,
-      members: 89,
-      revenue: "$2.5M",
-      growth: "+15%",
-      lastActivity: "2 hours ago",
-      tags: ["AI", "Enterprise", "SaaS", "Cloud"],
-      archived: false,
-      priority: "High",
-      health: "Excellent",
-      velocity: 85,
-      satisfaction: 94,
-      engagement: 92,
-      retention: 88,
-      projects: [
-        {
-          id: 1,
-          name: "Whapi Project Management Platform",
-          status: "Active",
-          progress: 75,
-          team: "Core Development",
-          deadline: "2024-06-30",
-          priority: "High",
-          budget: "$500K",
-          manager: "Sarah Johnson",
-          description: "Enterprise-grade project management platform with advanced analytics and team collaboration features",
-          health: "Good",
-          velocity: 78,
-          tasks: 45,
-          completedTasks: 34,
-          archived: false,
-          subprojects: [
-            {
-              id: 1,
-              name: "User Authentication Module",
-              status: "Completed",
-              progress: 100,
-              team: "Core Development",
-              deadline: "2024-03-15",
-              priority: "High",
-              budget: "$80K",
-              manager: "David Kim",
-              health: "Excellent",
-              velocity: 95,
-              totalTasks: 12,
-              completedTasks: 12,
-              archived: false,
-              taskList: [
-                {
-                  id: 1,
-                  name: "OAuth Integration",
-                  status: "Completed",
-                  assignee: "Mike Chen",
-                  timeSpent: "40h",
-                  timeEstimate: "35h",
-                  priority: "High"
-                },
-                {
-                  id: 2,
-                  name: "Password Reset Flow",
-                  status: "Completed",
-                  assignee: "Alex Rodriguez",
-                  timeSpent: "25h",
-                  timeEstimate: "30h",
-                  priority: "Medium"
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      teams: [
-        {
-          id: 1,
-          name: "Core Development",
-          members: 12,
-          lead: "Sarah Johnson",
-          status: "Active",
-          performance: 92,
-          velocity: 85,
-          projects: 3,
-          lastActivity: "1 hour ago"
-        }
-      ],
-      departments: [
-        {
-          id: 1,
-          name: "Engineering",
-          employees: 45,
-          manager: "David Kim",
-          status: "Active",
-          budget: "$1.2M",
-          projects: 8
-        }
-      ],
-      sprints: [
-        {
-          id: 1,
-          name: "Sprint 24",
-          status: "Active",
-          startDate: "2024-02-01",
-          endDate: "2024-02-14",
-          progress: 65,
-          tasks: 24,
-          completedTasks: 16,
-          team: "Core Development"
-            }
-          ]
-        },
-        {
-          id: 2,
-      name: "TechCorp Solutions",
-      description: "Innovative technology solutions for modern businesses with focus on digital transformation",
-      status: "Active",
-      type: "Technology",
-      industry: "IT Services",
-      founded: "2018",
-      employees: 85,
-      location: "Austin, TX",
-      website: "https://techcorp.com",
-      email: "info@techcorp.com",
-      phone: "+1 (555) 987-6543",
-      totalProjects: 8,
-      activeProjects: 5,
-      completedProjects: 3,
-      totalTeams: 4,
-      members: 52,
-      revenue: "$1.8M",
-      growth: "+12%",
-      lastActivity: "4 hours ago",
-      tags: ["Digital", "Cloud", "Consulting"],
-      archived: false,
-      priority: "Medium",
-      health: "Good",
-      velocity: 72,
-      satisfaction: 87,
-      engagement: 89,
-      retention: 85,
-      projects: [],
-      teams: [],
-      departments: [],
-      sprints: []
-    },
-    {
-      id: 3,
-      name: "InnovateLab",
-      description: "Research and development company specializing in cutting-edge technologies and innovation",
-      status: "Active",
-      type: "Research",
-      industry: "R&D",
-      founded: "2021",
-      employees: 65,
-      location: "Boston, MA",
-      website: "https://innovatelab.com",
-      email: "hello@innovatelab.com",
-      phone: "+1 (555) 456-7890",
-      totalProjects: 15,
-      activeProjects: 10,
-      completedProjects: 5,
-      totalTeams: 5,
-      members: 38,
-      revenue: "$3.2M",
-      growth: "+25%",
-      lastActivity: "30 minutes ago",
-      tags: ["Research", "Innovation", "AI"],
-      archived: false,
-      priority: "High",
-      health: "Excellent",
-      velocity: 91,
-      satisfaction: 96,
-      engagement: 94,
-      retention: 92,
-      projects: [],
-      teams: [],
-      departments: [],
-      sprints: []
+    const [companies, setCompanies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [formData, setFormData] = useState<Partial<CompanyData>>({
+    name: "",
+    description: "",
+    type: companyTypes[0],
+    industry: industries[0],
+    status: "Active",
+    founded: "",
+    employees: 0,
+    location: "",
+    website: "",
+    email: "",
+    phone: "",
+    revenue: "",
+    priority: priorities[1],
+    tags: [],
+    notes: ""
+  });
+
+  // API Integration
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  const fetchCompanies = async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching companies...');
+      const response = await CompanyApiService.getCompanies();
+      console.log('API Response:', response);
+      
+      if (response.success && response.data) {
+        console.log('Companies data:', response.data);
+        setCompanies(response.data);
+      } else {
+        console.error('Failed to fetch companies:', response.error);
+        // Fallback to empty array
+        setCompanies([]);
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      setCompanies([]);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  const handleCreateCompany = async (companyData: CompanyData) => {
+    try {
+      // Add default values for missing fields
+      const enrichedCompanyData = {
+        ...companyData,
+        totalProjects: 0,
+        totalTeams: 0,
+        members: 0,
+        satisfaction: 85,
+        growth: "+12%",
+        lastActivity: "Just now",
+        archived: false
+      };
+
+      const response = await CompanyApiService.createCompany(enrichedCompanyData);
+      if (response.success) {
+        // Refresh the companies list
+        await fetchCompanies();
+        setShowCreateForm(false);
+        // Reset form
+        setFormData({
+          name: "",
+          description: "",
+          type: companyTypes[0],
+          industry: industries[0],
+          status: "Active",
+          founded: "",
+          employees: 0,
+          location: "",
+          website: "",
+          email: "",
+          phone: "",
+          revenue: "",
+          priority: priorities[1],
+          tags: [],
+          notes: ""
+        });
+      } else {
+        console.error('Failed to create company:', response.error);
+        alert('Failed to create company: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error creating company:', error);
+      alert('Error creating company: ' + error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleCreateCompany(formData as CompanyData);
+  };
+
+  const toggleTag = (tag: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags?.includes(tag)
+        ? prev.tags.filter(t => t !== tag)
+        : [...(prev.tags || []), tag]
+    }));
+  };
 
   const analytics = {
-    totalCompanies: companies.length,
-    activeCompanies: companies.filter(c => c.status === "Active").length,
-    totalProjects: companies.reduce((sum, c) => sum + c.totalProjects, 0),
-    totalTeams: companies.reduce((sum, c) => sum + c.totalTeams, 0),
-    totalMembers: companies.reduce((sum, c) => sum + c.members, 0),
+    totalCompanies: Array.isArray(companies) ? companies.length : 0,
+    activeCompanies: Array.isArray(companies) ? companies.filter(c => c.status === "Active").length : 0,
+    totalProjects: Array.isArray(companies) ? companies.reduce((sum, c) => sum + (c.totalProjects || 0), 0) : 0,
+    totalTeams: Array.isArray(companies) ? companies.reduce((sum, c) => sum + (c.totalTeams || 0), 0) : 0,
+    totalMembers: Array.isArray(companies) ? companies.reduce((sum, c) => sum + (c.members || 0), 0) : 0,
     avgRevenue: "$2.5M",
     avgGrowth: "+17%",
-    avgSatisfaction: Math.round(companies.reduce((sum, c) => sum + c.satisfaction, 0) / companies.length)
+    avgSatisfaction: Array.isArray(companies) && companies.length > 0 
+      ? Math.round(companies.reduce((sum, c) => sum + (c.satisfaction || 0), 0) / companies.length)
+      : 0
   };
 
   const deleteCompany = (companyId: number) => {
@@ -323,7 +225,7 @@ Members: ${company.members}
   const deleteProject = (companyId: number, projectId: number) => {
     setCompanies(companies.map(company => 
       company.id === companyId 
-        ? { ...company, projects: company.projects.filter(p => p.id !== projectId) }
+        ? { ...company, projects: company.projects?.filter((p: any) => p.id !== projectId) || [] }
         : company
     ));
   };
@@ -333,9 +235,9 @@ Members: ${company.members}
       company.id === companyId 
         ? { 
             ...company, 
-            projects: company.projects.map(p => 
+            projects: company.projects?.map((p: any) => 
               p.id === projectId ? { ...p, archived: !p.archived } : p
-            )
+            ) || []
           }
         : company
     ));
@@ -401,21 +303,33 @@ Members: ${company.members}
     setStatusFilter("All");
   };
 
-  const filteredCompanies = companies.filter(company => {
+  const filteredCompanies = Array.isArray(companies) ? companies.filter(company => {
     const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         company.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         company.industry.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         company.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (company.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (company.industry || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (company.tags || []).some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesType = typeFilter === "All" || company.type === typeFilter;
     const matchesStatus = statusFilter === "All" || company.status === statusFilter;
     
     return matchesSearch && matchesType && matchesStatus;
-  });
+  }) : [];
 
-  const selectedCompanyData = companies.find(c => c.id === selectedCompany);
+  const selectedCompanyData = Array.isArray(companies) ? companies.find(c => c.id === selectedCompany) : undefined;
 
-  const renderOverview = () => (
-    <div className="space-y-6">
+  const renderOverview = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading companies...</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
       {/* Enhanced Analytics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
         <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
@@ -697,79 +611,9 @@ Members: ${company.members}
               )}
     </div>
   );
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Creating company:", formData);
-    
-    // Create new company object
-    const newCompany = {
-      id: Date.now(), // Generate unique ID
-      name: formData.name,
-      description: formData.description,
-      status: formData.status,
-      type: formData.type,
-      industry: formData.industry,
-      founded: formData.founded,
-      employees: formData.employees ? parseInt(formData.employees) : 0,
-      location: formData.location,
-      website: formData.website,
-      email: formData.email,
-      phone: formData.phone,
-      revenue: formData.revenue,
-      growth: "+0%",
-      lastActivity: "Just now",
-      tags: formData.tags,
-      archived: false,
-      priority: formData.priority,
-      health: "good",
-      velocity: 0,
-      satisfaction: 0,
-      engagement: 0,
-      retention: 0,
-      totalProjects: 0,
-      activeProjects: 0,
-      completedProjects: 0,
-      totalTeams: 0,
-      members: 0,
-      projects: [],
-      teams: [],
-      departments: [],
-      sprints: []
-    };
-
-    // Add the new company to the companies array
-    setCompanies(prevCompanies => [newCompany, ...prevCompanies]);
-    
-    // Reset form and hide it
-    setShowCreateForm(false);
-    setFormData({
-      name: "",
-      description: "",
-      type: companyTypes[0],
-      industry: industries[0],
-      status: "Active",
-      founded: "",
-      employees: "",
-      location: "",
-      website: "",
-      email: "",
-      phone: "",
-      revenue: "",
-      priority: priorities[1],
-      tags: [],
-      notes: ""
-    });
   };
 
-  const toggleTag = (tag: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.includes(tag) 
-        ? prev.tags.filter(t => t !== tag)
-        : [...prev.tags, tag]
-    }));
-  };
+
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
@@ -788,19 +632,19 @@ Members: ${company.members}
             <Download size={16} />
             Export All
           </button>
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring"
-          >
-            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
-            {showCreateForm ? 'Cancel' : 'New Company'}
-          </button>
+                     <button
+             onClick={() => setShowCreateForm(true)}
+             className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring"
+           >
+             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
+             New Company
+           </button>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Company Creation Form */}
-        {showCreateForm && (
+                 {/* Company Creation Form */}
+         {showCreateForm && (
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 animate-fade-in">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
@@ -954,13 +798,13 @@ Members: ${company.members}
                       Number of Employees
                     </label>
                     <div className="relative">
-                      <input
-                        type="number"
-                        value={formData.employees}
-                        onChange={(e) => setFormData(prev => ({ ...prev, employees: e.target.value }))}
-                        placeholder="e.g., 150"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
+                                             <input
+                         type="number"
+                         value={formData.employees}
+                         onChange={(e) => setFormData(prev => ({ ...prev, employees: parseInt(e.target.value) || 0 }))}
+                         placeholder="e.g., 150"
+                         className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       />
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <Users className="w-4 h-4 text-slate-400" />
                       </div>
@@ -1086,11 +930,11 @@ Members: ${company.members}
                       key={tag}
                       type="button"
                       onClick={() => toggleTag(tag)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                        formData.tags.includes(tag)
-                          ? "bg-blue-100 text-blue-700 border border-blue-200"
-                          : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200"
-                      }`}
+                                             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                         formData.tags?.includes(tag)
+                           ? "bg-blue-100 text-blue-700 border border-blue-200"
+                           : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200"
+                       }`}
                     >
                       {tag}
                     </button>
@@ -1306,6 +1150,8 @@ Members: ${company.members}
         {view === "departments" && <div className="text-center py-12 text-slate-600">Departments view coming soon...</div>}
         {view === "sprints" && <div className="text-center py-12 text-slate-600">Sprints view coming soon...</div>}
       </div>
+
+      
     </div>
   );
 } 

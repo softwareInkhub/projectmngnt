@@ -339,7 +339,8 @@ export default function DepartmentsPage({ open, onClose, onOpenTab }: {
   };
 
   const availableMembers = ["Alice Johnson", "Bob Smith", "Charlie Davis", "Diana Wilson", "Emma Chen", "Frank Miller", "Grace Lee", "Henry Brown"];
-  const companies = ["Whapi Corp", "Inkhub", "Acme Corp", "Globex Inc."];
+  // Companies will be fetched from API
+const companies: string[] = [];
   const locations = ["New York", "San Francisco", "London", "Berlin", "Tokyo", "Remote"];
   const managers = ["Alice Johnson", "Bob Smith", "Charlie Davis", "Diana Wilson", "Emma Chen"];
 

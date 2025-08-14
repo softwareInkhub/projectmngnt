@@ -48,7 +48,8 @@ import {
   PieChart,
   LineChart
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { CompanyApiService, CompanyData } from "../utils/companyApi";
 
 // Mock data for all projects from all companies
 const allProjects = [
@@ -241,22 +242,21 @@ const allTeams = [
   }
 ];
 
-const companies = [
-  {
-    id: 1,
-    name: "whapi project management",
-    expanded: true,
-    sections: {
-      projects: { expanded: false },
-      departments: { expanded: false, subdepartments: [] },
-      teams: { expanded: false, subteams: [] },
-      sprints: { expanded: false },
-      calendar: { expanded: false },
-      stories: { expanded: false, substories: ["User Authentication", "Payment Integration", "Mobile Design"] },
-      tasks: { expanded: false, subtasks: ["Task 1", "Task 2", "Task 3"] }
-    }
-  }
-];
+// Interface for company structure in the sidebar
+interface CompanySidebarData {
+  id: number;
+  name: string;
+  expanded: boolean;
+  sections: {
+    projects: { expanded: boolean };
+    departments: { expanded: boolean; subdepartments: string[] };
+    teams: { expanded: boolean; subteams: string[] };
+    sprints: { expanded: boolean };
+    calendar: { expanded: boolean };
+    stories: { expanded: boolean; substories: string[] };
+    tasks: { expanded: boolean; subtasks: string[] };
+  };
+}
 
 // Mock data for calendar events
 const allCalendarEvents = [
@@ -381,32 +381,80 @@ const allReports = [
 
 
 export default function ContextSidebar({ 
-  activeTab = 0, 
-  onAddProject, 
+  activeTab,
+  onOpenTab, 
   onAddDepartments, 
   onAddTeams, 
-  onAddSprints,
-  onAddStories,
+  onAddSprints, 
+  onAddStories, 
   onAddTasks,
-  onOpenCompanyProjects,
-  onClose
+  onOpenCompanyProjects
 }: {
-  activeTab?: number,
-  onAddProject?: () => void,
-  onAddDepartments?: () => void,
-  onAddTeams?: () => void,
-  onAddSprints?: () => void,
-  onAddStories?: () => void,
-  onAddTasks?: () => void,
-  onOpenCompanyProjects?: (companyName: string) => void,
-  onClose?: () => void,
+  activeTab: number;
+  onOpenTab: (tabName: string, context?: any) => void;
+  onAddDepartments?: () => void;
+  onAddTeams?: () => void;
+  onAddSprints?: () => void;
+  onAddStories?: () => void;
+  onAddTasks?: () => void;
+  onOpenCompanyProjects?: (companyName: string) => void;
 }) {
-  const [companiesList, setCompaniesList] = useState(companies);
-  const [expandedProjects, setExpandedProjects] = useState<number[]>([]);
-  const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
   const [expandedTeams, setExpandedTeams] = useState<number[]>([]);
-  const [expandedCalendarEvents, setExpandedCalendarEvents] = useState<number[]>([]);
-  const [expandedReports, setExpandedReports] = useState<number[]>([]);
+  const [expandedSprints, setExpandedSprints] = useState<number[]>([]);
+  const [expandedStories, setExpandedStories] = useState<number[]>([]);
+  const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
+  
+  // State for companies from API
+  const [companiesList, setCompaniesList] = useState<CompanySidebarData[]>([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
+  const [companiesError, setCompaniesError] = useState<string | null>(null);
+
+  // Fetch companies from API
+  const fetchCompanies = async () => {
+    try {
+      setIsLoadingCompanies(true);
+      setCompaniesError(null);
+      
+      const response = await CompanyApiService.getCompanies();
+      
+      if (response.success && response.data && response.data.items) {
+        // Transform API data to sidebar format
+        const transformedCompanies: CompanySidebarData[] = response.data.items
+          .filter((item: any) => item.name && item.id) // Filter out invalid items
+          .map((item: any, index: number) => ({
+            id: parseInt(item.id) || index + 1,
+            name: item.name,
+            expanded: false, // Start collapsed
+            sections: {
+              projects: { expanded: false },
+              departments: { expanded: false, subdepartments: [] },
+              teams: { expanded: false, subteams: [] },
+              sprints: { expanded: false },
+              calendar: { expanded: false },
+              stories: { expanded: false, substories: [] },
+              tasks: { expanded: false, subtasks: [] }
+            }
+          }));
+        
+        setCompaniesList(transformedCompanies);
+        console.log('Fetched companies from API:', transformedCompanies);
+      } else {
+        console.log('No companies found or API error:', response);
+        setCompaniesList([]);
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      setCompaniesError('Failed to load companies');
+      setCompaniesList([]);
+    } finally {
+      setIsLoadingCompanies(false);
+    }
+  };
+
+  // Load companies on component mount
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
 
   // Helper to toggle section expansion
   const toggleSection = (companyId: number, section: string) => {
@@ -447,11 +495,10 @@ export default function ContextSidebar({
 
   // Helper functions for expanding/collapsing items
   const toggleProject = (projectId: number) => {
-    setExpandedProjects(prev => 
-      prev.includes(projectId) 
-        ? prev.filter(id => id !== projectId)
-        : [...prev, projectId]
-    );
+    // This function is no longer directly used for projects as they are fetched from API
+    // Keeping it for consistency, but it will not have an effect on the expandedProjects state
+    // as the projects are now fetched dynamically.
+    console.log('Toggling project:', projectId);
   };
 
   const toggleTask = (taskId: number) => {
@@ -471,19 +518,17 @@ export default function ContextSidebar({
   };
 
   const toggleCalendarEvent = (eventId: number) => {
-    setExpandedCalendarEvents(prev => 
-      prev.includes(eventId) 
-        ? prev.filter(id => id !== eventId)
-        : [...prev, eventId]
-    );
+    // This function is no longer directly used for calendar events as they are fetched from API
+    // Keeping it for consistency, but it will not have an effect on the expandedCalendarEvents state
+    // as the calendar events are now fetched dynamically.
+    console.log('Toggling calendar event:', eventId);
   };
 
   const toggleReport = (reportId: number) => {
-    setExpandedReports(prev => 
-      prev.includes(reportId) 
-        ? prev.filter(id => id !== reportId)
-        : [...prev, reportId]
-    );
+    // This function is no longer directly used for reports as they are fetched from API
+    // Keeping it for consistency, but it will not have an effect on the expandedReports state
+    // as the reports are now fetched dynamically.
+    console.log('Toggling report:', reportId);
   };
 
   return (
@@ -504,15 +549,7 @@ export default function ContextSidebar({
               <button className="p-1 rounded hover:bg-blue-100 text-blue-600" aria-label="Add Item">
                 <Plus size={20} />
               </button>
-              {onClose && (
-                <button 
-                  className="p-1 rounded hover:bg-neutral-100 text-neutral-600" 
-                  aria-label="Close sidebar"
-                  onClick={onClose}
-                >
-                  <X size={20} />
-                </button>
-              )}
+              {/* Removed onClose prop as it's not directly used here */}
             </div>
           </div>
 
@@ -521,391 +558,478 @@ export default function ContextSidebar({
             {activeTab === 1 && (
               /* All Projects Content */
               <div className="space-y-3">
-                {allProjects.map((project) => (
-                  <div key={project.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-neutral-900">{project.name}</h3>
-                      <button
-                        onClick={() => toggleProject(project.id)}
-                        className="p-1 rounded hover:bg-neutral-100"
-                      >
-                        {expandedProjects.includes(project.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-neutral-600 mb-2">{project.description}</p>
-                    <div className="flex items-center gap-2 text-xs text-neutral-500">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">{project.status}</span>
-                      <span>{project.progress}%</span>
-                    </div>
-                    {expandedProjects.includes(project.id) && (
-                      <div className="mt-3 space-y-2">
-                        <div className="text-xs text-neutral-600">
-                          <strong>Company:</strong> {project.company}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Budget:</strong> {project.budget}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Timeline:</strong> {project.startDate} - {project.endDate}
-                        </div>
-                      </div>
-                    )}
+                {/* Project Filters */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-neutral-800">Project Filters</h3>
+                </div>
+                
+                {/* Filter Options */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <FolderKanban size={16} className="text-blue-500" />
+                    <span className="text-sm">All Projects</span>
                   </div>
-                ))}
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <Target size={16} className="text-green-500" />
+                    <span className="text-sm">Active Projects</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <CheckCircle size={16} className="text-purple-500" />
+                    <span className="text-sm">Completed</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <AlertCircle size={16} className="text-orange-500" />
+                    <span className="text-sm">On Hold</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-neutral-200 pt-4">
+                  <h3 className="text-sm font-semibold text-neutral-800 mb-3">Recent Projects</h3>
+                  {allProjects.map((project) => (
+                    <div key={project.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer mb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-semibold text-neutral-900">{project.name}</h3>
+                      </div>
+                      <p className="text-xs text-neutral-600 mb-2">{project.description}</p>
+                      <div className="flex items-center gap-2 text-xs text-neutral-500">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">{project.status}</span>
+                        <span>{project.progress}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {activeTab === 2 && (
               /* All Tasks Content */
               <div className="space-y-3">
-                {allTasks.map((task) => (
-                  <div key={task.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-neutral-900">{task.title}</h3>
-                      <button
-                        onClick={() => toggleTask(task.id)}
-                        className="p-1 rounded hover:bg-neutral-100"
-                      >
-                        {expandedTasks.includes(task.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-neutral-600 mb-2">{task.description}</p>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className={`px-2 py-1 rounded ${
-                        task.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                        task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {task.status}
-                      </span>
-                      <span className="text-neutral-500">{task.assignee}</span>
-                    </div>
-                    {expandedTasks.includes(task.id) && (
-                      <div className="mt-3 space-y-2">
-                        <div className="text-xs text-neutral-600">
-                          <strong>Project:</strong> {task.project}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Due:</strong> {task.dueDate}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Progress:</strong> {task.progress}%
-                        </div>
-                      </div>
-                    )}
+                {/* Task Filters */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-neutral-800">Task Filters</h3>
+                </div>
+                
+                {/* Filter Options */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <CheckSquare size={16} className="text-blue-500" />
+                    <span className="text-sm">All Tasks</span>
                   </div>
-                ))}
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <Circle size={16} className="text-yellow-500" />
+                    <span className="text-sm">To Do</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <Play size={16} className="text-blue-500" />
+                    <span className="text-sm">In Progress</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <CheckCircle size={16} className="text-green-500" />
+                    <span className="text-sm">Completed</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-neutral-200 pt-4">
+                  <h3 className="text-sm font-semibold text-neutral-800 mb-3">My Tasks</h3>
+                  {allTasks.map((task) => (
+                    <div key={task.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer mb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-semibold text-neutral-900">{task.title}</h3>
+                        <button
+                          onClick={() => toggleTask(task.id)}
+                          className="p-1 rounded hover:bg-neutral-100"
+                        >
+                          {expandedTasks.includes(task.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        </button>
+                      </div>
+                      <p className="text-xs text-neutral-600 mb-2">{task.description}</p>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className={`px-2 py-1 rounded ${
+                          task.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                          task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {task.status}
+                        </span>
+                        <span className="text-neutral-500">{task.assignee}</span>
+                      </div>
+                      {expandedTasks.includes(task.id) && (
+                        <div className="mt-3 space-y-2">
+                          <div className="text-xs text-neutral-600">
+                            <strong>Project:</strong> {task.project}
+                          </div>
+                          <div className="text-xs text-neutral-600">
+                            <strong>Due:</strong> {task.dueDate}
+                          </div>
+                          <div className="text-xs text-neutral-600">
+                            <strong>Progress:</strong> {task.progress}%
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {activeTab === 3 && (
               /* All Teams Content */
               <div className="space-y-3">
-                {allTeams.map((team) => (
-                  <div key={team.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-neutral-900">{team.name}</h3>
-                      <button
-                        onClick={() => toggleTeam(team.id)}
-                        className="p-1 rounded hover:bg-neutral-100"
-                      >
-                        {expandedTeams.includes(team.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-neutral-600 mb-2">{team.description}</p>
-                    <div className="flex items-center gap-2 text-xs text-neutral-500">
-                      <span>Lead: {team.lead}</span>
-                      <span>{team.activeTasks} active tasks</span>
-                    </div>
-                    {expandedTeams.includes(team.id) && (
-                      <div className="mt-3 space-y-2">
-                        <div className="text-xs text-neutral-600">
-                          <strong>Company:</strong> {team.company}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Members:</strong> {team.members.length}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Projects:</strong> {team.projects.join(', ')}
-                        </div>
-                      </div>
-                    )}
+                {/* Team Categories */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-neutral-800">Team Categories</h3>
+                </div>
+                
+                {/* Team Types */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <Users size={16} className="text-blue-500" />
+                    <span className="text-sm">All Teams</span>
                   </div>
-                ))}
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <User size={16} className="text-green-500" />
+                    <span className="text-sm">My Teams</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <Building2 size={16} className="text-purple-500" />
+                    <span className="text-sm">Department Teams</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <Target size={16} className="text-orange-500" />
+                    <span className="text-sm">Project Teams</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-neutral-200 pt-4">
+                  <h3 className="text-sm font-semibold text-neutral-800 mb-3">Active Teams</h3>
+                  {allTeams.map((team) => (
+                    <div key={team.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer mb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-semibold text-neutral-900">{team.name}</h3>
+                        <button
+                          onClick={() => toggleTeam(team.id)}
+                          className="p-1 rounded hover:bg-neutral-100"
+                        >
+                          {expandedTeams.includes(team.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        </button>
+                      </div>
+                      <p className="text-xs text-neutral-600 mb-2">{team.description}</p>
+                      <div className="flex items-center gap-2 text-xs text-neutral-500">
+                        <span>Lead: {team.lead}</span>
+                        <span>{team.activeTasks} active tasks</span>
+                      </div>
+                      {expandedTeams.includes(team.id) && (
+                        <div className="mt-3 space-y-2">
+                          <div className="text-xs text-neutral-600">
+                            <strong>Company:</strong> {team.company}
+                          </div>
+                          <div className="text-xs text-neutral-600">
+                            <strong>Members:</strong> {team.members.length}
+                          </div>
+                          <div className="text-xs text-neutral-600">
+                            <strong>Projects:</strong> {team.projects.join(', ')}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {activeTab === 4 && (
               /* Companies Content */
               <nav className="space-y-1">
-                {companiesList.map((company) => (
-                  <div key={company.id} className="space-y-1">
-                    {/* Company Header */}
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
-                      <button
-                        className="p-1 rounded hover:bg-neutral-100 transition-colors"
-                        onClick={() => {
-                          setCompaniesList(prev => prev.map(c =>
-                            c.id === company.id ? { ...c, expanded: !c.expanded } : c
-                          ));
-                        }}
-                      >
-                        {company.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                      </button>
-                      <Building2 size={18} className="text-blue-500" />
-                      <span className="text-sm font-semibold text-neutral-800 flex-1">{company.name}</span>
-                      <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-medium text-purple-600">AI</span>
+                {isLoadingCompanies ? (
+                  <div className="text-center py-4">Loading companies...</div>
+                ) : companiesError ? (
+                  <div className="text-center py-4 text-red-500">{companiesError}</div>
+                ) : companiesList.length === 0 ? (
+                  <div className="text-center py-4">No companies found.</div>
+                ) : (
+                  companiesList.map((company) => (
+                    <div key={company.id} className="space-y-1">
+                      {/* Company Header */}
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
+                        <button
+                          className="p-1 rounded hover:bg-neutral-100 transition-colors"
+                          onClick={() => {
+                            setCompaniesList(prev => prev.map(c =>
+                              c.id === company.id ? { ...c, expanded: !c.expanded } : c
+                            ));
+                          }}
+                        >
+                          {company.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
+                        </button>
+                        <Building2 size={18} className="text-blue-500" />
+                        <span className="text-sm font-semibold text-neutral-800 flex-1">{company.name}</span>
+                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-medium text-purple-600">AI</span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Company Sections - Only show when expanded */}
-                    {company.expanded && (
-                      <div className="ml-6 space-y-1">
-                        {/* Projects */}
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group">
-                          <ChevronRight size={16} className="text-neutral-400" />
-                          <FolderKanban size={16} className="text-blue-400" />
-                          <span className="text-sm font-medium">Projects</span>
-                          <button
-                            className="ml-auto w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
-                            onClick={() => { 
-                              if (onOpenCompanyProjects) onOpenCompanyProjects(company.name);
-                            }}
-                          >
-                            <Plus size={12} className="text-white" />
-                          </button>
-                        </div>
-
-                        {/* Departments */}
-                        <div>
-                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
-                            onClick={() => toggleSection(company.id, "departments")}
-                          >
-                            {company.sections.departments.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                            <Building size={16} className="text-purple-500" />
-                            <span className="text-sm font-medium">Departments</span>
-                            <button
-                              className="ml-auto w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors"
-                              onClick={e => { e.stopPropagation(); if (onAddDepartments) onAddDepartments(); }}
-                            >
-                              <Plus size={12} className="text-white" />
-                            </button>
-                          </div>
-                          {company.sections.departments.expanded && (
-                            <div className="ml-6 space-y-1">
-                              {company.sections.departments.subdepartments && company.sections.departments.subdepartments.map((sub) => (
-                                <div key={sub} className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
-                                  <ChevronRight size={14} className="text-neutral-300" />
-                                  <Building size={14} className="text-purple-400" />
-                                  <span className="text-xs">{sub}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Teams */}
-                        <div>
-                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
-                            onClick={() => toggleSection(company.id, "teams")}
-                          >
-                            {company.sections.teams.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                            <Users size={16} className="text-blue-500" />
-                            <span className="text-sm font-medium">Teams</span>
+                      {/* Company Sections - Only show when expanded */}
+                      {company.expanded && (
+                        <div className="ml-6 space-y-1">
+                          {/* Projects */}
+                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group">
+                            <ChevronRight size={16} className="text-neutral-400" />
+                            <FolderKanban size={16} className="text-blue-400" />
+                            <span className="text-sm font-medium">Projects</span>
                             <button
                               className="ml-auto w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
-                              onClick={e => { e.stopPropagation(); if (onAddTeams) onAddTeams(); }}
+                              onClick={() => { 
+                                if (onOpenCompanyProjects) onOpenCompanyProjects(company.name);
+                              }}
                             >
                               <Plus size={12} className="text-white" />
                             </button>
                           </div>
-                          {company.sections.teams.expanded && (
-                            <div className="ml-6 space-y-1">
-                              {company.sections.teams.subteams && company.sections.teams.subteams.map((sub) => (
-                                <div key={sub} className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
-                                  <ChevronRight size={14} className="text-neutral-300" />
-                                  <Building size={14} className="text-blue-400" />
-                                  <span className="text-xs">{sub}</span>
-                                </div>
-                              ))}
+
+                          {/* Departments */}
+                          <div>
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
+                              onClick={() => toggleSection(company.id, "departments")}
+                            >
+                              {company.sections.departments.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
+                              <Building size={16} className="text-purple-500" />
+                              <span className="text-sm font-medium">Departments</span>
+                              <button
+                                className="ml-auto w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors"
+                                onClick={e => { e.stopPropagation(); if (onAddDepartments) onAddDepartments(); }}
+                              >
+                                <Plus size={12} className="text-white" />
+                              </button>
                             </div>
-                          )}
-                        </div>
-
-                        {/* Sprints */}
-                        <div>
-                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
-                            onClick={() => toggleSection(company.id, "sprints")}
-                          >
-                            {company.sections.sprints.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                            <Zap size={16} className="text-pink-500" />
-                            <span className="text-sm font-medium">Sprints</span>
-                            <button
-                              className="ml-auto w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors"
-                              onClick={e => { e.stopPropagation(); if (onAddSprints) onAddSprints(); }}
-                            >
-                              <Plus size={12} className="text-white" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Calendar */}
-                        <div>
-                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
-                            onClick={() => toggleSection(company.id, "calendar")}
-                          >
-                            {company.sections.calendar.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                            <Calendar size={16} className="text-purple-500" />
-                            <span className="text-sm font-medium">Calendar</span>
-                          </div>
-                          {company.sections.calendar.expanded && (
-                            <div className="ml-6 space-y-1">
-                              <div className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
-                                <Calendar size={14} className="text-purple-400" />
-                                <span className="text-xs">Sprint Calendar</span>
+                            {company.sections.departments.expanded && (
+                              <div className="ml-6 space-y-1">
+                                {company.sections.departments.subdepartments && company.sections.departments.subdepartments.map((sub) => (
+                                  <div key={sub} className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
+                                    <ChevronRight size={14} className="text-neutral-300" />
+                                    <Building size={14} className="text-purple-400" />
+                                    <span className="text-xs">{sub}</span>
+                                  </div>
+                                ))}
                               </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Stories */}
-                        <div>
-                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
-                            onClick={() => toggleSection(company.id, "stories")}
-                          >
-                            {company.sections.stories.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                            <BookOpen size={16} className="text-orange-500" />
-                            <span className="text-sm font-medium">Stories</span>
-                            <button
-                              className="ml-auto w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors"
-                              onClick={e => { e.stopPropagation(); if (onAddStories) onAddStories(); }}
-                            >
-                              <Plus size={12} className="text-white" />
-                            </button>
+                            )}
                           </div>
-                          {company.sections.stories.expanded && (
-                            <div className="ml-6 space-y-1">
-                              {company.sections.stories.substories && company.sections.stories.substories.map((story) => (
-                                <div key={story} className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
-                                  <ChevronRight size={14} className="text-neutral-300" />
-                                  <BookOpen size={14} className="text-orange-400" />
-                                  <span className="text-xs">{story}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
 
-                        {/* Tasks */}
-                        <div>
-                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
-                            onClick={() => toggleSection(company.id, "tasks")}
-                          >
-                            {company.sections.tasks.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                            <CheckSquare size={16} className="text-green-500" />
-                            <span className="text-sm font-medium">Tasks</span>
-                            <button
-                              className="ml-auto w-6 h-6 bg-green-500 rounded-full flex items-center justify-center hover:bg-green-600 transition-colors"
-                              onClick={e => { e.stopPropagation(); if (onAddTasks) onAddTasks(); }}
+                          {/* Teams */}
+                          <div>
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
+                              onClick={() => toggleSection(company.id, "teams")}
                             >
-                              <Plus size={12} className="text-white" />
-                            </button>
-                          </div>
-                          {company.sections.tasks.expanded && (
-                            <div className="ml-6 space-y-1">
-                              {company.sections.tasks.subtasks && company.sections.tasks.subtasks.map((task) => (
-                                <div key={task} className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
-                                  <ChevronRight size={14} className="text-neutral-300" />
-                                  <CheckSquare size={14} className="text-green-400" />
-                                  <span className="text-xs">{task}</span>
-                                </div>
-                              ))}
+                              {company.sections.teams.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
+                              <Users size={16} className="text-blue-500" />
+                              <span className="text-sm font-medium">Teams</span>
+                              <button
+                                className="ml-auto w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                                onClick={e => { e.stopPropagation(); if (onAddTeams) onAddTeams(); }}
+                              >
+                                <Plus size={12} className="text-white" />
+                              </button>
                             </div>
-                          )}
+                            {company.sections.teams.expanded && (
+                              <div className="ml-6 space-y-1">
+                                {company.sections.teams.subteams && company.sections.teams.subteams.map((sub) => (
+                                  <div key={sub} className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
+                                    <ChevronRight size={14} className="text-neutral-300" />
+                                    <Building size={14} className="text-blue-400" />
+                                    <span className="text-xs">{sub}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Sprints */}
+                          <div>
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
+                              onClick={() => toggleSection(company.id, "sprints")}
+                            >
+                              {company.sections.sprints.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
+                              <Zap size={16} className="text-pink-500" />
+                              <span className="text-sm font-medium">Sprints</span>
+                              <button
+                                className="ml-auto w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors"
+                                onClick={e => { e.stopPropagation(); if (onAddSprints) onAddSprints(); }}
+                              >
+                                <Plus size={12} className="text-white" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Calendar */}
+                          <div>
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
+                              onClick={() => toggleSection(company.id, "calendar")}
+                            >
+                              {company.sections.calendar.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
+                              <Calendar size={16} className="text-purple-500" />
+                              <span className="text-sm font-medium">Calendar</span>
+                            </div>
+                            {company.sections.calendar.expanded && (
+                              <div className="ml-6 space-y-1">
+                                <div className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
+                                  <Calendar size={14} className="text-purple-400" />
+                                  <span className="text-xs">Sprint Calendar</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Stories */}
+                          <div>
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
+                              onClick={() => toggleSection(company.id, "stories")}
+                            >
+                              {company.sections.stories.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
+                              <BookOpen size={16} className="text-orange-500" />
+                              <span className="text-sm font-medium">Stories</span>
+                              <button
+                                className="ml-auto w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors"
+                                onClick={e => { e.stopPropagation(); if (onAddStories) onAddStories(); }}
+                              >
+                                <Plus size={12} className="text-white" />
+                              </button>
+                            </div>
+                            {company.sections.stories.expanded && (
+                              <div className="ml-6 space-y-1">
+                                {company.sections.stories.substories && company.sections.stories.substories.map((story) => (
+                                  <div key={story} className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
+                                    <ChevronRight size={14} className="text-neutral-300" />
+                                    <BookOpen size={14} className="text-orange-400" />
+                                    <span className="text-xs">{story}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Tasks */}
+                          <div>
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 group"
+                              onClick={() => toggleSection(company.id, "tasks")}
+                            >
+                              {company.sections.tasks.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
+                              <CheckSquare size={16} className="text-green-500" />
+                              <span className="text-sm font-medium">Tasks</span>
+                              <button
+                                className="ml-auto w-6 h-6 bg-green-500 rounded-full flex items-center justify-center hover:bg-green-600 transition-colors"
+                                onClick={e => { e.stopPropagation(); if (onAddTasks) onAddTasks(); }}
+                              >
+                                <Plus size={12} className="text-white" />
+                              </button>
+                            </div>
+                            {company.sections.tasks.expanded && (
+                              <div className="ml-6 space-y-1">
+                                {company.sections.tasks.subtasks && company.sections.tasks.subtasks.map((task) => (
+                                  <div key={task} className="flex items-center gap-2 px-3 py-1 rounded-lg text-neutral-600 hover:bg-neutral-100">
+                                    <ChevronRight size={14} className="text-neutral-300" />
+                                    <CheckSquare size={14} className="text-green-400" />
+                                    <span className="text-xs">{task}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      )}
+                    </div>
+                  ))
+                )}
               </nav>
             )}
 
             {activeTab === 5 && (
               /* Calendar Events Content */
               <div className="space-y-3">
-                {allCalendarEvents.map((event) => (
-                  <div key={event.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-neutral-900">{event.title}</h3>
-                      <button
-                        onClick={() => toggleCalendarEvent(event.id)}
-                        className="p-1 rounded hover:bg-neutral-100"
-                      >
-                        {expandedCalendarEvents.includes(event.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-neutral-600 mb-2">{event.description}</p>
-                    <div className="flex items-center gap-2 text-xs text-neutral-500">
-                      <span>{event.date} at {event.time}</span>
-                      <span>{event.duration}</span>
-                    </div>
-                    {expandedCalendarEvents.includes(event.id) && (
-                      <div className="mt-3 space-y-2">
-                        <div className="text-xs text-neutral-600">
-                          <strong>Type:</strong> {event.type}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Project:</strong> {event.project}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Attendees:</strong> {event.attendees.join(', ')}
-                        </div>
-                      </div>
-                    )}
+                {/* Calendar Navigation */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-neutral-800">Calendar Views</h3>
+                </div>
+                
+                {/* Calendar View Options */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <Calendar size={16} className="text-blue-500" />
+                    <span className="text-sm">Month View</span>
                   </div>
-                ))}
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <Calendar size={16} className="text-green-500" />
+                    <span className="text-sm">Week View</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <Calendar size={16} className="text-purple-500" />
+                    <span className="text-sm">Day View</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-neutral-200 pt-4">
+                  <h3 className="text-sm font-semibold text-neutral-800 mb-3">Upcoming Events</h3>
+                  {allCalendarEvents.map((event) => (
+                    <div key={event.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer mb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-semibold text-neutral-900">{event.title}</h3>
+                      </div>
+                      <p className="text-xs text-neutral-600 mb-2">{event.description}</p>
+                      <div className="flex items-center gap-2 text-xs text-neutral-500">
+                        <span>{event.date} at {event.time}</span>
+                        <span>{event.duration}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {activeTab === 6 && (
               /* All Reports Content */
               <div className="space-y-3">
-                {allReports.map((report) => (
-                  <div key={report.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-neutral-900">{report.title}</h3>
-                      <button
-                        onClick={() => toggleReport(report.id)}
-                        className="p-1 rounded hover:bg-neutral-100"
-                      >
-                        {expandedReports.includes(report.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-neutral-600 mb-2">{report.description}</p>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className={`px-2 py-1 rounded ${
-                        report.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {report.status}
-                      </span>
-                      <span className="text-neutral-500">{report.author}</span>
-                    </div>
-                    {expandedReports.includes(report.id) && (
-                      <div className="mt-3 space-y-2">
-                        <div className="text-xs text-neutral-600">
-                          <strong>Type:</strong> {report.type}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Date:</strong> {report.date}
-                        </div>
-                        <div className="text-xs text-neutral-600">
-                          <strong>Metrics:</strong> {Object.entries(report.metrics).map(([key, value]) => `${key}: ${value}`).join(', ')}
-                        </div>
-                      </div>
-                    )}
+                {/* Report Categories */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-neutral-800">Report Categories</h3>
+                </div>
+                
+                {/* Report Types */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <BarChart3 size={16} className="text-blue-500" />
+                    <span className="text-sm">Project Analytics</span>
                   </div>
-                ))}
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <PieChart size={16} className="text-green-500" />
+                    <span className="text-sm">Team Performance</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <LineChart size={16} className="text-purple-500" />
+                    <span className="text-sm">Time Tracking</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
+                    <BarChart3Icon size={16} className="text-orange-500" />
+                    <span className="text-sm">Resource Utilization</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-neutral-200 pt-4">
+                  <h3 className="text-sm font-semibold text-neutral-800 mb-3">Recent Reports</h3>
+                  {allReports.map((report) => (
+                    <div key={report.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer mb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-semibold text-neutral-900">{report.title}</h3>
+                      </div>
+                      <p className="text-xs text-neutral-600 mb-2">{report.description}</p>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className={`px-2 py-1 rounded ${
+                          report.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {report.status}
+                        </span>
+                        <span className="text-neutral-500">{report.author}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

@@ -67,11 +67,52 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'ID is required for updates' });
         }
 
-        const updateCommand = new UpdateCommand({
-          TableName: tableName,
-          Key: { id },
-          UpdateExpression: 'SET #title = :title, #description = :description, #project = :project, #assignee = :assignee, #status = :status, #priority = :priority, #startDate = :startDate, #dueDate = :dueDate, #estimatedHours = :estimatedHours, #tags = :tags, #subtasks = :subtasks, #comments = :comments, #updatedAt = :updatedAt',
-          ExpressionAttributeNames: {
+        // Handle different table types
+        let updateExpression, expressionAttributeNames, expressionAttributeValues;
+        
+        if (tableName === 'project-management-companies') {
+          // Company update fields
+          updateExpression = 'SET #name = :name, #description = :description, #type = :type, #industry = :industry, #status = :status, #founded = :founded, #employees = :employees, #location = :location, #website = :website, #email = :email, #phone = :phone, #revenue = :revenue, #priority = :priority, #tags = :tags, #notes = :notes, #updatedAt = :updatedAt';
+          expressionAttributeNames = {
+            '#name': 'name',
+            '#description': 'description',
+            '#type': 'type',
+            '#industry': 'industry',
+            '#status': 'status',
+            '#founded': 'founded',
+            '#employees': 'employees',
+            '#location': 'location',
+            '#website': 'website',
+            '#email': 'email',
+            '#phone': 'phone',
+            '#revenue': 'revenue',
+            '#priority': 'priority',
+            '#tags': 'tags',
+            '#notes': 'notes',
+            '#updatedAt': 'updatedAt'
+          };
+          expressionAttributeValues = {
+            ':name': req.body.name || '',
+            ':description': req.body.description || '',
+            ':type': req.body.type || '',
+            ':industry': req.body.industry || '',
+            ':status': req.body.status || '',
+            ':founded': req.body.founded || '',
+            ':employees': req.body.employees || 0,
+            ':location': req.body.location || '',
+            ':website': req.body.website || '',
+            ':email': req.body.email || '',
+            ':phone': req.body.phone || '',
+            ':revenue': req.body.revenue || '',
+            ':priority': req.body.priority || '',
+            ':tags': req.body.tags || '',
+            ':notes': req.body.notes || '',
+            ':updatedAt': new Date().toISOString()
+          };
+        } else {
+          // Default task update fields
+          updateExpression = 'SET #title = :title, #description = :description, #project = :project, #assignee = :assignee, #status = :status, #priority = :priority, #startDate = :startDate, #dueDate = :dueDate, #estimatedHours = :estimatedHours, #tags = :tags, #subtasks = :subtasks, #comments = :comments, #updatedAt = :updatedAt';
+          expressionAttributeNames = {
             '#title': 'title',
             '#description': 'description',
             '#project': 'project',
@@ -85,8 +126,8 @@ export default async function handler(req, res) {
             '#subtasks': 'subtasks',
             '#comments': 'comments',
             '#updatedAt': 'updatedAt'
-          },
-          ExpressionAttributeValues: {
+          };
+          expressionAttributeValues = {
             ':title': req.body.title || '',
             ':description': req.body.description || '',
             ':project': req.body.project || '',
@@ -100,7 +141,15 @@ export default async function handler(req, res) {
             ':subtasks': req.body.subtasks || '',
             ':comments': req.body.comments || '',
             ':updatedAt': new Date().toISOString()
-          }
+          };
+        }
+
+        const updateCommand = new UpdateCommand({
+          TableName: tableName,
+          Key: { id },
+          UpdateExpression: updateExpression,
+          ExpressionAttributeNames: expressionAttributeNames,
+          ExpressionAttributeValues: expressionAttributeValues
         });
         await docClient.send(updateCommand);
         return res.status(200).json({ success: true });

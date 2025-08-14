@@ -390,7 +390,8 @@ export default function TeamsPageSheet({ open, onClose, onOpenTab, context }: {
 
   const availableMembers = ["Alice Johnson", "Bob Smith", "Charlie Davis", "Diana Wilson", "Emma Chen", "Frank Miller", "Grace Lee", "Henry Brown"];
   const departments = ["Engineering", "Design", "Marketing", "Sales", "Product", "Operations"];
-  const companies = ["Whapi Corp", "Inkhub", "Acme Corp", "Globex Inc."];
+  // Companies will be fetched from API
+const companies: string[] = [];
   const managers = ["Alice Johnson", "Bob Smith", "Charlie Davis", "Diana Wilson", "Emma Chen"];
   const whatsappGroups = [
     { id: "1", name: "Development Team" },

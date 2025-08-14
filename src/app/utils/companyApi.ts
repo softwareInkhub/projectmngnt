@@ -1,20 +1,24 @@
-// API utility functions for task management
+// API utility functions for company management
 
-export interface TaskData {
-  title: string;
+export interface CompanyData {
+  id?: string;
+  name: string;
   description?: string;
-  project: string;
-  assignee: string;
+  type: string;
+  industry: string;
   status: string;
+  founded?: string;
+  employees?: number;
+  location?: string;
+  website?: string;
+  email?: string;
+  phone?: string;
+  revenue?: string;
   priority: string;
-  startDate: string;
-  dueDate: string;
-  estimatedHours?: number | null;
-  tags?: string;
-  subtasks?: string;
-  comments?: string;
-  createdAt: string;
-  updatedAt: string;
+  tags?: string[];
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ApiResponse<T = any> {
@@ -37,7 +41,7 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-export class TaskApiService {
+export class CompanyApiService {
   private static async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -97,27 +101,30 @@ export class TaskApiService {
     }
   }
 
-  static async createTask(taskData: TaskData): Promise<ApiResponse> {
-    // Generate a unique ID for the task
-    const taskId = Date.now().toString();
+  static async createCompany(companyData: CompanyData): Promise<ApiResponse> {
+    // Generate a unique ID for the company
+    const companyId = Date.now().toString();
     
     // Simplify the data structure for the API
     const simplifiedData = {
-      id: taskId, // Add the required partition key
-      title: taskData.title,
-      description: taskData.description || '',
-      project: taskData.project,
-      assignee: taskData.assignee,
-      status: taskData.status,
-      priority: taskData.priority,
-      startDate: taskData.startDate,
-      dueDate: taskData.dueDate,
-      estimatedHours: taskData.estimatedHours || 0,
-      tags: taskData.tags || '',
-      subtasks: taskData.subtasks || '',
-      comments: taskData.comments || '',
-      createdAt: taskData.createdAt,
-      updatedAt: taskData.updatedAt
+      id: companyId, // Add the required partition key
+      name: companyData.name,
+      description: companyData.description || '',
+      type: companyData.type,
+      industry: companyData.industry,
+      status: companyData.status,
+      founded: companyData.founded || '',
+      employees: companyData.employees || 0,
+      location: companyData.location || '',
+      website: companyData.website || '',
+      email: companyData.email || '',
+      phone: companyData.phone || '',
+      revenue: companyData.revenue || '',
+      priority: companyData.priority,
+      tags: companyData.tags ? companyData.tags.join(',') : '',
+      notes: companyData.notes || '',
+      createdAt: companyData.createdAt || new Date().toISOString(),
+      updatedAt: companyData.updatedAt || new Date().toISOString()
     };
 
     console.log('Sending simplified data to API:', simplifiedData);
@@ -129,58 +136,58 @@ export class TaskApiService {
 
     console.log('Final request body:', requestBody);
 
-    return this.makeRequest('project-management-tasks', {
+    return this.makeRequest('project-management-companies', {
       method: 'POST',
       body: JSON.stringify(requestBody),
     });
   }
 
-  static async getTasks(): Promise<ApiResponse> {
-    return this.makeRequest('project-management-tasks', {
+  static async getCompanies(): Promise<ApiResponse> {
+    return this.makeRequest('project-management-companies', {
       method: 'GET',
     });
   }
 
-  static async updateTask(taskId: string, taskData: Partial<TaskData>): Promise<ApiResponse> {
-    return this.makeRequest(`project-management-tasks/${taskId}`, {
+  static async updateCompany(companyId: string, companyData: Partial<CompanyData>): Promise<ApiResponse> {
+    return this.makeRequest(`project-management-companies/${companyId}`, {
       method: 'PUT',
-      body: JSON.stringify(taskData),
+      body: JSON.stringify(companyData),
     });
   }
 
-  static async deleteTask(taskId: string): Promise<ApiResponse> {
-    return this.makeRequest(`project-management-tasks/${taskId}`, {
+  static async deleteCompany(companyId: string): Promise<ApiResponse> {
+    return this.makeRequest(`project-management-companies/${companyId}`, {
       method: 'DELETE',
     });
   }
 }
 
-// Helper function to validate task data
-export function validateTaskData(data: Partial<TaskData>): { isValid: boolean; errors: string[] } {
+// Helper function to validate company data
+export function validateCompanyData(data: Partial<CompanyData>): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  if (!data.title?.trim()) {
-    errors.push('Task title is required');
+  if (!data.name?.trim()) {
+    errors.push('Company name is required');
   }
 
-  if (!data.project?.trim()) {
-    errors.push('Project is required');
+  if (!data.type?.trim()) {
+    errors.push('Company type is required');
   }
 
-  if (!data.assignee?.trim()) {
-    errors.push('Assignee is required');
+  if (!data.industry?.trim()) {
+    errors.push('Industry is required');
   }
 
-  if (!data.startDate) {
-    errors.push('Start date is required');
+  if (!data.status?.trim()) {
+    errors.push('Status is required');
   }
 
-  if (!data.dueDate) {
-    errors.push('Due date is required');
+  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    errors.push('Invalid email format');
   }
 
-  if (data.startDate && data.dueDate && new Date(data.startDate) > new Date(data.dueDate)) {
-    errors.push('Due date must be after start date');
+  if (data.website && !/^https?:\/\/.+/.test(data.website)) {
+    errors.push('Website must start with http:// or https://');
   }
 
   return {
