@@ -31,10 +31,10 @@ const getApiBaseUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // Use HTTPS for production, HTTP for development
+  // Use CORS proxy for production to avoid mixed content
   if (process.env.NODE_ENV === 'production') {
-    // For production, we need HTTPS to avoid mixed content errors
-    return 'https://54.85.164.84:5001/crud';
+    // Use a CORS proxy to make HTTP requests from HTTPS
+    return 'https://cors-anywhere.herokuapp.com/http://54.85.164.84:5001/crud';
   }
   
   return 'http://54.85.164.84:5001/crud';
