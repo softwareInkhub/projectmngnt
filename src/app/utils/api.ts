@@ -33,7 +33,8 @@ const getApiBaseUrl = () => {
   
   // Use Vercel API in production (HTTPS by default)
   if (process.env.NODE_ENV === 'production') {
-    return 'https://projectmngnt-b6xs-3c8dkb444-softwareinkhubs-projects.vercel.app/api/crud';
+    // Use relative URL to avoid CORS issues
+    return '/api/crud';
   }
   
   return 'http://54.85.164.84:5001/crud';
