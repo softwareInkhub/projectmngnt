@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Layout, 
   Grid, 
@@ -20,6 +20,7 @@ import {
   Calendar,
   FileText
 } from 'lucide-react';
+import LayoutComponentRenderer from './LayoutComponentRenderer';
 
 interface LayoutCell {
   id: string;
@@ -148,34 +149,6 @@ export default function SnapLayoutManager({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Mobile fallback - stack all components
-  if (isMobile && isLayoutMode) {
-    return (
-      <div className="p-4 space-y-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Mobile Layout</h2>
-          <button
-            onClick={() => setIsLayoutMode(false)}
-            className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200"
-          >
-            <X size={16} />
-          </button>
-        </div>
-        {currentLayout.map((cell) => (
-          <div key={cell.id} className="bg-white rounded-lg border border-slate-200 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium">{cell.component || 'Empty Cell'}</h3>
-              <Move size={16} className="text-slate-400" />
-            </div>
-            <div className="text-sm text-slate-500">
-              {cell.component ? 'Component loaded' : 'Tap to add component'}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   const handleLayoutSelect = (preset: LayoutPreset) => {
     // Apply the layout and automatically add components to each cell
     const layoutWithComponents = preset.cells.map((cell, index) => ({
@@ -230,11 +203,11 @@ export default function SnapLayoutManager({
     }
   };
 
-  const handleResizeMove = (e: MouseEvent) => {
-    if (!resizingCell) return;
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!resizingCell || !resizeStart) return;
     
-    const containerWidth = containerRef.current!.offsetWidth;
-    const containerHeight = containerRef.current!.offsetHeight;
+    const containerWidth = containerRef.current?.offsetWidth || 1;
+    const containerHeight = containerRef.current?.offsetHeight || 1;
     const deltaX = (e.clientX - resizeStart.x) / containerWidth;
     const deltaY = (e.clientY - resizeStart.y) / containerHeight;
     
@@ -291,12 +264,12 @@ export default function SnapLayoutManager({
       
       return updatedLayout;
     });
-  };
+  }, [resizingCell, resizeStart]);
 
-  const handleResizeEnd = () => {
+  const handleResizeEnd = useCallback(() => {
     setResizingCell(null);
     onLayoutChange?.(currentLayout);
-  };
+  }, [onLayoutChange, currentLayout]);
 
   // Add mouse event listeners for resize
   useEffect(() => {
@@ -308,7 +281,7 @@ export default function SnapLayoutManager({
         document.removeEventListener('mouseup', handleResizeEnd);
       };
     }
-  }, [resizingCell, resizeStart, handleResizeMove, handleResizeEnd]);
+  }, [resizingCell, handleResizeMove, handleResizeEnd]);
 
   const renderLayoutGrid = () => {
     return (
@@ -522,6 +495,34 @@ export default function SnapLayoutManager({
     );
   }
 
+  // Mobile fallback - stack all components
+  if (isMobile && isLayoutMode) {
+    return (
+      <div className="p-4 space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Mobile Layout</h2>
+          <button
+            onClick={() => setIsLayoutMode(false)}
+            className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        {currentLayout.map((cell) => (
+          <div key={cell.id} className="bg-white rounded-lg border border-slate-200 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium">{cell.component || 'Empty Cell'}</h3>
+              <Move size={16} className="text-slate-400" />
+            </div>
+            <div className="text-sm text-slate-500">
+              {cell.component ? 'Component loaded' : 'Tap to add component'}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-screen bg-slate-50">
       {/* Layout Mode Header */}
@@ -653,6 +654,4 @@ export default function SnapLayoutManager({
       )}
     </div>
   );
-}
-
-import LayoutComponentRenderer from './LayoutComponentRenderer'; 
+} 

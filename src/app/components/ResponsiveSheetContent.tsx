@@ -68,7 +68,7 @@ export default function ResponsiveSheetContent({
               open={true}
               onClose={() => {}}
               onOpenTab={onOpenTab}
-              context={context}
+              context={context as { company: string } | undefined}
             />
           </div>
         );
@@ -81,7 +81,7 @@ export default function ResponsiveSheetContent({
           >
             <TeamsPage 
               onOpenTab={onOpenTab}
-              context={context}
+              context={context as { company: string } | undefined}
             />
           </div>
         );
@@ -93,7 +93,7 @@ export default function ResponsiveSheetContent({
             data-sheet-height={height}
           >
             <TasksPage 
-              context={context}
+              context={context as { company: string } | undefined}
             />
           </div>
         );
@@ -104,7 +104,11 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <CalendarPage />
+            <CalendarPage
+              open={true}
+              onClose={() => {}}
+              onOpenTab={onOpenTab}
+            />
           </div>
         );
       case 'reports':

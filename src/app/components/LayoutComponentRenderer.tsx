@@ -15,25 +15,27 @@ interface LayoutComponentRendererProps {
   componentId: string;
   className?: string;
   onOpenTab?: (tabType: string, context?: any) => void;
+  onViewProject?: (project: any) => void;
 }
 
 export default function LayoutComponentRenderer({ 
   componentId, 
   className = '',
-  onOpenTab 
+  onOpenTab,
+  onViewProject 
 }: LayoutComponentRendererProps) {
   const renderComponent = () => {
     switch (componentId) {
       case 'projects':
-        return <ProjectsAnalyticsPage onOpenTab={onOpenTab} />;
+        return <ProjectsAnalyticsPage onOpenTab={onOpenTab} onViewProject={onViewProject || (() => {})} />;
       case 'tasks':
-        return <TasksPage onOpenTab={onOpenTab} />;
+        return <TasksPage context={{ company: 'Default Company' }} />;
       case 'teams':
-        return <TeamsPage onOpenTab={onOpenTab} />;
+        return <TeamsPage onOpenTab={onOpenTab} context={{ company: 'Default Company' }} />;
       case 'analytics':
         return <DashboardPage onOpenTab={onOpenTab} />;
       case 'calendar':
-        return <CalendarPage onOpenTab={onOpenTab} />;
+        return <CalendarPage open={true} onClose={() => {}} onOpenTab={onOpenTab} />;
       case 'reports':
         return <ReportsPage onOpenTab={onOpenTab} />;
       case 'grid-dashboard':

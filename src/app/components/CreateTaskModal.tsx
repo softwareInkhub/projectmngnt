@@ -86,11 +86,10 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
 
   const [showNewProject, setShowNewProject] = useState(false);
   const [newProject, setNewProject] = useState("");
-
-  if (!open) return null;
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (!open) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

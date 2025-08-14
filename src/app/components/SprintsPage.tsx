@@ -428,17 +428,17 @@ ${sprint.stories.map(story => `- ${story.name} (${story.status}) - ${story.assig
       const newSprint: Sprint = {
         id: Math.max(...sprints.map(s => s.id)) + 1,
         name: formData.name,
-        project: formData.project,
         status: formData.status || "Planning",
-        priority: formData.priority || "Medium",
         startDate: formData.startDate,
         endDate: formData.endDate,
-        velocity: formData.velocity || "0",
+        velocity: parseInt(formData.velocity) || 0,
         description: formData.description,
         created: new Date().toISOString().split('T')[0],
         lastActivity: "Just now",
         archived: false,
-        tasks: [],
+        tasks: 0,
+        completed: 0,
+        team: "Default Team",
         stories: []
       };
       
@@ -869,11 +869,11 @@ ${sprint.stories.map(story => `- ${story.name} (${story.status}) - ${story.assig
                 <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-neutral-400" />
-                    <span className="text-neutral-600">{sprint.project}</span>
+                    <span className="text-neutral-600">Default Project</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Flag className="w-4 h-4 text-neutral-400" />
-                    <span className="text-neutral-600">{sprint.priority}</span>
+                    <span className="text-neutral-600">Medium</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-neutral-400" />

@@ -277,7 +277,7 @@ export default function GridTasksPage({ onOpenTab }: { onOpenTab?: (type: string
 
   const handleEditTask = (task: any) => {
     console.log('Edit task:', task);
-    onOpenTab?.('edit-task', 'Edit Task', task);
+    onOpenTab?.('edit-task');
   };
 
   const handleDeleteTask = (task: any) => {

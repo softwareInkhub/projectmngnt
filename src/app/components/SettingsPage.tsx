@@ -301,7 +301,9 @@ export default function SettingsPage() {
           Security Features
         </h3>
         <div className="space-y-4">
-          {Object.entries(securitySettings).map(([key, value]) => (
+          {Object.entries(securitySettings)
+            .filter(([key, value]) => typeof value === 'boolean')
+            .map(([key, value]) => (
             <div key={key} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-lg">
               <div>
                 <h4 className="font-medium text-slate-900 capitalize">
@@ -319,7 +321,7 @@ export default function SettingsPage() {
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={value}
+                  checked={value as boolean}
                   onChange={(e) => setSecuritySettings(prev => ({ ...prev, [key]: e.target.checked }))}
                   className="sr-only peer"
                 />

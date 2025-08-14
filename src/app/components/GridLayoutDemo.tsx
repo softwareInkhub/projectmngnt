@@ -315,7 +315,7 @@ export default function GridLayoutDemo() {
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Grid Layout Demo</h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
                 Experience the power of customizable grid layouts. Drag, resize, and organize widgets 
-                to create your perfect dashboard. Click "Start Customizing" to begin.
+                to create your perfect dashboard. Click &quot;Start Customizing&quot; to begin.
               </p>
             </div>
             

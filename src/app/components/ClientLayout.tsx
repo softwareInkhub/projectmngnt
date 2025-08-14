@@ -59,7 +59,7 @@ const geistMono = Geist_Mono({
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const SHEET_COMPONENTS: Record<string, React.ComponentType<Record<string, unknown>>> = {
+const SHEET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   project: ProjectsPage,
   departments: DepartmentsPage,
   teams: TeamsPageSheet,
@@ -113,7 +113,7 @@ export default function ClientLayout() {
   ];
 
   // Handlers to open new tabs
-  const openTab = (type: string, context?: Record<string, unknown>) => {
+  const openTab = (type: string, title?: string, context?: Record<string, unknown>) => {
     setOpenTabs((prev) => {
       // Create a unique key that includes context to allow multiple tabs of same type
       const uniqueKey = context ? `${type}-${JSON.stringify(context)}-${Date.now()}` : `${type}-${Date.now()}`;
@@ -127,18 +127,22 @@ export default function ClientLayout() {
       
       // Find the component from SHEET_COMPONENTS first, then sidebarTabMap
       let component;
-      let tabTitle = type.charAt(0).toUpperCase() + type.slice(1);
+      let tabTitle = title || type.charAt(0).toUpperCase() + type.slice(1);
       
       // Check if it's a sheet component first (for company-specific types)
       if (SHEET_COMPONENTS[type]) {
         component = SHEET_COMPONENTS[type];
-        tabTitle = type.charAt(0).toUpperCase() + type.slice(1);
+        if (!title) {
+          tabTitle = type.charAt(0).toUpperCase() + type.slice(1);
+        }
       } else {
         // Check if it's a main sidebar tab
         const sidebarTab = sidebarTabMap.find(tab => tab.type === type);
         if (sidebarTab) {
           component = sidebarTab.component;
-          tabTitle = sidebarTab.title;
+          if (!title) {
+            tabTitle = sidebarTab.title;
+          }
         }
       }
       
@@ -435,7 +439,7 @@ export default function ClientLayout() {
               onDropItem={(item) => setDraggedItem(null)}
             />
           ) : (
-            <SnapLayoutManager onOpenTab={openTab}>
+            <SnapLayoutManager onOpenTab={(tabType, context) => openTab(tabType, undefined, context)}>
               {openTabs[activeTabIdx] && (() => {
                 const TabComponent = openTabs[activeTabIdx].component;
                 return (

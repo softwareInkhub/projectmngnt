@@ -29,7 +29,7 @@ export default function CreateDepartmentPage({ onClose }: { onClose?: () => void
       <CreateDepartmentModal
         open={showModal}
         onClose={handleClose}
-        onCreate={handleCreate}
+        onSubmit={handleCreate}
       />
     </div>
   );

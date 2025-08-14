@@ -280,7 +280,7 @@ export default function ProjectsPage({ open, onClose, onOpenTab, context }: {
             <p className="text-slate-600">{context?.company ? `Manage and track projects for ${context.company}` : 'Manage and track all your projects'}</p>
           </div>
         </div>
-      </div>
+        </div>
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
@@ -290,11 +290,11 @@ export default function ProjectsPage({ open, onClose, onOpenTab, context }: {
               <div className="flex items-center justify-between text-sm text-slate-500">
                 <span>{project.assignee}</span>
                 <span>{project.progress}%</span>
-              </div>
-            </div>
-          ))}
-        </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
       </div>
     </div>
   );
-}
+} 

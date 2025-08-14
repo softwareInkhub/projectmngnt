@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Responsive, WidthProvider } from 'react-grid-layout';
+import { Responsive, WidthProvider, Layouts, Layout as GridLayout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { 
@@ -46,7 +46,7 @@ interface GridSheet {
   id: string;
   type: string;
   title: string;
-  component: React.ComponentType<Record<string, unknown>>;
+  component: React.ComponentType<any>;
   project?: Record<string, unknown>;
   context?: Record<string, unknown>;
   layout: {
@@ -73,7 +73,7 @@ interface GridLayoutManagerProps {
 
 export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }: GridLayoutManagerProps) {
   const [sheets, setSheets] = useState<GridSheet[]>([]);
-  const [layouts, setLayouts] = useState<Record<string, unknown>>({});
+  const [layouts, setLayouts] = useState<Layouts>({});
   const [currentBreakpoint, setCurrentBreakpoint] = useState('lg');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
@@ -100,7 +100,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
   ];
 
   // Add new sheet
-  const addSheet = useCallback((type: string, component: React.ComponentType<Record<string, unknown>>, context?: Record<string, unknown>) => {
+  const addSheet = useCallback((type: string, component: React.ComponentType<any>, context?: Record<string, unknown>) => {
     const newSheet: GridSheet = {
       id: `${type}-${Date.now()}`,
       type,
@@ -122,11 +122,11 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
     // Update layouts
     const newLayout = { i: newSheet.id, ...newSheet.layout };
     setLayouts(prev => ({
-      lg: [...(prev.lg as Record<string, unknown>[] || []), newLayout],
-      md: [...(prev.md as Record<string, unknown>[] || []), { ...newLayout, w: Math.min(newLayout.w, 10) }],
-      sm: [...(prev.sm as Record<string, unknown>[] || []), { ...newLayout, w: Math.min(newLayout.w, 6) }],
-      xs: [...(prev.xs as Record<string, unknown>[] || []), { ...newLayout, w: Math.min(newLayout.w, 4) }],
-      xxs: [...(prev.xxs as Record<string, unknown>[] || []), { ...newLayout, w: Math.min(newLayout.w, 2) }]
+      lg: [...(prev.lg || []), newLayout],
+      md: [...(prev.md || []), { ...newLayout, w: Math.min(newLayout.w, 10) }],
+      sm: [...(prev.sm || []), { ...newLayout, w: Math.min(newLayout.w, 6) }],
+      xs: [...(prev.xs || []), { ...newLayout, w: Math.min(newLayout.w, 4) }],
+      xxs: [...(prev.xxs || []), { ...newLayout, w: Math.min(newLayout.w, 2) }]
     }));
   }, [sheets]);
 
@@ -139,7 +139,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
         // This is a tab drop - use the component directly
         addSheet(
           (draggedItem as Record<string, unknown>).type as string, 
-          (draggedItem as Record<string, unknown>).component as React.ComponentType<Record<string, unknown>>, 
+          (draggedItem as Record<string, unknown>).component as React.ComponentType<any>, 
           (draggedItem as Record<string, unknown>).context as Record<string, unknown>
         );
         onDropItem(draggedItem);
@@ -205,7 +205,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
   }, []);
 
   // Handle layout changes
-  const handleLayoutChange = useCallback((layout: Record<string, unknown>, layouts: Record<string, unknown>) => {
+  const handleLayoutChange = useCallback((layout: GridLayout[], layouts: Layouts) => {
     setLayouts(layouts);
   }, []);
 
@@ -218,11 +218,11 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
   const removeSheet = useCallback((sheetId: string) => {
     setSheets(prev => prev.filter(sheet => sheet.id !== sheetId));
     setLayouts(prev => ({
-      lg: (prev.lg as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || [],
-      md: (prev.md as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || [],
-      sm: (prev.sm as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || [],
-      xs: (prev.xs as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || [],
-      xxs: (prev.xxs as Record<string, unknown>[])?.filter((item: Record<string, unknown>) => item.i !== sheetId) || []
+      lg: prev.lg?.filter(item => item.i !== sheetId) || [],
+      md: prev.md?.filter(item => item.i !== sheetId) || [],
+      sm: prev.sm?.filter(item => item.i !== sheetId) || [],
+      xs: prev.xs?.filter(item => item.i !== sheetId) || [],
+      xxs: prev.xxs?.filter(item => item.i !== sheetId) || []
     }));
     // Remove zoom level when sheet is removed
     setSheetZoomLevels(prev => {
@@ -410,8 +410,8 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
     const zoomLevel = sheetZoomLevels[sheet.id] || 1;
     
     // Get current layout for this sheet to determine dimensions
-    const currentLayout = layouts[currentBreakpoint] as Record<string, unknown>[] || [];
-    const sheetLayout = currentLayout.find((item: Record<string, unknown>) => item.i === sheet.id);
+    const currentLayout = layouts[currentBreakpoint] || [];
+    const sheetLayout = currentLayout.find((item) => item.i === sheet.id);
     const width = (sheetLayout?.w as number) || sheet.layout.w;
     const height = (sheetLayout?.h as number) || sheet.layout.h;
     
@@ -811,7 +811,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="bg-blue-100 border-2 border-blue-400 rounded-lg p-8 text-center shadow-lg">
               <div className="text-blue-600 font-medium mb-2 text-lg">Drop to add sheet</div>
-              <div className="text-blue-500 text-sm mb-2">{draggedItem.label || draggedItem.title}</div>
+              <div className="text-blue-500 text-sm mb-2">{(draggedItem as any)?.label || (draggedItem as any)?.title}</div>
               <div className="text-blue-400 text-xs">Drag from sidebar or tabs to add sheets to the grid</div>
             </div>
           </div>

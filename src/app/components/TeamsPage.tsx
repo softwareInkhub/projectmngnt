@@ -283,9 +283,13 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const handleCreateTeam = async (team: { 
     name: string; 
     description: string; 
-    members: string[];
+    department: string;
+    company: string;
+    manager: string;
     whatsappGroupId?: string;
     whatsappGroupName?: string;
+    startDate: string;
+    teamMembers: string[];
   }) => {
     try {
       // Create the team locally
@@ -293,7 +297,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         id: Math.max(...teams.map(t => t.id)) + 1,
         name: team.name,
         description: team.description,
-        members: team.members.map((member, index) => ({
+        members: team.teamMembers.map((member, index) => ({
           id: Math.max(...teams.flatMap(t => t.members.map(m => m.id))) + index + 1,
           name: member,
           role: "Member",

@@ -300,27 +300,32 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
     let aValue, bValue;
     
     switch (sortBy) {
-      case "dueDate":
+      case "dueDate": {
         aValue = new Date(a.dueDate).getTime();
         bValue = new Date(b.dueDate).getTime();
         break;
-      case "priority":
+      }
+      case "priority": {
         const priorityOrder = { "High": 3, "Medium": 2, "Low": 1 };
         aValue = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
         bValue = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
         break;
-      case "status":
+      }
+      case "status": {
         const statusOrder = { "To Do": 1, "In Progress": 2, "Review": 3, "Done": 4 };
         aValue = statusOrder[a.status as keyof typeof statusOrder] || 0;
         bValue = statusOrder[b.status as keyof typeof statusOrder] || 0;
         break;
-      case "assignee":
+      }
+      case "assignee": {
         aValue = a.assignee.toLowerCase();
         bValue = b.assignee.toLowerCase();
         break;
-      default:
+      }
+      default: {
         aValue = a.name.toLowerCase();
         bValue = b.name.toLowerCase();
+      }
     }
     
     if (sortOrder === "asc") {
