@@ -24,7 +24,23 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
-const API_BASE_URL = 'http://54.85.164.84:5001/crud';
+// API base URL with fallback options
+const getApiBaseUrl = () => {
+  // Check for environment variable first
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // Use HTTPS for production, HTTP for development
+  if (process.env.NODE_ENV === 'production') {
+    // For production, we need HTTPS to avoid mixed content errors
+    return 'https://54.85.164.84:5001/crud';
+  }
+  
+  return 'http://54.85.164.84:5001/crud';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export class TaskApiService {
   private static async makeRequest<T>(
@@ -40,6 +56,15 @@ export class TaskApiService {
         headers: options.headers,
         body: options.body
       });
+      
+      // Check if we're in production and using HTTP (which will cause mixed content error)
+      if (typeof window !== 'undefined' && window.location.protocol === 'https:' && url.startsWith('http:')) {
+        console.warn('Mixed content detected: HTTPS page trying to access HTTP API');
+        return {
+          success: false,
+          error: 'Mixed content error: Cannot access HTTP API from HTTPS page. Please configure HTTPS for the API endpoint.',
+        };
+      }
       
       const response = await fetch(url, {
         headers: {
