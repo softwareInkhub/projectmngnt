@@ -31,10 +31,9 @@ const getApiBaseUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // For now, use HTTP even in production until HTTPS is configured
+  // Use Vercel API in production (HTTPS by default)
   if (process.env.NODE_ENV === 'production') {
-    // TODO: Configure HTTPS on API server
-    return 'http://54.85.164.84:5001/crud';
+    return 'https://projectmngnt-b6xs-3c8dkb444-softwareinkhubs-projects.vercel.app/api/crud';
   }
   
   return 'http://54.85.164.84:5001/crud';
