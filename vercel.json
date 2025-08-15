@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/crud.js": {
-      "maxDuration": 30
-    }
-  },
   "env": {
     "AWS_REGION": "us-east-1"
   }
