@@ -52,8 +52,10 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <DashboardPage 
-              onOpenTab={onOpenTab ? (type: string) => onOpenTab(type, sheetTitle, context) : undefined}
+                        <DashboardPage
+              open={true}
+              onClose={() => {}}
+              onOpenTab={onOpenTab ? (type: string) => onOpenTab(type, sheetTitle, context) : (() => {})}
             />
           </div>
         );
@@ -64,10 +66,7 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <ProjectsPage 
-              open={true}
-              onClose={() => {}}
-              onOpenTab={onOpenTab}
+                        <ProjectsPage
               context={context as { company: string } | undefined}
             />
           </div>

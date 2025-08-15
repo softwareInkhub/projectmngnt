@@ -53,7 +53,10 @@ import {
   Save,
   ArrowLeft
 } from "lucide-react";
-import { TaskApiService, validateTaskData } from "../utils/api";
+import { TaskApiService, TaskData, TaskWithUI, transformTaskToUI, validateTaskData } from "../utils/taskApi";
+import { ApiResponse } from "../utils/api";
+
+// Use imported interfaces and functions from taskApi.ts
 
 // Empty initial tasks - will be populated from API
 const initialTasks: any[] = [];
@@ -104,7 +107,7 @@ export default function TasksPage({ context }: { context?: { company: string } }
   const [priorityFilter, setPriorityFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
-  const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set());
+  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
   const [newProject, setNewProject] = useState("");
@@ -120,41 +123,33 @@ export default function TasksPage({ context }: { context?: { company: string } }
   const fetchTasks = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://54.85.164.84:5001/crud?tableName=project-management-tasks');
-      const data = await response.json();
+      const response = await TaskApiService.getTasks();
       
-      if (data.success && data.items) {
-        // Filter only tasks that have the required fields (real tasks, not test data)
-        const realTasks = data.items.filter((item: any) => 
-          item.title && 
-          item.assignee && 
-          item.status && 
-          item.priority && 
-          item.project &&
-          !item._metadata // Exclude items with _metadata (test data)
-        ).map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          description: item.description || '',
-          status: item.status,
-          priority: item.priority,
-          assignee: item.assignee,
-          dueDate: item.dueDate,
-          project: item.project,
-          tags: item.tags ? item.tags.split(',').filter((tag: string): boolean => tag.trim() !== '') : [],
-          progress: 0, // Default progress for new tasks
-          timeSpent: "0h",
-          estimatedTime: item.estimatedHours ? `${item.estimatedHours}h` : "0h",
-          comments: 0,
-          likes: 0,
-          views: 0,
-          created: item.createdAt ? item.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
-          lastActivity: "Just now",
-          subtasks: item.subtasks ? JSON.parse(item.subtasks) : []
-        }));
+      if (response.success) {
+        // Handle different response structures
+        const tasksData = (response as any).items || response.data || [];
+        // Tasks loaded successfully
         
-        setTasks(realTasks);
-        console.log('Fetched real tasks from API:', realTasks);
+        if (Array.isArray(tasksData)) {
+          // Transform API data to UI format
+          const uiTasks = tasksData
+            .filter((item: TaskData) => {
+              // More lenient filter - check for title or name
+              const hasTitle = item.title && item.title.trim() !== '';
+              const hasName = (item as any).name && (item as any).name.trim() !== '';
+              const hasRequiredFields = hasTitle || hasName;
+              return hasRequiredFields;
+            })
+            .map((item: TaskData) => transformTaskToUI(item));
+          
+          setTasks(uiTasks);
+        } else {
+          console.warn('Tasks data is not an array:', tasksData);
+          setTasks([]);
+        }
+      } else {
+        console.error('Failed to fetch tasks:', response.error);
+        setError('Failed to load tasks');
       }
     } catch (err) {
       console.error('Error fetching tasks:', err);
@@ -189,7 +184,7 @@ export default function TasksPage({ context }: { context?: { company: string } }
     completedTasks: tasks.filter(t => t.status === "Done").length,
     inProgressTasks: tasks.filter(t => t.status === "In Progress").length,
     overdueTasks: tasks.filter(t => new Date(t.dueDate) < new Date() && t.status !== "Done").length,
-    avgProgress: Math.round(tasks.reduce((sum, t) => sum + t.progress, 0) / tasks.length),
+    avgProgress: tasks.length > 0 ? Math.round(tasks.reduce((sum, t) => sum + t.progress, 0) / tasks.length) : 0,
     totalTimeSpent: tasks.reduce((sum, t) => {
       const timeSpent = t.timeSpent || '0h';
       return sum + parseInt(timeSpent.replace('h', '') || '0');
@@ -211,7 +206,9 @@ export default function TasksPage({ context }: { context?: { company: string } }
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const toggleTask = (taskId: number) => {
+  // Task filtering completed
+
+  const toggleTask = (taskId: string) => {
     const newExpanded = new Set(expandedTasks);
     if (newExpanded.has(taskId)) {
       newExpanded.delete(taskId);
@@ -248,7 +245,7 @@ export default function TasksPage({ context }: { context?: { company: string } }
     setError(null);
 
     // Prepare task data for API
-    const taskData = {
+    const taskData: TaskData = {
       title: formData.title.trim(),
       description: formData.description.trim(),
       project: formData.project.trim(),
@@ -291,8 +288,6 @@ export default function TasksPage({ context }: { context?: { company: string } }
 
     try {
       console.log("About to call TaskApiService.createTask...");
-      console.log("TaskApiService available:", typeof TaskApiService);
-      console.log("TaskApiService.createTask available:", typeof TaskApiService.createTask);
       
       // Use API service to create task
       const response = await TaskApiService.createTask(taskData);
@@ -378,19 +373,9 @@ export default function TasksPage({ context }: { context?: { company: string } }
   // CRUD Operations
   const deleteTask = async (taskId: string) => {
     try {
-      const response = await fetch(`http://54.85.164.84:5001/crud?tableName=project-management-tasks`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: taskId
-        })
-      });
-
-      const data = await response.json();
+      const response = await TaskApiService.deleteTask(taskId);
       
-      if (data.success) {
+      if (response.success) {
         setSuccessMessage('Task deleted successfully!');
         await fetchTasks(); // Refresh the task list
         setTimeout(() => setSuccessMessage(null), 3000);
@@ -404,40 +389,80 @@ export default function TasksPage({ context }: { context?: { company: string } }
     setOpenMenuId(null);
   };
 
-  const updateTask = async (taskData: any) => {
+  const updateTask = async (taskData: TaskData) => {
     try {
-      const response = await fetch(`http://54.85.164.84:5001/crud?tableName=project-management-tasks`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          item: {
-            ...taskData,
-            updatedAt: new Date().toISOString()
-          }
-        })
-      });
+      if (!taskData.id) {
+        setError('Task ID is required for update');
+        return;
+      }
 
-      const data = await response.json();
+      // Only send the fields that should be updated, not the entire object
+      const updateFields = {
+        title: taskData.title,
+        description: taskData.description,
+        project: taskData.project,
+        assignee: taskData.assignee,
+        status: taskData.status,
+        priority: taskData.priority,
+        startDate: taskData.startDate,
+        dueDate: taskData.dueDate,
+        estimatedHours: taskData.estimatedHours,
+        tags: taskData.tags,
+        subtasks: taskData.subtasks,
+        comments: taskData.comments,
+        updatedAt: new Date().toISOString()
+      };
+
+      console.log('Updating task with ID:', taskData.id);
+      console.log('Update fields:', updateFields);
       
-      if (data.success) {
+      const response = await TaskApiService.updateTask(taskData.id, updateFields);
+      
+      console.log('Update response:', response);
+      
+      if (response.success) {
         setSuccessMessage('Task updated successfully!');
         await fetchTasks(); // Refresh the task list
         setTimeout(() => setSuccessMessage(null), 3000);
         setShowEditForm(false);
         setEditingTask(null);
       } else {
-        setError('Failed to update task');
+        console.error('Task update failed:', response.error);
+        setError(`Failed to update task: ${response.error}`);
       }
     } catch (err) {
       console.error('Error updating task:', err);
-      setError('Failed to update task');
+      setError(`Failed to update task: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
   const handleEditTask = (task: any) => {
     setEditingTask(task);
+    
+    // Parse tags and subtasks from strings to arrays
+    let tags = [];
+    let subtasks = [];
+    
+    try {
+      if (task.tags && typeof task.tags === 'string') {
+        tags = task.tags.split(',').filter((tag: string) => tag.trim());
+      } else if (Array.isArray(task.tags)) {
+        tags = task.tags;
+      }
+    } catch (e) {
+      console.warn('Error parsing tags:', e);
+    }
+    
+    try {
+      if (task.subtasks && typeof task.subtasks === 'string') {
+        subtasks = JSON.parse(task.subtasks);
+      } else if (Array.isArray(task.subtasks)) {
+        subtasks = task.subtasks;
+      }
+    } catch (e) {
+      console.warn('Error parsing subtasks:', e);
+    }
+    
     setFormData({
       title: task.title,
       description: task.description,
@@ -448,8 +473,8 @@ export default function TasksPage({ context }: { context?: { company: string } }
       dueDate: task.dueDate,
       startDate: task.startDate || '',
       estimatedHours: task.estimatedHours ? task.estimatedHours.toString() : '',
-      tags: task.tags || [],
-      subtasks: task.subtasks || [],
+      tags: tags,
+      subtasks: subtasks,
       comments: task.comments || ''
     });
     setShowEditForm(true);
@@ -463,7 +488,7 @@ export default function TasksPage({ context }: { context?: { company: string } }
 
     if (!editingTask) return;
 
-    const updatedTaskData = {
+    const updatedTaskData: TaskData = {
       id: editingTask.id,
       title: formData.title.trim(),
       description: formData.description.trim(),

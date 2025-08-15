@@ -33,15 +33,15 @@ export default function LayoutComponentRenderer({
       case 'teams':
         return <TeamsPage onOpenTab={onOpenTab} context={{ company: 'Default Company' }} />;
       case 'analytics':
-        return <DashboardPage onOpenTab={onOpenTab} />;
+        return <DashboardPage open={true} onClose={() => {}} onOpenTab={onOpenTab || (() => {})} />;
       case 'calendar':
-        return <CalendarPage open={true} onClose={() => {}} onOpenTab={onOpenTab} />;
+        return <CalendarPage open={true} onClose={() => {}} onOpenTab={onOpenTab || (() => {})} />;
       case 'reports':
-        return <ReportsPage onOpenTab={onOpenTab} />;
+        return <ReportsPage onOpenTab={onOpenTab || (() => {})} />;
       case 'grid-dashboard':
-        return <GridDashboard onOpenTab={onOpenTab} />;
+        return <GridDashboard onOpenTab={onOpenTab || (() => {})} />;
       case 'grid-tasks':
-        return <GridTasksPage onOpenTab={onOpenTab} />;
+        return <GridTasksPage onOpenTab={onOpenTab || (() => {})} />;
       case 'grid-demo':
         return <GridLayoutDemo />;
       default:

@@ -17,11 +17,15 @@ export const metadata: Metadata = {
   description: "A modern project management application",
 };
 
-export default function RootLayout() {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div id="root"></div>
+        {children}
       </body>
     </html>
   );

@@ -1,60 +1,69 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import { 
+  CheckCircle, 
+  AlertCircle, 
+  Plus, 
   Search, 
   Filter, 
-  Plus, 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Download, 
-  Share, 
-  Archive, 
-  Copy, 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  Minus, 
-  Building, 
-  Globe, 
-  Settings, 
-  Upload, 
-  Key, 
-  Lock, 
-  Unlock, 
-  Database, 
-  Server, 
-  Cloud, 
-  Wifi, 
-  WifiOff, 
-  Volume2, 
-  VolumeX, 
-  Languages, 
-  MapPin, 
-  Home, 
-  School, 
-  ThumbsUp, 
-  ThumbsDown, 
-  HelpCircle, 
-  BookOpen, 
-  File, 
-  FileImage, 
-  FileVideo, 
-  FileAudio, 
-  FileArchive,
-  Users,
-  Calendar
-} from 'lucide-react';
+  MoreHorizontal,
+  Calendar,
+  User,
+  Tag,
+  TrendingUp,
+  Activity,
+  Target,
+  Clock,
+  Star,
+  MessageSquare,
+  Eye,
+  Edit,
+  Trash2,
+  Archive,
+  Copy,
+  Share2,
+  Download,
+  FilterX,
+  Grid3X3,
+  List,
+  Bell,
+  Heart,
+  ExternalLink,
+  GitCommit,
+  DollarSign,
+  CalendarDays,
+  UserCheck,
+  Timer,
+  Flag,
+  Layers,
+  Zap,
+  Award,
+  TrendingDown,
+  SortAsc,
+  CheckSquare,
+  Square,
+  Play,
+  Pause,
+  StopCircle,
+  RotateCcw,
+  BarChart3,
+  PieChart,
+  LineChart,
+  X,
+  Building,
+  Save,
+  ArrowLeft
+} from "lucide-react";
 
 export default function NewTabPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const categories = [
-    { id: "all", label: "All", icon: ThumbsUp, count: 12, description: "View all recent items" },
+    { id: "all", label: "All", icon: Star, count: 12, description: "View all recent items" },
     { id: "companies", label: "Companies", icon: Building, count: 3, description: "Manage organizations" },
-    { id: "projects", label: "Projects", icon: FileImage, count: 4, description: "Track project progress" },
-    { id: "teams", label: "Teams", icon: Users, count: 2, description: "Team collaboration" },
+    { id: "projects", label: "Projects", icon: Tag, count: 4, description: "Track project progress" },
+    { id: "teams", label: "Teams", icon: User, count: 2, description: "Team collaboration" },
     { id: "sprints", label: "Sprints", icon: Calendar, count: 3, description: "Agile development" }
   ];
 
@@ -72,7 +81,7 @@ export default function NewTabPage() {
       id: "new-project",
       title: "New Project",
       description: "Start a new project with team collaboration and task management",
-      icon: FileImage,
+      icon: Tag,
       color: "green",
       category: "projects",
       priority: "high"
@@ -81,7 +90,7 @@ export default function NewTabPage() {
       id: "new-team",
       title: "New Team",
       description: "Create a new team with members and assign roles",
-      icon: Users,
+      icon: User,
       color: "purple",
       category: "teams",
       priority: "medium"
@@ -131,7 +140,7 @@ export default function NewTabPage() {
       id: 2,
       title: "Mobile App Development",
       type: "Project",
-      icon: FileImage,
+      icon: Tag,
       lastModified: "1 day ago",
       status: "In Progress",
       description: "Cross-platform mobile application development",
@@ -142,7 +151,7 @@ export default function NewTabPage() {
       id: 3,
       title: "Core Development Team",
       type: "Team",
-      icon: Users,
+      icon: User,
       lastModified: "3 hours ago",
       status: "Active",
       description: "Main development team for core features",
@@ -175,7 +184,7 @@ export default function NewTabPage() {
       id: 6,
       title: "UI/UX Redesign",
       type: "Project",
-      icon: FileImage,
+      icon: Tag,
       lastModified: "2 days ago",
       status: "Planning",
       description: "Complete user interface redesign project",
@@ -346,7 +355,7 @@ export default function NewTabPage() {
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-slate-500 capitalize">{action.category}</span>
-                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all duration-200" />
+                    <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all duration-200" />
                   </div>
                 </button>
               );

@@ -1,10 +1,14 @@
 // Company API service
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://54.85.164.84:5001';
 
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+  // Additional properties from your API response
+  items?: T[];
+  count?: number;
+  pagesFetched?: number;
 }
 
 async function makeRequest<T>(
@@ -26,7 +30,13 @@ async function makeRequest<T>(
     }
 
     const data = await response.json();
-    return { success: true, data };
+    // Handle different response structures
+    if (data.success !== undefined) {
+      // Return the response as-is - let components handle the structure
+      return data;
+    } else {
+      return { success: true, data };
+    }
   } catch (error) {
     console.error('API request failed:', error);
     return { 
@@ -56,9 +66,14 @@ export interface CompanyData {
 
 export class CompanyApiService {
   static async createCompany(company: CompanyData): Promise<ApiResponse<CompanyData>> {
+    // Ensure company has an ID
+    const companyWithId = {
+      ...company,
+      id: company.id || `company-${Date.now()}`
+    };
     return makeRequest<CompanyData>('/crud?tableName=project-management-companies', {
       method: 'POST',
-      body: JSON.stringify(company),
+      body: JSON.stringify({ item: companyWithId }),
     });
   }
 
@@ -71,13 +86,17 @@ export class CompanyApiService {
   static async updateCompany(id: string, company: Partial<CompanyData>): Promise<ApiResponse<CompanyData>> {
     return makeRequest<CompanyData>(`/crud?tableName=project-management-companies&id=${id}`, {
       method: 'PUT',
-      body: JSON.stringify(company),
+      body: JSON.stringify({ 
+        key: { id },
+        updates: company 
+      }),
     });
   }
 
   static async deleteCompany(id: string): Promise<ApiResponse<CompanyData>> {
     return makeRequest<CompanyData>(`/crud?tableName=project-management-companies&id=${id}`, {
       method: 'DELETE',
+      body: JSON.stringify({ id }),
     });
   }
 }
@@ -88,14 +107,6 @@ export function validateCompanyData(data: Partial<CompanyData>): { isValid: bool
 
   if (!data.name?.trim()) {
     errors.push('Company name is required');
-  }
-
-  if (!data.type?.trim()) {
-    errors.push('Company type is required');
-  }
-
-  if (!data.industry?.trim()) {
-    errors.push('Industry is required');
   }
 
   if (!data.status?.trim()) {

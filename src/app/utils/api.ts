@@ -1,10 +1,14 @@
 // API utility functions
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://54.85.164.84:5001';
 
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+  // Additional properties from your API response
+  items?: T[];
+  count?: number;
+  pagesFetched?: number;
 }
 
 async function makeRequest<T>(
@@ -26,7 +30,13 @@ async function makeRequest<T>(
     }
 
     const data = await response.json();
-    return { success: true, data };
+    // Handle different response structures
+    if (data.success !== undefined) {
+      // Return the response as-is - let components handle the structure
+      return data;
+    } else {
+      return { success: true, data };
+    }
   } catch (error) {
     console.error('API request failed:', error);
     return { 
@@ -40,7 +50,7 @@ async function makeRequest<T>(
 export async function createItem<T>(tableName: string, item: T): Promise<ApiResponse<T>> {
   return makeRequest<T>(`/crud?tableName=${tableName}`, {
     method: 'POST',
-    body: JSON.stringify(item),
+    body: JSON.stringify({ item }),
   });
 }
 
@@ -53,13 +63,14 @@ export async function getItems<T>(tableName: string): Promise<ApiResponse<T[]>> 
 export async function updateItem<T>(tableName: string, id: string, item: Partial<T>): Promise<ApiResponse<T>> {
   return makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
     method: 'PUT',
-    body: JSON.stringify(item),
+    body: JSON.stringify({ item }),
   });
 }
 
 export async function deleteItem<T>(tableName: string, id: string): Promise<ApiResponse<T>> {
   return makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
     method: 'DELETE',
+    body: JSON.stringify({ id }),
   });
 }
 

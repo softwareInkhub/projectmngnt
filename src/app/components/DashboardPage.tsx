@@ -103,10 +103,10 @@ const teamMembers = [
 ];
 
 const notifications = [
-  { type: "success", message: "Project 'E-commerce Platform' is 85% complete", time: "5m ago", icon: CheckCircle },
-  { type: "warning", message: "Sprint 'Mobile App v2' ends in 2 days", time: "15m ago", icon: AlertCircle },
-  { type: "info", message: "New team member 'Eve Chen' joined", time: "1h ago", icon: UserPlus },
-  { type: "success", message: "All tasks completed for 'Dashboard Redesign'", time: "2h ago", icon: CheckCircle },
+  { type: "success", message: "Project &apos;E-commerce Platform&apos; is 85% complete", time: "5m ago", icon: CheckCircle },
+  { type: "warning", message: "Sprint &apos;Mobile App v2&apos; ends in 2 days", time: "15m ago", icon: AlertCircle },
+  { type: "info", message: "New team member &apos;Eve Chen&apos; joined", time: "1h ago", icon: UserPlus },
+  { type: "success", message: "All tasks completed for &apos;Dashboard Redesign&apos;", time: "2h ago", icon: CheckCircle },
 ];
 
 const quickStats = [

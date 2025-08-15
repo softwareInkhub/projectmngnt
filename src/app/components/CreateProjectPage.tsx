@@ -28,8 +28,12 @@ export default function CreateProjectPage() {
       
       const response = await CompanyApiService.getCompanies();
       
-      if (response.success && response.data && response.data.items) {
-        const realCompanies = response.data.items
+      if (response.success) {
+        // Handle different response structures
+        const companiesData = response.items || response.data || [];
+        
+        if (Array.isArray(companiesData)) {
+          const realCompanies = companiesData
           .filter((item: any) => item.name && item.id) // Filter out invalid items
           .map((item: any) => ({
             id: item.id,
@@ -59,6 +63,10 @@ export default function CreateProjectPage() {
         }
         
         console.log('Fetched companies from API:', realCompanies);
+        } else {
+          console.warn('Companies data is not an array:', companiesData);
+          setCompanies([]);
+        }
       } else {
         console.log('No companies found or API error:', response);
         setCompanies([]);

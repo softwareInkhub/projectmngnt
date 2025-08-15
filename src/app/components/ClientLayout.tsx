@@ -5,7 +5,7 @@ import Sidebar from "./Sidebar";
 import ContextSidebar from "./ContextSidebar";
 import SnapLayoutManager from "./SnapLayoutManager";
 import GridLayoutManager from "./GridLayoutManager";
-import { Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen, CheckCircle, Users, Building, Calendar } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen, CheckCircle, Users, Building, Calendar, ChevronDown, CheckSquare } from "lucide-react";
 
 interface Project {
   name: string;
@@ -59,7 +59,6 @@ const geistMono = Geist_Mono({
 
 
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SHEET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   project: ProjectsPage,
   departments: DepartmentsPage,
@@ -90,7 +89,6 @@ const SHEET_COMPONENTS: Record<string, React.ComponentType<any>> = {
 
 export default function ClientLayout() {
   // Set Dashboard as the default open tab
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [openTabs, setOpenTabs] = useState<{ type: string; key: string; title: string; component: React.ComponentType<any>; project?: Project; context?: any }[]>([
     { type: "dashboard", key: `dashboard-${Date.now()}`, title: "Dashboard", component: DashboardPage }
   ]);
@@ -538,6 +536,8 @@ export default function ClientLayout() {
           onAddStories={() => openTab("stories", "Company Stories", { company: "whapi project management" })}
           onAddTasks={() => openTab("company-tasks", "Company Tasks", { company: "whapi project management" })}
           onOpenCompanyProjects={onOpenCompanyProjects}
+          onClose={() => {}}
+          isMobile={isMobile}
         />
       )}
       <main className="flex-1 min-w-0 bg-background flex flex-col">

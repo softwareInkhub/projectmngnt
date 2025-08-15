@@ -1,5 +1,7 @@
-import ResponsiveGridDemo from './components/ResponsiveGridDemo';
+'use client';
+
+import ClientLayout from './components/ClientLayout';
 
 export default function Home() {
-  return <ResponsiveGridDemo />;
+  return <ClientLayout />;
 }

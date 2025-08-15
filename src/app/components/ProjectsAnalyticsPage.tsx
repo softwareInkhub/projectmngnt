@@ -19,6 +19,7 @@ import {
   Eye,
   Clock,
   CheckCircle,
+  CheckSquare,
   AlertCircle,
   Star,
   GitBranch,
@@ -493,6 +494,10 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
                   
                   {showCompanyDropdown && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {/* Company Options */}
+                          <div className="px-3 py-2 bg-slate-50 border-b border-slate-200">
+                            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Companies</span>
+                          </div>
                           {companies.map((company) => (
                         <button
                               key={company.name}
@@ -501,17 +506,94 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
                                 setSelectedCompany(company.name);
                             setShowCompanyDropdown(false);
                           }}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors"
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
                         >
+                              <Building size={14} className="text-blue-500" />
                               {company.name}
                         </button>
                       ))}
+                          
+                          {/* Company Management Options */}
+                          <div className="border-t border-slate-200">
+                            <div className="px-3 py-2 bg-slate-50">
+                              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Company Management</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // TODO: Open Projects page for selected company
+                                setShowCompanyDropdown(false);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
+                            >
+                              <FolderOpen size={14} className="text-green-500" />
+                              Projects
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // TODO: Open Sprints page for selected company
+                                setShowCompanyDropdown(false);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
+                            >
+                              <Calendar size={14} className="text-purple-500" />
+                              Sprints
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // TODO: Open Tasks page for selected company
+                                setShowCompanyDropdown(false);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
+                            >
+                              <CheckSquare size={14} className="text-orange-500" />
+                              Tasks
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // TODO: Open Teams page for selected company
+                                setShowCompanyDropdown(false);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
+                            >
+                              <Users size={14} className="text-indigo-500" />
+                              Teams
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // TODO: Open Departments page for selected company
+                                setShowCompanyDropdown(false);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
+                            >
+                              <Building size={14} className="text-teal-500" />
+                              Departments
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // TODO: Open Stories page for selected company
+                                setShowCompanyDropdown(false);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
+                            >
+                              <BarChart3 size={14} className="text-pink-500" />
+                              Stories
+                            </button>
+                          </div>
+
+                          {/* Add New Company */}
                           <div className="border-t border-slate-200">
                             <button
                               type="button"
                               onClick={() => setShowNewCompanyModal(true)}
-                              className="w-full text-left px-4 py-3 text-blue-600 hover:bg-blue-50 text-sm font-medium transition-colors"
+                              className="w-full text-left px-4 py-3 text-blue-600 hover:bg-blue-50 text-sm font-medium transition-colors flex items-center gap-3"
                             >
+                              <Plus size={14} />
                               + Add New Company
                             </button>
                           </div>

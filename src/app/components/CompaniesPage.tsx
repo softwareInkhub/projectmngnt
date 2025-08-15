@@ -58,10 +58,13 @@ export default function CompaniesPage() {
     const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [editingCompany, setEditingCompany] = useState<any | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [formData, setFormData] = useState<Partial<CompanyData>>({
     name: "",
     description: "",
-    type: companyTypes[0],
     industry: industries[0],
     status: "Active",
     founded: "",
@@ -70,10 +73,7 @@ export default function CompaniesPage() {
     website: "",
     email: "",
     phone: "",
-    revenue: "",
-    priority: priorities[1],
-    tags: [],
-    notes: ""
+    revenue: ""
   });
 
   // API Integration
@@ -81,16 +81,79 @@ export default function CompaniesPage() {
     fetchCompanies();
   }, []);
 
+  // Menu management functions
+  const toggleMenu = (companyId: string) => {
+    setOpenMenuId(openMenuId === companyId ? null : companyId);
+  };
+
+  const closeMenu = () => {
+    setOpenMenuId(null);
+  };
+
+  // Company action functions
+  const handleEditCompany = (company: any) => {
+    setEditingCompany(company);
+    setFormData({
+      name: company.name || "",
+      description: company.description || "",
+      industry: company.industry || industries[0],
+      status: company.status || "Active",
+      founded: company.founded || "",
+      employees: company.employees || 0,
+      location: company.location || "",
+      website: company.website || "",
+      email: company.email || "",
+      phone: company.phone || "",
+      revenue: company.revenue || ""
+    });
+    setShowEditForm(true);
+    closeMenu();
+  };
+
+  const handleDeleteCompany = async (companyId: string) => {
+    if (confirm('Are you sure you want to delete this company? This action cannot be undone.')) {
+      try {
+        const response = await CompanyApiService.deleteCompany(companyId);
+        if (response.success) {
+          setCompanies(companies.filter(c => c.id !== companyId));
+        } else {
+          console.error('Failed to delete company:', response.error);
+        }
+      } catch (error) {
+        console.error('Error deleting company:', error);
+      }
+    }
+    closeMenu();
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!(event.target as Element).closest('.company-menu')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      console.log('Fetching companies...');
       const response = await CompanyApiService.getCompanies();
-      console.log('API Response:', response);
       
-      if (response.success && response.data) {
-        console.log('Companies data:', response.data);
-        setCompanies(response.data);
+      if (response.success) {
+        // Handle different response structures
+        const companiesData = response.items || response.data || [];
+        console.log('Companies loaded:', companiesData.length);
+        
+        if (Array.isArray(companiesData)) {
+          setCompanies(companiesData);
+        } else {
+          console.warn('Companies data is not an array:', companiesData);
+          setCompanies([]);
+        }
       } else {
         console.error('Failed to fetch companies:', response.error);
         // Fallback to empty array
@@ -123,11 +186,12 @@ export default function CompaniesPage() {
         // Refresh the companies list
         await fetchCompanies();
         setShowCreateForm(false);
+        setShowEditForm(false);
+        setEditingCompany(null);
         // Reset form
         setFormData({
           name: "",
           description: "",
-          type: companyTypes[0],
           industry: industries[0],
           status: "Active",
           founded: "",
@@ -136,10 +200,7 @@ export default function CompaniesPage() {
           website: "",
           email: "",
           phone: "",
-          revenue: "",
-          priority: priorities[1],
-          tags: [],
-          notes: ""
+          revenue: ""
         });
       } else {
         console.error('Failed to create company:', response.error);
@@ -156,14 +217,83 @@ export default function CompaniesPage() {
     await handleCreateCompany(formData as CompanyData);
   };
 
-  const toggleTag = (tag: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags?.includes(tag)
-        ? prev.tags.filter(t => t !== tag)
-        : [...(prev.tags || []), tag]
-    }));
+  const handleUpdateCompany = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCompany) return;
+
+    try {
+      const updatedCompanyData: CompanyData = {
+        id: editingCompany.id,
+        name: formData.name || "",
+        description: formData.description || "",
+        industry: formData.industry || industries[0],
+        status: formData.status || "Active",
+        founded: formData.founded || "",
+        employees: formData.employees || 0,
+        location: formData.location || "",
+        website: formData.website || "",
+        email: formData.email || "",
+        phone: formData.phone || "",
+        revenue: formData.revenue || "",
+        createdAt: editingCompany.createdAt,
+        updatedAt: new Date().toISOString()
+      };
+
+      // Only send the fields that should be updated, not the entire object
+      const updateFields = {
+        name: formData.name || "",
+        description: formData.description || "",
+        industry: formData.industry || industries[0],
+        status: formData.status || "Active",
+        founded: formData.founded || "",
+        employees: formData.employees || 0,
+        location: formData.location || "",
+        website: formData.website || "",
+        email: formData.email || "",
+        phone: formData.phone || "",
+        revenue: formData.revenue || "",
+        updatedAt: new Date().toISOString()
+      };
+
+      console.log('Updating company with ID:', editingCompany.id);
+      console.log('Update fields:', updateFields);
+      
+      const response = await CompanyApiService.updateCompany(editingCompany.id, updateFields);
+      
+      console.log('Company update response:', response);
+      
+      if (response.success) {
+        // Refresh the companies list
+        await fetchCompanies();
+        setShowEditForm(false);
+        setEditingCompany(null);
+        setSuccessMessage('Company updated successfully!');
+        setTimeout(() => setSuccessMessage(null), 3000);
+        // Reset form
+        setFormData({
+          name: "",
+          description: "",
+          industry: industries[0],
+          status: "Active",
+          founded: "",
+          employees: 0,
+          location: "",
+          website: "",
+          email: "",
+          phone: "",
+          revenue: ""
+        });
+      } else {
+        console.error('Failed to update company:', response.error);
+        alert('Failed to update company: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error updating company:', error);
+      alert('Error updating company: ' + error);
+    }
   };
+
+
 
   const analytics = {
     totalCompanies: Array.isArray(companies) ? companies.length : 0,
@@ -407,9 +537,60 @@ Members: ${company.members}
                       <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
                         <Heart size={16} />
                       </button>
-                      <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
-                        <MoreHorizontal size={16} />
-                      </button>
+                      <div className="relative company-menu">
+                        <button 
+                          onClick={() => toggleMenu(company.id)}
+                          className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200"
+                        >
+                          <MoreHorizontal size={16} />
+                        </button>
+                        
+                        {/* Dropdown Menu */}
+                        {openMenuId === company.id && (
+                          <div className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-fade-in">
+                            <div className="py-1">
+                              <button
+                                onClick={() => handleEditCompany(company)}
+                                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                              >
+                                <Edit className="w-4 h-4" />
+                                Edit Company
+                              </button>
+                                                              <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(JSON.stringify(company, null, 2));
+                                    setSuccessMessage('Company details copied to clipboard!');
+                                    setTimeout(() => setSuccessMessage(null), 2000);
+                                    closeMenu();
+                                  }}
+                                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                              >
+                                <Copy className="w-4 h-4" />
+                                Copy Details
+                              </button>
+                                                              <button
+                                  onClick={() => {
+                                    setSuccessMessage('Archive feature coming soon!');
+                                    setTimeout(() => setSuccessMessage(null), 2000);
+                                    closeMenu();
+                                  }}
+                                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                              >
+                                <Archive className="w-4 h-4" />
+                                Archive
+                              </button>
+                              <div className="border-t border-slate-200 my-1"></div>
+                              <button
+                                onClick={() => handleDeleteCompany(company.id)}
+                                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Company
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -555,9 +736,60 @@ Members: ${company.members}
                         <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
                           <Heart className="w-4 h-4" />
                         </button>
-                        <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
+                        <div className="relative company-menu">
+                          <button 
+                            onClick={() => toggleMenu(company.id)}
+                            className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                          
+                          {/* Dropdown Menu */}
+                          {openMenuId === company.id && (
+                            <div className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-fade-in">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => handleEditCompany(company)}
+                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Edit Company
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(JSON.stringify(company, null, 2));
+                                    setSuccessMessage('Company details copied to clipboard!');
+                                    setTimeout(() => setSuccessMessage(null), 2000);
+                                    closeMenu();
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                  Copy Details
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSuccessMessage('Archive feature coming soon!');
+                                    setTimeout(() => setSuccessMessage(null), 2000);
+                                    closeMenu();
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <Archive className="w-4 h-4" />
+                                  Archive
+                                </button>
+                                <div className="border-t border-slate-200 my-1"></div>
+                                <button
+                                  onClick={() => handleDeleteCompany(company.id)}
+                                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete Company
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
@@ -617,6 +849,12 @@ Members: ${company.members}
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+      {/* Success Message */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in">
+          {successMessage}
+        </div>
+      )}
       {/* Enhanced Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
         <div className="flex items-center gap-3">
@@ -644,7 +882,7 @@ Members: ${company.members}
 
       <div className="p-6 space-y-6">
                  {/* Company Creation Form */}
-         {showCreateForm && (
+         {(showCreateForm || showEditForm) && (
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 animate-fade-in">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
@@ -652,13 +890,13 @@ Members: ${company.members}
                   <Building2 className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Create New Company</h2>
-                  <p className="text-slate-600">Fill in the details below to create a new company.</p>
+                  <h2 className="text-2xl font-bold text-slate-900">{showEditForm ? 'Edit Company' : 'Create New Company'}</h2>
+                  <p className="text-slate-600">{showEditForm ? 'Update the company details below.' : 'Fill in the details below to create a new company.'}</p>
                 </div>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={showEditForm ? handleUpdateCompany : handleSubmit} className="space-y-8">
               {/* Company Information */}
               <div className="space-y-6">
                 <div className="flex items-center space-x-3 mb-6">
@@ -684,26 +922,7 @@ Members: ${company.members}
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Company Type *
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={formData.type}
-                          onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-                          required
-                        >
-                          {companyTypes.map(type => (
-                            <option key={type} value={type}>{type}</option>
-                          ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <Briefcase className="w-4 h-4 text-slate-400" />
-                        </div>
-                      </div>
-                    </div>
+
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -915,83 +1134,30 @@ Members: ${company.members}
                 </div>
               </div>
 
-              {/* Tags */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                    <Tag className="w-4 h-4 text-indigo-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Tags</h3>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {availableTags.map(tag => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => toggleTag(tag)}
-                                             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                         formData.tags?.includes(tag)
-                           ? "bg-blue-100 text-blue-700 border border-blue-200"
-                           : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200"
-                       }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Additional Details */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-yellow-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Additional Details</h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Priority
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={formData.priority}
-                        onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-                      >
-                        {priorities.map(priority => (
-                          <option key={priority} value={priority}>{priority}</option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <AlertCircle className="w-4 h-4 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Notes
-                    </label>
-                    <textarea
-                      value={formData.notes}
-                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Add any additional notes or special requirements..."
-                      rows={3}
-                      className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
-                  </div>
-                </div>
-              </div>
+              
 
               {/* Action Buttons */}
               <div className="flex items-center justify-between pt-6 border-t border-slate-200">
                 <button
                   type="button"
-                  onClick={() => setShowCreateForm(false)}
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setShowEditForm(false);
+                    setEditingCompany(null);
+                    setFormData({
+                      name: "",
+                      description: "",
+                      industry: industries[0],
+                      status: "Active",
+                      founded: "",
+                      employees: 0,
+                      location: "",
+                      website: "",
+                      email: "",
+                      phone: "",
+                      revenue: ""
+                    });
+                  }}
                   className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -1011,7 +1177,7 @@ Members: ${company.members}
                     className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center space-x-2"
                   >
                     <Building2 className="w-4 h-4" />
-                    <span>Create Company</span>
+                    <span>{showEditForm ? 'Update Company' : 'Create Company'}</span>
                   </button>
                 </div>
               </div>

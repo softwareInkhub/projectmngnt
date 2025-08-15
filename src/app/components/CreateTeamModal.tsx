@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, ChevronDown, Plus, Users, Target, Calendar, MessageSquare, Building } from "lucide-react";
+import { X, ChevronDown, Plus, Users, Target, Calendar, MessageSquare, Building, FolderOpen, CheckSquare, BarChart3 } from "lucide-react";
 
 interface CreateTeamModalProps {
   open: boolean;
@@ -194,7 +194,11 @@ export default function CreateTeamModal({ open, onClose, onCreate }: CreateTeamM
                   <ChevronDown size={12} className="text-gray-400" />
                 </button>
                 {showCompanyDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-28 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {/* Company Options */}
+                    <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
+                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Companies</span>
+                    </div>
                     {companies.map((companyOption) => (
                       <button
                         key={companyOption}
@@ -203,11 +207,85 @@ export default function CreateTeamModal({ open, onClose, onCreate }: CreateTeamM
                           setCompany(companyOption);
                           setShowCompanyDropdown(false);
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors"
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors flex items-center gap-3"
                       >
+                        <Building size={12} className="text-blue-500" />
                         {companyOption}
                       </button>
                     ))}
+                    
+                    {/* Company Management Options */}
+                    <div className="border-t border-gray-200">
+                      <div className="px-3 py-2 bg-gray-50">
+                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Company Management</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // TODO: Open Projects page for selected company
+                          setShowCompanyDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors flex items-center gap-3"
+                      >
+                        <FolderOpen size={12} className="text-green-500" />
+                        Projects
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // TODO: Open Sprints page for selected company
+                          setShowCompanyDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors flex items-center gap-3"
+                      >
+                        <Calendar size={12} className="text-purple-500" />
+                        Sprints
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // TODO: Open Tasks page for selected company
+                          setShowCompanyDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors flex items-center gap-3"
+                      >
+                        <CheckSquare size={12} className="text-orange-500" />
+                        Tasks
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // TODO: Open Teams page for selected company
+                          setShowCompanyDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors flex items-center gap-3"
+                      >
+                        <Users size={12} className="text-indigo-500" />
+                        Teams
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // TODO: Open Departments page for selected company
+                          setShowCompanyDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors flex items-center gap-3"
+                      >
+                        <Building size={12} className="text-teal-500" />
+                        Departments
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // TODO: Open Stories page for selected company
+                          setShowCompanyDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-xs transition-colors flex items-center gap-3"
+                      >
+                        <BarChart3 size={12} className="text-pink-500" />
+                        Stories
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

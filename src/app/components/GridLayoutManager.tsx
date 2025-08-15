@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Responsive, WidthProvider, Layouts, Layout as GridLayout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -84,7 +84,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
   const [showHelp, setShowHelp] = useState(false);
 
   // Available sheet types
-  const availableSheets = [
+  const availableSheets = useMemo(() => [
     { type: 'dashboard', title: 'Dashboard', component: DashboardPage },
     { type: 'projects', title: 'Projects', component: ProjectsPage },
     { type: 'teams', title: 'Teams', component: TeamsPageSheet },
@@ -97,7 +97,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
     { type: 'notifications', title: 'Notifications', component: NotificationsPage },
     { type: 'companies', title: 'Companies', component: CompaniesPage },
     { type: 'projects-analytics', title: 'Projects Analytics', component: ProjectsAnalyticsPage },
-  ];
+  ], []);
 
   // Add new sheet
   const addSheet = useCallback((type: string, component: React.ComponentType<any>, context?: Record<string, unknown>) => {

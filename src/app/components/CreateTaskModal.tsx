@@ -1,38 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
-  X, 
   CheckSquare, 
-  User, 
+  X, 
   Calendar, 
+  User, 
   Tag, 
   Clock, 
-  AlertCircle, 
-  Star,
-  Building,
-  Target,
-  FileText,
-  Users,
-  Flag,
-  Zap,
-  Award,
-  TrendingUp,
-  MessageSquare,
-  Eye,
-  Heart,
-  Share2,
-  ExternalLink,
-  GitCommit,
-  Activity,
-  DollarSign,
-  CalendarDays,
-  UserCheck,
-  Timer,
-  Layers,
-  Save,
-  ArrowLeft,
-  Plus
+  Plus, 
+  Trash2,
+  AlertCircle,
+  CheckCircle,
+  Play,
+  Pause,
+  Square,
+  CheckCircle2
 } from "lucide-react";
-import { TaskApiService, validateTaskData } from "../utils/api";
+import { TaskApiService, TaskData, validateTaskData } from "../utils/taskApi";
 
 interface CreateTaskModalProps {
   open: boolean;
@@ -97,7 +80,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
     setError(null);
 
     // Prepare task data for API
-    const taskData = {
+    const taskData: TaskData = {
       title: formData.title.trim(),
       description: formData.description.trim(),
       project: formData.project.trim(),
@@ -106,7 +89,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
       priority: formData.priority,
       startDate: formData.startDate,
       dueDate: formData.dueDate,
-      estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
+      estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : 0, // Default to 0 if not set
       tags: formData.tags.join(','), // Convert array to comma-separated string
       subtasks: JSON.stringify(formData.subtasks), // Convert to JSON string
       comments: formData.comments.trim(),
@@ -122,9 +105,9 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
       return;
     }
 
-    try {
-      // Use API service to create task
-      const response = await TaskApiService.createTask(taskData);
+          try {
+        // Use API service to create task
+        const response = await TaskApiService.createTask(taskData);
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to create task');
@@ -251,7 +234,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                       ))}
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <Building className="w-4 h-4 text-slate-400" />
+                      {/* Building icon removed as per new_code */}
                     </div>
                   </div>
                   {showNewProject && (
@@ -317,7 +300,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
           <div className="space-y-6">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Target className="w-4 h-4 text-purple-600" />
+                {/* Target icon removed as per new_code */}
               </div>
               <h3 className="text-lg font-semibold text-slate-900">Task Details</h3>
             </div>
@@ -339,7 +322,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     ))}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <Flag className="w-4 h-4 text-slate-400" />
+                    {/* Flag icon removed as per new_code */}
                   </div>
                 </div>
               </div>
@@ -408,7 +391,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     required
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <CalendarDays className="w-4 h-4 text-slate-400" />
+                    {/* CalendarDays icon removed as per new_code */}
                   </div>
                 </div>
               </div>
@@ -426,7 +409,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     required
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <CalendarDays className="w-4 h-4 text-slate-400" />
+                    {/* CalendarDays icon removed as per new_code */}
                   </div>
                 </div>
               </div>
@@ -500,7 +483,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     onClick={() => removeSubtask(subtask.id)}
                     className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"
                   >
-                    <X className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               ))}
@@ -511,7 +494,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
           <div className="space-y-6">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <MessageSquare className="w-4 h-4 text-yellow-600" />
+                {/* MessageSquare icon removed as per new_code */}
               </div>
               <h3 className="text-lg font-semibold text-slate-900">Initial Comments</h3>
             </div>
@@ -546,7 +529,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
               disabled={isSubmitting}
               className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <X className="w-4 h-4" />
               <span>Cancel</span>
             </button>
 
@@ -556,7 +539,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                 disabled={isSubmitting}
                 className="px-6 py-3 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save className="w-4 h-4" />
+                {/* Save icon removed as per new_code */}
                 <span>Save Draft</span>
               </button>
               <button
