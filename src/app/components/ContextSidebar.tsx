@@ -35,6 +35,8 @@ import {
 import { useState, useEffect } from "react";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
 import { TaskApiService, TaskData } from "../utils/taskApi";
+import { ProjectApiService, ProjectData } from "../utils/projectApi";
+import { TeamApiService, TeamData } from "../utils/teamApi";
 
 // Interface for company structure in the sidebar
 interface CompanySidebarData {
@@ -140,6 +142,12 @@ export default function ContextSidebar({
   const [tasksList, setTasksList] = useState<TaskSidebarData[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
   const [tasksError, setTasksError] = useState<string | null>(null);
+  const [projectsList, setProjectsList] = useState<ProjectData[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
+  const [teamsList, setTeamsList] = useState<TeamData[]>([]);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(true);
+  const [teamsError, setTeamsError] = useState<string | null>(null);
 
   // Fallback companies if API fails
   const fallbackCompanies: CompanySidebarData[] = [
@@ -265,10 +273,70 @@ export default function ContextSidebar({
     }
   };
 
-  // Load companies and tasks on component mount
+  // Fetch projects from API
+  const fetchProjects = async () => {
+    try {
+      setIsLoadingProjects(true);
+      setProjectsError(null);
+      
+      const response = await ProjectApiService.getProjects();
+      
+      if (response.success) {
+        // Handle different response structures
+        const projectsData = (response as any).items || response.data || [];
+        
+        if (Array.isArray(projectsData)) {
+          setProjectsList(projectsData);
+        } else {
+          setProjectsList([]);
+        }
+      } else {
+        setProjectsList([]);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setProjectsError(null);
+      setProjectsList([]);
+    } finally {
+      setIsLoadingProjects(false);
+    }
+  };
+
+  // Fetch teams from API
+  const fetchTeams = async () => {
+    try {
+      setIsLoadingTeams(true);
+      setTeamsError(null);
+      
+      const response = await TeamApiService.getTeams();
+      
+      if (response.success) {
+        // Handle different response structures
+        const teamsData = (response as any).items || response.data || [];
+        
+        if (Array.isArray(teamsData)) {
+          setTeamsList(teamsData);
+        } else {
+          setTeamsList([]);
+        }
+      } else {
+        setTeamsList([]);
+      }
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+      setTeamsError(null);
+      setTeamsList([]);
+    } finally {
+      setIsLoadingTeams(false);
+    }
+  };
+
+  // Load companies, tasks, projects, and teams on component mount
   useEffect(() => {
     fetchCompanies();
     fetchTasks();
+    fetchProjects();
+    fetchTeams();
   }, []);
 
   // Helper to toggle section expansion
@@ -427,12 +495,12 @@ export default function ContextSidebar({
                 ) : tasksList.length === 0 ? (
                   <div className="text-center py-4">
                     <div className="text-sm text-gray-500 mb-2">No tasks found</div>
-                  </div>
+                    </div>
                 ) : (
                   tasksList.map((task) => (
                     <div key={task.id} className="space-y-1">
                       <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
-                        <button
+                      <button
                           className="p-1 rounded hover:bg-neutral-100 transition-colors"
                           onClick={() => {
                             setTasksList(prev => prev.map(t =>
@@ -441,21 +509,21 @@ export default function ContextSidebar({
                           }}
                         >
                           {task.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                        </button>
+                      </button>
                         <CheckSquare size={18} className="text-green-500" />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold text-neutral-800 truncate">{task.title}</div>
                           <div className="text-xs text-neutral-500 truncate">{task.assignee} • {task.project}</div>
-                        </div>
+                    </div>
                         <div className="flex items-center gap-1">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             task.status === "Done" ? "bg-green-100 text-green-700" :
                             task.status === "In Progress" ? "bg-blue-100 text-blue-700" :
                             task.status === "To Do" ? "bg-gray-100 text-gray-700" :
                             "bg-yellow-100 text-yellow-700"
-                          }`}>
-                            {task.status}
-                          </span>
+                      }`}>
+                        {task.status}
+                      </span>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             task.priority === "High" ? "bg-red-100 text-red-700" :
                             task.priority === "Medium" ? "bg-yellow-100 text-yellow-700" :
@@ -464,10 +532,94 @@ export default function ContextSidebar({
                             {task.priority}
                           </span>
                         </div>
+                        </div>
                       </div>
-                    </div>
                   ))
                 )}
+              </nav>
+            )}
+
+            {activeTab === 1 && (
+              /* Projects Content */
+              <nav className="space-y-1">
+                {isLoadingProjects ? (
+                  <div className="text-center py-4">Loading projects...</div>
+                ) : projectsError ? (
+                  <div className="text-center py-4 text-red-500">{projectsError}</div>
+                ) : projectsList.length === 0 ? (
+                  <div className="text-center py-4">
+                    <div className="text-sm text-gray-500 mb-2">No projects found</div>
+                  </div>
+                ) : (
+                  projectsList.map((project) => (
+                    <div key={project.id} className="space-y-1">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
+                        <FolderOpen size={18} className="text-blue-500" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-neutral-800 truncate">{project.name}</div>
+                          <div className="text-xs text-neutral-500 truncate">{project.company} • {project.assignee}</div>
+                    </div>
+                        <div className="flex items-center gap-1">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            project.status === "Completed" ? "bg-green-100 text-green-700" :
+                            project.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                            project.status === "Planning" ? "bg-gray-100 text-gray-700" :
+                            "bg-yellow-100 text-yellow-700"
+                          }`}>
+                            {project.status}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            project.priority === "High" ? "bg-red-100 text-red-700" :
+                            project.priority === "Medium" ? "bg-yellow-100 text-yellow-700" :
+                            "bg-green-100 text-green-700"
+                          }`}>
+                            {project.priority}
+                      </span>
+                        </div>
+                        </div>
+                      </div>
+                  ))
+                    )}
+              </nav>
+            )}
+
+            {activeTab === 3 && (
+              /* Teams Content */
+              <nav className="space-y-1">
+                {isLoadingTeams ? (
+                  <div className="text-center py-4">Loading teams...</div>
+                ) : teamsError ? (
+                  <div className="text-center py-4 text-red-500">{teamsError}</div>
+                ) : teamsList.length === 0 ? (
+                  <div className="text-center py-4">
+                    <div className="text-sm text-gray-500 mb-2">No teams found</div>
+                    </div>
+                ) : (
+                  teamsList.map((team) => (
+                    <div key={team.id} className="space-y-1">
+                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
+                        <Users size={18} className="text-purple-500" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-neutral-800 truncate">{team.name}</div>
+                          <div className="text-xs text-neutral-500 truncate">{team.project} • {team.department}</div>
+                    </div>
+                        <div className="flex items-center gap-1">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            team.health === "excellent" ? "bg-green-100 text-green-700" :
+                            team.health === "good" ? "bg-blue-100 text-blue-700" :
+                            team.health === "warning" ? "bg-yellow-100 text-yellow-700" :
+                            "bg-red-100 text-red-700"
+                          }`}>
+                            {team.health}
+                          </span>
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                            {team.budget}
+                          </span>
+                        </div>
+                        </div>
+                      </div>
+                  ))
+                    )}
               </nav>
             )}
 
@@ -505,27 +657,27 @@ export default function ContextSidebar({
                   </div>
                 ) : (
                   companiesList.map((company) => (
-                    <div key={company.id} className="space-y-1">
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
-                        <button
-                          className="p-1 rounded hover:bg-neutral-100 transition-colors"
-                          onClick={() => {
-                            setCompaniesList(prev => prev.map(c =>
-                              c.id === company.id ? { ...c, expanded: !c.expanded } : c
-                            ));
-                          }}
-                        >
-                          {company.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                        </button>
-                        <Building2 size={18} className="text-blue-500" />
-                        <span className="text-sm font-semibold text-neutral-800 flex-1">{company.name}</span>
-                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-medium text-purple-600">AI</span>
-                        </div>
+                  <div key={company.id} className="space-y-1">
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
+                      <button
+                        className="p-1 rounded hover:bg-neutral-100 transition-colors"
+                        onClick={() => {
+                          setCompaniesList(prev => prev.map(c =>
+                            c.id === company.id ? { ...c, expanded: !c.expanded } : c
+                          ));
+                        }}
+                      >
+                        {company.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
+                      </button>
+                      <Building2 size={18} className="text-blue-500" />
+                      <span className="text-sm font-semibold text-neutral-800 flex-1">{company.name}</span>
+                      <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                        <span className="text-xs font-medium text-purple-600">AI</span>
                       </div>
-                      
-
                     </div>
+
+
+                          </div>
                   ))
                 )}
               </nav>
@@ -551,18 +703,18 @@ export default function ContextSidebar({
 
                 <div className="border-t border-neutral-200 pt-4">
                   <h3 className="text-sm font-semibold text-neutral-800 mb-3">Upcoming Events</h3>
-                  {allCalendarEvents.map((event) => (
+                {allCalendarEvents.map((event) => (
                     <div key={event.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer mb-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-semibold text-neutral-900">{event.title}</h3>
-                      </div>
-                      <p className="text-xs text-neutral-600 mb-2">{event.description}</p>
-                      <div className="flex items-center gap-2 text-xs text-neutral-500">
-                        <span>{event.date} at {event.time}</span>
-                        <span>{event.duration}</span>
-                      </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-sm font-semibold text-neutral-900">{event.title}</h3>
                     </div>
-                  ))}
+                    <p className="text-xs text-neutral-600 mb-2">{event.description}</p>
+                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                      <span>{event.date} at {event.time}</span>
+                      <span>{event.duration}</span>
+                    </div>
+                  </div>
+                ))}
                 </div>
               </div>
             )}
@@ -587,23 +739,23 @@ export default function ContextSidebar({
 
                 <div className="border-t border-neutral-200 pt-4">
                   <h3 className="text-sm font-semibold text-neutral-800 mb-3">Recent Reports</h3>
-                  {allReports.map((report) => (
+                {allReports.map((report) => (
                     <div key={report.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer mb-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-semibold text-neutral-900">{report.title}</h3>
-                      </div>
-                      <p className="text-xs text-neutral-600 mb-2">{report.description}</p>
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className={`px-2 py-1 rounded ${
-                          report.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {report.status}
-                        </span>
-                        <span className="text-neutral-500">{report.author}</span>
-                      </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-sm font-semibold text-neutral-900">{report.title}</h3>
                     </div>
+                    <p className="text-xs text-neutral-600 mb-2">{report.description}</p>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className={`px-2 py-1 rounded ${
+                        report.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {report.status}
+                      </span>
+                      <span className="text-neutral-500">{report.author}</span>
+                    </div>
+                        </div>
                   ))}
-                </div>
+                        </div>
               </div>
             )}
           </div>

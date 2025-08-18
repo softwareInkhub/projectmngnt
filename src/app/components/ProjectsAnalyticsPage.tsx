@@ -1,4 +1,8 @@
-import { useState } from "react";
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ProjectApiService, ProjectData } from "../utils/projectApi";
+import { CompanyApiService, CompanyData } from "../utils/companyApi";
 import { 
   X, 
   FolderOpen, 
@@ -59,235 +63,39 @@ import {
   ChevronUp
 } from "lucide-react";
 
-const initialCompanies = [
-  {
-    name: "Whapi Corp",
-    projects: [
-      {
-        name: "Whapi Project Management",
-        status: "Active",
-        members: ["A", "B", "C"],
-        description: "Comprehensive project management platform for enterprise teams",
-        tasks: [
-          { id: 1, title: "Design UI Components", status: "Completed", assignee: "A" },
-          { id: 2, title: "Implement Authentication", status: "In Progress", assignee: "B" },
-          { id: 3, title: "Database Schema Design", status: "Pending", assignee: "C" }
-        ],
-        sprints: [
-          { id: 1, name: "Sprint 1", status: "Completed", tasks: 8 },
-          { id: 2, name: "Sprint 2", status: "Active", tasks: 12 }
-        ],
-        progress: 65,
-        startDate: "2024-01-15",
-        endDate: "2024-06-30"
-      },
-      {
-        name: "Client Portal",
-        status: "Planning",
-        members: ["A", "D"],
-        description: "Customer-facing portal for client management",
-        tasks: [
-          { id: 1, title: "Requirements Gathering", status: "Completed", assignee: "A" },
-          { id: 2, title: "Architecture Design", status: "In Progress", assignee: "D" }
-        ],
-        sprints: [
-          { id: 1, name: "Planning Sprint", status: "Active", tasks: 5 }
-        ],
-        progress: 25,
-        startDate: "2024-03-01",
-        endDate: "2024-08-31"
-      },
-    ],
-  },
-  {
-    name: "Inkhub",
-    projects: [
-      {
-        name: "Inkhub Docs",
-        status: "Active",
-        members: ["E", "F"],
-        description: "Documentation platform for development teams",
-        tasks: [
-          { id: 1, title: "API Documentation", status: "Completed", assignee: "E" },
-          { id: 2, title: "User Guide Creation", status: "In Progress", assignee: "F" },
-          { id: 3, title: "Integration Testing", status: "Pending", assignee: "E" }
-        ],
-        sprints: [
-          { id: 1, name: "Sprint 1", status: "Completed", tasks: 6 },
-          { id: 2, name: "Sprint 2", status: "Active", tasks: 8 }
-        ],
-        progress: 45,
-        startDate: "2024-02-01",
-        endDate: "2024-07-31"
-      },
-    ],
-  },
-];
+// Status and priority colors for cards
+const statusColors = {
+  "Planning": "bg-blue-100 text-blue-700",
+  "Active": "bg-green-100 text-green-700",
+  "On Hold": "bg-orange-100 text-orange-700",
+  "Completed": "bg-emerald-100 text-emerald-700",
+  "Cancelled": "bg-red-100 text-red-700"
+};
 
-const statusTabs = ["All", "Active", "Planning", "Completed", "Archived"];
-const analytics = [
-  { label: "Total Projects", value: 6 },
-  { label: "Active", value: 4 },
-  { label: "Planning", value: 2 },
-  { label: "Completed", value: 1 },
-  { label: "Overdue", value: 0 },
-];
-const sortOptions = [
-  { label: "Name", value: "name" },
-  { label: "Status", value: "status" },
-  { label: "Progress", value: "progress" },
-  { label: "Start Date", value: "startDate" },
-  { label: "End Date", value: "endDate" },
-];
+const priorityColors = {
+  "Low": "bg-green-100 text-green-700",
+  "Medium": "bg-yellow-100 text-yellow-700",
+  "High": "bg-red-100 text-red-700",
+  "Critical": "bg-purple-100 text-purple-700"
+};
 
-interface Project {
-  name: string;
-  status: string;
-  members: string[];
-  description: string;
-  tasks: Array<{ id: number; title: string; status: string; assignee: string }>;
-  sprints: Array<{ id: number; name: string; status: string; tasks: number }>;
-  progress: number;
-  startDate: string;
-  endDate: string;
-  company?: string;
-  archived?: boolean;
+interface ProjectsAnalyticsPageProps {
+  onOpenTab?: (tabType: string, context?: Record<string, unknown>) => void;
+  onViewProject?: (project: any) => void;
 }
 
-export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { onViewProject: (project: Project) => void, onOpenTab?: (type: string, title?: string, project?: Project) => void }) {
-  // State for all companies/projects
-  const [companies, setCompanies] = useState(initialCompanies);
-  const [activeTab, setActiveTab] = useState("All");
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("name");
-  const [sortAsc, setSortAsc] = useState(true);
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const [showFilters, setShowFilters] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>("");
-  const [filterCompany, setFilterCompany] = useState<string>("");
-  const [filterMember, setFilterMember] = useState<string>("");
-  const [page, setPage] = useState(1);
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState<string | null>(null);
-  const pageSize = 10;
-
-  // Flatten all projects for filtering/sorting
-  const allProjects: Project[] = [];
-  companies.forEach(company => {
-    company.projects.forEach(project => {
-      allProjects.push({ ...project, company: company.name });
-    });
-  });
-
-  // Filters
-  let filtered = allProjects.filter(p =>
-    (activeTab === "All" || p.status === activeTab) &&
-    (!filterStatus || p.status === filterStatus) &&
-    (!filterCompany || p.company === filterCompany) &&
-    (!filterMember || p.members.includes(filterMember)) &&
-    (!p.archived || activeTab === "Archived")
-  );
-  // Search
-  if (search) {
-    filtered = filtered.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.company?.toLowerCase().includes(search.toLowerCase()));
-  }
-  // Sort
-  filtered = filtered.sort((a, b) => {
-    if (sort === "progress") return sortAsc ? a.progress - b.progress : b.progress - a.progress;
-    const aVal = a[sort as keyof Project];
-    const bVal = b[sort as keyof Project];
-    const aStr = aVal !== undefined && aVal !== null ? String(aVal) : "";
-    const bStr = bVal !== undefined && bVal !== null ? String(bVal) : "";
-    return sortAsc ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
-  });
-  // Pagination
-  const totalPages = Math.ceil(filtered.length / pageSize);
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  // Bulk actions
-  const bulkArchive = () => {
-    setCompanies(prev => prev.map(company => ({
-      ...company,
-      projects: company.projects.map(p => selected[p.name] ? { ...p, archived: true } : p)
-    })));
-    setSelected({});
-  };
-  const bulkDelete = () => {
-    setCompanies(prev => prev.map(company => ({
-      ...company,
-      projects: company.projects.filter(p => !selected[p.name])
-    })));
-    setSelected({});
-  };
+export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: ProjectsAnalyticsPageProps = {}) {
+  const router = useRouter();
   
-  // Single actions
-  const archiveProject = (project: Project) => {
-    setCompanies(prev => prev.map(company => ({
-      ...company,
-      projects: company.projects.map(p => p.name === project.name ? { ...p, archived: true } : p)
-    })));
-  };
-  const deleteProject = (project: Project) => {
-    setCompanies(prev => prev.map(company => ({
-      ...company,
-      projects: company.projects.filter(p => p.name !== project.name)
-    })));
-  };
-  const duplicateProject = (project: Project) => {
-    const newProject = {
-      ...project,
-      name: `${project.name} (Copy)`,
-      progress: 0,
-      status: "Planning"
-    };
-    setCompanies(prev => prev.map(company => 
-      company.name === project.company 
-        ? { ...company, projects: [...company.projects, newProject] }
-        : company
-    ));
-  };
-  const exportProject = (project: Project) => {
-    const dataStr = JSON.stringify(project, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${project.name}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Unique companies and members for filters
-  const allCompanies = Array.from(new Set(allProjects.map(p => p.company)));
-  const allMembers = Array.from(new Set(allProjects.flatMap(p => p.members)));
-
-  // Handle select all
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const all: Record<string, boolean> = {};
-      paginated.forEach(p => all[p.name] = true);
-      setSelected(all);
-    } else {
-      setSelected({});
-    }
-  };
-
-  // Handle individual select
-  const handleSelectProject = (projectName: string, checked: boolean) => {
-    setSelected(prev => ({ ...prev, [projectName]: checked }));
-  };
-
-  // Clear all filters
-  const clearFilters = () => {
-    setFilterStatus("");
-    setFilterCompany("");
-    setFilterMember("");
-    setSearch("");
-    setPage(1);
-  };
-
-  // Check if any filters are active
-  const hasActiveFilters = filterStatus || filterCompany || filterMember;
+  // API state
+  const [projects, setProjects] = useState<ProjectData[]>([]);
+  const [companies, setCompanies] = useState<CompanyData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [priorityFilter, setPriorityFilter] = useState("All");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Form states
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -303,9 +111,9 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
-  const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
-  const [newCompanyName, setNewCompanyName] = useState("");
-  const [newCompanyDescription, setNewCompanyDescription] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
+
 
   const statuses = ["Planning", "Active", "Completed", "On Hold", "Cancelled"];
   const priorities = ["Low", "Medium", "High", "Critical"];
@@ -319,6 +127,80 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
     );
   };
 
+  // Fetch projects from API
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await ProjectApiService.getProjects();
+      
+      if (response.success) {
+        const projectsData = response.items || response.data || [];
+        console.log('Projects fetched from API:', projectsData);
+        setProjects(Array.isArray(projectsData) ? projectsData as ProjectData[] : []);
+      } else {
+        console.error('Failed to fetch projects:', response.error);
+        setError('Failed to fetch projects');
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setError('Error fetching projects');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch companies from API
+  const fetchCompanies = async () => {
+    try {
+      const response = await CompanyApiService.getCompanies();
+      
+      if (response.success) {
+        const companiesData = response.items || response.data || [];
+        console.log('Companies fetched from API:', companiesData);
+        setCompanies(Array.isArray(companiesData) ? companiesData as CompanyData[] : []);
+      } else {
+        console.error('Failed to fetch companies:', response.error);
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+    }
+  };
+
+  // Load projects and companies on component mount
+  useEffect(() => {
+    fetchProjects();
+    fetchCompanies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId && !(event.target as Element).closest('.menu-container')) {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuId]);
+
+  // Filter projects based on search and filters
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = 
+      (project.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (project.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (project.company?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "All" || project.status === statusFilter;
+    const matchesPriority = priorityFilter === "All" || project.priority === priorityFilter;
+    
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
   const handleCreateProject = async (projectData: {
     name: string;
     description: string;
@@ -331,49 +213,66 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
     teamMembers: string[];
   }) => {
       try {
-        const newProject: Project = {
-        name: projectData.name,
-        description: projectData.description,
-        status: projectData.status,
-        members: projectData.teamMembers,
-          tasks: [],
-          sprints: [],
-          progress: 0,
-        startDate: projectData.startDate,
-        endDate: projectData.endDate,
-        company: projectData.company,
-          archived: false
+        // Ensure description has a value
+        const description = projectData.description?.trim() || 'No description provided';
+        
+        // Prepare project data for API
+        const apiProjectData = {
+          name: projectData.name,
+          description: description,
+          company: projectData.company,
+          status: projectData.status,
+          priority: projectData.priority,
+          startDate: projectData.startDate,
+          endDate: projectData.endDate,
+          budget: projectData.budget,
+          team: projectData.teamMembers.join(', '),
+          assignee: projectData.teamMembers[0] || '',
+          progress: editingProject ? editingProject.progress : 0,
+          tasks: editingProject ? editingProject.tasks : 0,
+          tags: editingProject ? editingProject.tags : JSON.stringify([]),
+          notes: editingProject ? editingProject.notes : ''
         };
+
+        let response;
         
-        setCompanies(prev => prev.map(company => 
-        company.name === projectData.company 
-            ? { ...company, projects: [...company.projects, newProject] }
-            : company
-        ));
-        
-        setShowCreateForm(false);
-      console.log('Project created successfully:', newProject);
+        if (editingProject) {
+          // Update existing project
+          console.log('Updating project with API data:', apiProjectData);
+          response = await ProjectApiService.updateProject(editingProject.id || '', {
+            ...apiProjectData,
+            updatedAt: new Date().toISOString()
+          });
+          console.log('Project update API response:', response);
+        } else {
+          // Create new project
+          console.log('Creating project with API data:', apiProjectData);
+          response = await ProjectApiService.createProject(apiProjectData);
+        console.log('Project creation API response:', response);
+        }
+
+        if (response.success) {
+          console.log(editingProject ? 'Project updated successfully in database:' : 'Project created successfully in database:', response.data);
+          
+          // Refresh projects from API to get the latest data
+          await fetchProjects();
+          
+          setShowCreateForm(false);
+          setEditingProject(null);
+          console.log(editingProject ? 'Project updated successfully and data refreshed' : 'Project created successfully and data refreshed');
+        } else {
+          console.error(editingProject ? 'Failed to update project in database:' : 'Failed to create project in database:', response.error);
+        }
       } catch (error) {
-        console.error('Error creating project:', error);
+        console.error('Error saving project:', error);
       }
   };
 
-  const handleCreateNewCompany = () => {
-    if (newCompanyName.trim()) {
-      const newCompany = {
-        name: newCompanyName.trim(),
-        projects: [],
-      };
-      setCompanies(prev => [...prev, newCompany]);
-      setSelectedCompany(newCompanyName.trim());
-      setShowNewCompanyModal(false);
-      setNewCompanyName("");
-      setNewCompanyDescription("");
-    }
-  };
+
 
   const cancelCreate = () => {
     setShowCreateForm(false);
+    setEditingProject(null);
     setProjectName("");
     setProjectDescription("");
     setSelectedCompany("");
@@ -385,16 +284,120 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
     setSelectedMembers([]);
   };
 
-  const handleOpenCompanyProjects = (companyName: string) => {
-    setFilterCompany(companyName);
-    setPage(1);
-    if (onOpenTab) {
-      onOpenTab("projects", `Projects - ${companyName}`);
+  // Menu management functions
+  const toggleMenu = (projectId: string) => {
+    setOpenMenuId(openMenuId === projectId ? null : projectId);
+  };
+
+  const closeMenu = () => {
+    setOpenMenuId(null);
+  };
+
+  // Project action functions
+  const handleEditProject = (project: ProjectData) => {
+    // Pre-fill the create form with project data for editing
+    setProjectName(project.name || '');
+    setProjectDescription(project.description || '');
+    setSelectedCompany(project.company || '');
+    setProjectStatus(project.status || 'Planning');
+    setProjectPriority(project.priority || 'Medium');
+    setStartDate(project.startDate || '');
+    setEndDate(project.endDate || '');
+    setBudget(project.budget || '');
+    setSelectedMembers(project.team ? project.team.split(',').map(m => m.trim()) : []);
+    
+    // Store the project being edited
+    setEditingProject(project);
+    setShowCreateForm(true);
+    closeMenu();
+  };
+
+  const handleDeleteProject = async (project: ProjectData) => {
+    if (confirm(`Are you sure you want to delete "${project.name}"?`)) {
+      try {
+        const response = await ProjectApiService.deleteProject(project.id || '');
+        if (response.success) {
+          console.log('Project deleted successfully');
+          await fetchProjects(); // Refresh the list
+        } else {
+          console.error('Failed to delete project:', response.error);
+        }
+      } catch (error) {
+        console.error('Error deleting project:', error);
+      }
     }
+    closeMenu();
+  };
+
+  const handleArchiveProject = async (project: ProjectData) => {
+    try {
+      const response = await ProjectApiService.updateProject(project.id || '', {
+        status: 'Archived',
+        updatedAt: new Date().toISOString()
+      });
+      
+      if (response.success) {
+        console.log('Project archived successfully');
+        await fetchProjects(); // Refresh the list
+      } else {
+        console.error('Failed to archive project:', response.error);
+      }
+    } catch (error) {
+      console.error('Error archiving project:', error);
+    }
+    closeMenu();
+  };
+
+  const handleDuplicateProject = async (project: ProjectData) => {
+    try {
+      const duplicatedProject = {
+        ...project,
+        name: `${project.name} (Copy)`,
+        status: 'Planning',
+        progress: 0,
+        tasks: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Remove the ID so a new one is generated
+      delete duplicatedProject.id;
+      
+      const response = await ProjectApiService.createProject(duplicatedProject);
+      
+      if (response.success) {
+        console.log('Project duplicated successfully');
+        await fetchProjects(); // Refresh the list
+      } else {
+        console.error('Failed to duplicate project:', response.error);
+      }
+    } catch (error) {
+      console.error('Error duplicating project:', error);
+    }
+    closeMenu();
+  };
+
+  const handleExportProject = (project: ProjectData) => {
+    // Create a JSON file with project data
+    const projectData = {
+      ...project,
+      exportedAt: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(projectData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `${project.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.json`;
+    link.click();
+    
+    console.log('Project exported successfully');
+    closeMenu();
   };
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="flex items-center justify-between px-8 py-6">
@@ -409,6 +412,45 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="All">All Status</option>
+              <option value="Planning">Planning</option>
+              <option value="Active">Active</option>
+              <option value="On Hold">On Hold</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+
+            {/* Priority Filter */}
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="All">All Priority</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
+
             <button 
               className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md"
             >
@@ -427,13 +469,68 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
       </div>
 
       <div className="p-8 space-y-6">
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500">Total Projects</p>
+                <p className="text-lg font-semibold text-slate-900">{projects.length}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <FolderKanban className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500">Active Projects</p>
+                <p className="text-lg font-semibold text-slate-900">{projects.filter(p => p.status === "Active").length}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Activity className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500">Completed</p>
+                <p className="text-lg font-semibold text-slate-900">{projects.filter(p => p.status === "Completed").length}</p>
+              </div>
+              <div className="p-3 bg-emerald-100 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-emerald-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500">Avg Progress</p>
+                <p className="text-lg font-semibold text-slate-900">{projects.length > 0 ? Math.round(projects.reduce((sum, p) => sum + (p.progress || 0), 0) / projects.length) : 0}%</p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Professional Inline Create Project Form */}
       {showCreateForm && (
           <div className="bg-white border border-slate-200 rounded-xl shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-xl font-bold text-slate-900 mb-1">Create New Project</h2>
-                <p className="text-slate-500 text-sm">Fill in the details below to create a new project</p>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">
+                  {editingProject ? 'Edit Project' : 'Create New Project'}
+                </h2>
+                <p className="text-slate-500 text-sm">
+                  {editingProject ? 'Update the project details below' : 'Fill in the details below to create a new project'}
+                </p>
               </div>
             <button 
               onClick={cancelCreate}
@@ -484,174 +581,60 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
                   <button
                     type="button"
                     onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className={`w-full px-4 py-3 border rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                          selectedCompany ? "border-slate-300 text-slate-900" : "border-red-300 text-slate-500"
+                        }`}
                   >
                         <span className={selectedCompany ? "text-slate-900" : "text-slate-500"}>
-                      {selectedCompany || "Select a company"}
+                          {selectedCompany || "Select a company (required)"}
                     </span>
                         <ChevronDown size={16} className="text-slate-400" />
                   </button>
                   
                   {showCompanyDropdown && (
                         <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {/* Company Options */}
-                          <div className="px-3 py-2 bg-slate-50 border-b border-slate-200">
-                            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Companies</span>
+                          {companies.length === 0 ? (
+                            <div className="px-4 py-3 text-sm text-slate-500">
+                              No companies available. Please create a company first.
                           </div>
+                          ) : (
+                            <>
                           {companies.map((company) => (
                         <button
-                              key={company.name}
+                                  key={company.id}
                           type="button"
                           onClick={() => {
                                 setSelectedCompany(company.name);
                             setShowCompanyDropdown(false);
                           }}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
-                        >
-                              <Building size={14} className="text-blue-500" />
-                              {company.name}
+                                  className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors border-b border-slate-100 last:border-b-0"
+                                >
+                                  <div className="font-medium text-slate-900">{company.name}</div>
+                                  {company.description && (
+                                    <div className="text-xs text-slate-500 mt-1">{company.description}</div>
+                                  )}
                         </button>
                       ))}
-                          
-                          {/* Company Management Options */}
-                          <div className="border-t border-slate-200">
-                            <div className="px-3 py-2 bg-slate-50">
-                              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Company Management</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                // TODO: Open Projects page for selected company
-                                setShowCompanyDropdown(false);
-                              }}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
-                            >
-                              <FolderOpen size={14} className="text-green-500" />
-                              Projects
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                // TODO: Open Sprints page for selected company
-                                setShowCompanyDropdown(false);
-                              }}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
-                            >
-                              <Calendar size={14} className="text-purple-500" />
-                              Sprints
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                // TODO: Open Tasks page for selected company
-                                setShowCompanyDropdown(false);
-                              }}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
-                            >
-                              <CheckSquare size={14} className="text-orange-500" />
-                              Tasks
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                // TODO: Open Teams page for selected company
-                                setShowCompanyDropdown(false);
-                              }}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
-                            >
-                              <Users size={14} className="text-indigo-500" />
-                              Teams
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                // TODO: Open Departments page for selected company
-                                setShowCompanyDropdown(false);
-                              }}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
-                            >
-                              <Building size={14} className="text-teal-500" />
-                              Departments
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                // TODO: Open Stories page for selected company
-                                setShowCompanyDropdown(false);
-                              }}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors flex items-center gap-3"
-                            >
-                              <BarChart3 size={14} className="text-pink-500" />
-                              Stories
-                            </button>
-                          </div>
-
-                          {/* Add New Company */}
                           <div className="border-t border-slate-200">
                             <button
                               type="button"
-                              onClick={() => setShowNewCompanyModal(true)}
-                              className="w-full text-left px-4 py-3 text-blue-600 hover:bg-blue-50 text-sm font-medium transition-colors flex items-center gap-3"
-                            >
-                              <Plus size={14} />
-                              + Add New Company
+                              onClick={() => {
+                                    // Open companies page using the app's tab system
+                                    if (onOpenTab) {
+                                      onOpenTab("companies");
+                                    } else {
+                                      // Fallback to window location if onOpenTab is not available
+                                      window.location.href = '/?tab=companies';
+                                    }
+                                setShowCompanyDropdown(false);
+                              }}
+                                  className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-blue-600 font-medium transition-colors"
+                                >
+                                  + Create New Company
                             </button>
                           </div>
-                    </div>
-                  )}
-
-                      {/* Inline New Company Form */}
-                      {showNewCompanyModal && (
-                        <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-4">
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-sm font-semibold text-slate-900">Add New Company</h4>
-                            <button
-                              onClick={() => setShowNewCompanyModal(false)}
-                              className="text-slate-400 hover:text-slate-600"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-700 mb-1">Company Name *</label>
-                              <input
-                                type="text"
-                                value={newCompanyName}
-                                onChange={(e) => setNewCompanyName(e.target.value)}
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                                placeholder="Enter company name"
-                                required
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-700 mb-1">Description (Optional)</label>
-                              <textarea
-                                value={newCompanyDescription}
-                                onChange={(e) => setNewCompanyDescription(e.target.value)}
-                                rows={2}
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
-                                placeholder="Brief company description..."
-                              />
-                            </div>
-                            <div className="flex gap-3 pt-2">
-                              <button
-                                type="button"
-                                onClick={() => setShowNewCompanyModal(false)}
-                                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="button"
-                                onClick={handleCreateNewCompany}
-                                disabled={!newCompanyName.trim()}
-                                className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                Add Company
-                              </button>
-                            </div>
-                          </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -747,44 +730,32 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
               <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">Budget</label>
                 <input 
+                      type="text"
                   value={budget} 
                   onChange={e => setBudget(e.target.value)} 
                       className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="e.g., $50,000"
+                      placeholder="Enter budget amount"
                 />
-                  </div>
               </div>
-            </div>
-
-              {/* Timeline Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Calendar className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Timeline</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Start Date *</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Start Date</label>
                 <input 
                   type="date"
                   value={startDate} 
                   onChange={e => setStartDate(e.target.value)} 
                       className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      required
                 />
               </div>
-              
               <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">End Date *</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">End Date</label>
                 <input 
                   type="date"
                   value={endDate} 
                   onChange={e => setEndDate(e.target.value)} 
                       className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      required
                 />
                   </div>
               </div>
@@ -793,453 +764,402 @@ export default function ProjectsAnalyticsPage({ onViewProject, onOpenTab }: { on
               {/* Team Members Section */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <Users className="w-5 h-5 text-orange-600" />
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Users className="w-5 h-5 text-purple-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900">Team Members</h3>
                 </div>
 
-            <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Assign Team Members</label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {availableMembers.map(member => (
+                  {availableMembers.map((member) => (
                   <button
                     key={member}
                     type="button"
                     onClick={() => toggleMember(member)}
                         className={`p-3 rounded-lg border-2 transition-all ${
                       selectedMembers.includes(member) 
-                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                            : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-sm font-medium">
-                            {member.split(' ').map(n => n[0]).join('')}
-                          </div>
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          selectedMembers.includes(member) ? "bg-blue-500" : "bg-slate-300"
+                        }`}></div>
                           <span className="text-sm font-medium">{member}</span>
                         </div>
                   </button>
                 ))}
-                  </div>
               </div>
             </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-6 border-t border-slate-200">
+              {/* Form Actions */}
+              <div className="flex items-center justify-end gap-4 pt-6 border-t border-slate-200">
               <button 
                 type="button"
                 onClick={cancelCreate}
-                  className="px-6 py-3 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-all font-medium"
+                  className="px-6 py-3 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                disabled={!projectName || !selectedCompany} 
-                  className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
-                Create Project
+                  {editingProject ? 'Update Project' : 'Create Project'}
               </button>
             </div>
           </form>
         </div>
       )}
 
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-blue-50 rounded-md flex items-center justify-center mr-3">
-              <FolderKanban className="w-3 h-3 text-blue-600" />
+        {/* Projects Cards */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-slate-600">Loading projects...</p>
             </div>
-            <div>
-              <p className="text-xs text-slate-500">Total Projects</p>
-              <p className="text-lg font-semibold text-slate-900">{allProjects.length}</p>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-4" />
+                <p className="text-red-600">{error}</p>
+                <button 
+                  onClick={fetchProjects}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Retry
+                </button>
+          </div>
+            </div>
+          ) : filteredProjects.length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <FolderKanban className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">No projects found</h3>
+                <p className="text-slate-600 mb-4">Get started by creating your first project</p>
+                <button 
+                  onClick={() => setShowCreateForm(true)}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
+                >
+                  <Plus size={20} />
+                  Create Project
+                </button>
+            </div>
+          </div>
+          ) : (
+            <>
+              {/* View Mode Toggle */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center bg-slate-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`p-2 rounded-md transition-colors ${
+                        viewMode === "grid" 
+                          ? "bg-white text-blue-600 shadow-sm" 
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      <Grid3X3 size={16} />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-2 rounded-md transition-colors ${
+                        viewMode === "list" 
+                          ? "bg-white text-blue-600 shadow-sm" 
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      <List size={16} />
+                    </button>
+            </div>
+                  <span className="text-sm text-slate-600">
+                    {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
+                  </span>
             </div>
           </div>
           
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-green-50 rounded-md flex items-center justify-center mr-3">
-              <TrendingUp className="w-3 h-3 text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Active Projects</p>
-              <p className="text-lg font-semibold text-slate-900">{allProjects.filter(p => p.status === "Active").length}</p>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-purple-50 rounded-md flex items-center justify-center mr-3">
-              <CheckCircle className="w-3 h-3 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Completed</p>
-              <p className="text-lg font-semibold text-slate-900">{allProjects.filter(p => p.status === "Completed").length}</p>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-orange-50 rounded-md flex items-center justify-center mr-3">
-              <BarChart2 className="w-3 h-3 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Avg Progress</p>
-              <p className="text-lg font-semibold text-slate-900">{Math.round(allProjects.reduce((sum, p) => sum + p.progress, 0) / allProjects.length)}%</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters and Actions */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+              {/* Projects Grid/List */}
+              <div className={`grid gap-6 ${
+                viewMode === "grid" 
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
+                  : "grid-cols-1"
+              }`}>
+                {filteredProjects.map((project) => (
+                  <div key={project.id} className={`bg-white border border-slate-200 rounded-xl hover:shadow-lg transition-all duration-200 hover:border-slate-300 ${
+                    viewMode === "list" ? "p-4" : "p-6"
+                  }`}>
+                    {viewMode === "list" ? (
+                      // List View - Compact card layout similar to tasks
+                      <div className="flex items-center gap-4">
+                        {/* Checkbox */}
                 <input
-                  type="text"
-                  placeholder="Search projects..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                          type="checkbox"
+                          className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                        />
+                        
+                        {/* Project Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-green-600 text-base mb-1 truncate">{project.name}</h3>
+                              <p className="text-sm text-slate-600 line-clamp-1">{project.description}</p>
               </div>
               
-              <div className="flex gap-3">
+                            {/* Status and Priority Tags */}
+                            <div className="flex items-center gap-2 ml-4">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[project.status as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'}`}>
+                                {project.status}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[project.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700'}`}>
+                                {project.priority}
+                              </span>
+                            </div>
+                            
+                            {/* Action Icons */}
+                            <div className="flex items-center gap-2 ml-4">
+                              <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+                                <Heart className="w-4 h-4" />
+                              </button>
+                              <div className="relative">
                 <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
-                    showFilters 
-                      ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                      : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <Filter size={16} />
-                  Filters
+                                  onClick={() => toggleMenu(project.id || '')}
+                                  className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
         </button>
                 
-        <div className="relative">
+                                {/* Dropdown Menu for List View */}
+                                {openMenuId === project.id && (
+                                  <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[160px] menu-container">
+                                    <div className="py-1">
           <button 
-                    onClick={() => setShowSortDropdown(!showSortDropdown)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-all"
+                                        onClick={() => handleEditProject(project)}
+                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
           >
-                    <SortAsc size={16} />
-                    Sort
-                    <ChevronDown size={16} />
+                                        <Edit className="w-4 h-4" />
+                                        Edit Project
           </button>
-          
-          {showSortDropdown && (
-                    <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg min-w-[160px] z-10">
                 <button 
-                        onClick={() => { setSort("name"); setShowSortDropdown(false); }}
-                        className="block w-full text-left px-4 py-3 hover:bg-slate-50 text-sm"
+                                        onClick={() => handleDuplicateProject(project)}
+                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                       >
-                        Name {sort === "name" && (sortAsc ? "↑" : "↓")}
+                                        <Copy className="w-4 h-4" />
+                                        Duplicate
                 </button>
                       <button
-                        onClick={() => { setSort("status"); setShowSortDropdown(false); }}
-                        className="block w-full text-left px-4 py-3 hover:bg-slate-50 text-sm"
+                                        onClick={() => handleArchiveProject(project)}
+                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                       >
-                        Status {sort === "status" && (sortAsc ? "↑" : "↓")}
+                                        <Archive className="w-4 h-4" />
+                                        Archive
                       </button>
                       <button
-                        onClick={() => { setSort("progress"); setShowSortDropdown(false); }}
-                        className="block w-full text-left px-4 py-3 hover:bg-slate-50 text-sm"
-                      >
-                        Progress {sort === "progress" && (sortAsc ? "↑" : "↓")}
+                                        onClick={() => handleExportProject(project)}
+                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                      >
+                                        <Download className="w-4 h-4" />
+                                        Export
+                                      </button>
+                                      <div className="border-t border-slate-200 my-1"></div>
+                                      <button
+                                        onClick={() => handleDeleteProject(project)}
+                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete
                       </button>
+                                    </div>
             </div>
           )}
                 </div>
               </div>
         </div>
 
-            <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-all">
-                <Archive size={16} />
-                Bulk Archive
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition-all">
-                <Trash2 size={16} />
-                Bulk Delete
-              </button>
+                          {/* Project Details Row */}
+                          <div className="flex items-center gap-6 text-sm text-slate-600">
+                            <div className="flex items-center gap-1">
+                              <Users className="w-4 h-4 text-slate-400" />
+                              <span>{project.assignee || 'Unassigned'}</span>
       </div>
+                            <div className="flex items-center gap-1">
+                              <Building className="w-4 h-4 text-slate-400" />
+                              <span>{project.company}</span>
           </div>
-          
-      {showFilters && (
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">All Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Planning">Planning</option>
-                    <option value="Completed">Completed</option>
-                  </select>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4 text-slate-400" />
+                              <span>Due: {project.endDate}</span>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Company</label>
-                  <select
-                    value={filterCompany}
-                    onChange={(e) => setFilterCompany(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">All Companies</option>
-                    {companies.map(company => (
-                      <option key={company.name} value={company.name}>{company.name}</option>
-                    ))}
-                  </select>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4 text-slate-400" />
+                              <span>{project.tasks || 0}h</span>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Member</label>
-                  <select
-                    value={filterMember}
-                    onChange={(e) => setFilterMember(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">All Members</option>
-                    {availableMembers.map(member => (
-                      <option key={member} value={member}>{member}</option>
-                    ))}
-                  </select>
                 </div>
               </div>
-              
-              <div className="flex items-center justify-between mt-4">
-                <button
-                  onClick={clearFilters}
-                  className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
-                >
-                  <FilterX size={16} />
-                  Clear Filters
-                </button>
-                
-                <div className="text-sm text-slate-500">
-                  {filtered.length} of {allProjects.length} projects
                 </div>
-              </div>
-        </div>
-      )}
-          </div>
-
-        {/* Projects Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-4 text-left">
-                  <input 
-                    type="checkbox" 
-                      checked={Object.keys(selected).length === paginated.length && paginated.length > 0}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          const newSelected: Record<string, boolean> = {};
-                          paginated.forEach(project => { newSelected[project.name] = true; });
-                          setSelected(newSelected);
-                        } else {
-                          setSelected({});
-                        }
-                      }}
-                      className="rounded border-slate-300"
-                  />
-                </th>
-                  <th className="px-6 py-4 text-left">
-                    <button 
-                      onClick={() => { setSort("name"); setSortAsc(!sortAsc); }}
-                      className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
-                    >
-                      Project
-                      {sort === "name" && (sortAsc ? <ChevronUp size={16} /> : <ChevronDown size={16} />)}
-                    </button>
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Company</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Progress</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Members</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Dates</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Actions</th>
-              </tr>
-            </thead>
-              <tbody className="divide-y divide-slate-200">
-              {paginated.map(project => (
-                  <tr key={project.name} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                    <input 
-                      type="checkbox" 
-                      checked={!!selected[project.name]} 
-                      onChange={e => handleSelectProject(project.name, e.target.checked)} 
-                        className="rounded border-slate-300"
-                    />
-                  </td>
-                    <td className="px-6 py-4">
+                    ) : (
+                      // Grid View - Original detailed card layout
+                      <>
+                        {/* Project Header */}
+                        <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <FolderKanban className="text-blue-500" size={20} />
-                        <div>
-                          <div className="font-semibold text-slate-900">{project.name}</div>
-                          <div className="text-sm text-slate-500">{project.description}</div>
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <FolderKanban className="w-5 h-5 text-blue-600" />
                         </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-slate-900 text-lg mb-1">{project.name}</h3>
+                              <p className="text-sm text-slate-600 line-clamp-2">{project.description}</p>
                       </div>
-                  </td>
-                    <td className="px-6 py-4">
-                      <button 
-                        className="text-blue-600 hover:text-blue-800 font-medium underline"
-                        onClick={(e) => { e.stopPropagation(); handleOpenCompanyProjects(project.company || ""); }}
-                      >
-                        {project.company}
-                      </button>
-                  </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        project.status === "Active" ? "bg-green-100 text-green-700" : 
-                        project.status === "Planning" ? "bg-yellow-100 text-yellow-700" : 
-                        project.status === "Completed" ? "bg-blue-100 text-blue-700" : 
-                        "bg-slate-100 text-slate-700"
-                      }`}>
-                        {project.status}
-                      </span>
-                  </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-20 h-2 bg-slate-200 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-2 rounded-full transition-all ${
-                              project.progress === 100 ? "bg-green-500" : "bg-blue-500"
-                            }`} 
-                            style={{ width: `${project.progress}%` }}
-                          ></div>
                     </div>
-                        <span className="text-sm font-medium text-slate-700">{project.progress}%</span>
-                      </div>
-                  </td>
-                    <td className="px-6 py-4">
-                    <div className="flex gap-1">
-                        {project.members.map((member, i) => (
+                          <div className="relative">
                           <button 
-                            key={i} 
-                            className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700 text-sm hover:bg-blue-200 transition-colors" 
-                            title={member}
-                            onClick={(e) => { e.stopPropagation(); setFilterMember(member); setPage(1); }}
-                          >
-                            {member.split(' ').map(n => n[0]).join('')}
+                              onClick={() => toggleMenu(project.id || '')}
+                              className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                            >
+                              <MoreHorizontal size={16} className="text-slate-400" />
                           </button>
-                      ))}
-                    </div>
-                  </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-slate-600">
-                        <div>Start: {project.startDate}</div>
-                        <div>End: {project.endDate}</div>
-                    </div>
-                  </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                            
+                            {/* Dropdown Menu */}
+                            {openMenuId === project.id && (
+                              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[160px] menu-container">
+                                <div className="py-1">
                         <button 
-                          className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" 
-                          title="View"
-                          onClick={() => onViewProject && onViewProject(project)}
+                                    onClick={() => handleEditProject(project)}
+                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >
-                          <Eye size={16} />
+                                    <Edit className="w-4 h-4" />
+                                    Edit Project
                         </button>
                         <button 
-                          className="p-2 rounded-lg hover:bg-yellow-50 text-yellow-600 transition-colors" 
-                          title="Edit"
-                          onClick={() => onOpenTab && onOpenTab("edit-project", `Edit: ${project.name}`, project)}
+                                    onClick={() => handleDuplicateProject(project)}
+                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >
-                          <Edit size={16} />
+                                    <Copy className="w-4 h-4" />
+                                    Duplicate
                         </button>
                         <button 
-                          className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors" 
-                          title="Archive"
-                          onClick={() => archiveProject(project)}
+                                    onClick={() => handleArchiveProject(project)}
+                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >
-                          <Archive size={16} />
+                                    <Archive className="w-4 h-4" />
+                                    Archive
                         </button>
                         <button 
-                          className="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors" 
-                          title="Delete"
-                          onClick={() => deleteProject(project)}
+                                    onClick={() => handleExportProject(project)}
+                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >
-                          <Trash2 size={16} />
+                                    <Download className="w-4 h-4" />
+                                    Export
                         </button>
-                        <div className="relative">
+                                  <div className="border-t border-slate-200 my-1"></div>
                           <button 
-                            className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors" 
-                          title="More" 
-                          onClick={() => setShowMoreMenu(showMoreMenu === project.name ? null : project.name)}
-                        >
-                          <MoreHorizontal size={16} />
-                        </button>
-                        {showMoreMenu === project.name && (
-                            <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg min-w-[140px] z-10">
-                            <button 
-                                className="block w-full text-left px-4 py-2 hover:bg-slate-50 text-sm" 
-                              onClick={() => {
-                                duplicateProject(project);
-                                setShowMoreMenu(null);
-                              }}
-                            >
-                              Duplicate
+                                    onClick={() => handleDeleteProject(project)}
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
                             </button>
-                            <button 
-                                className="block w-full text-left px-4 py-2 hover:bg-slate-50 text-sm" 
-                              onClick={() => {
-                                exportProject(project);
-                                setShowMoreMenu(null);
-                              }}
-                            >
-                              Export
-                            </button>
+                                </div>
                           </div>
                         )}
                       </div>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+                        {/* Project Stats */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-slate-900">{project.progress || 0}%</div>
+                            <div className="text-xs text-slate-500">Progress</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-slate-900">{project.tasks || 0}</div>
+                            <div className="text-xs text-slate-500">Tasks</div>
           </div>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-8">
-            <button 
-              className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-              disabled={page === 1} 
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-            >
-              Previous
+                        {/* Progress Bar */}
+                        <div className="w-full bg-slate-200 rounded-full h-2 mb-4">
+                          <div 
+                            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${project.progress || 0}%` }}
+                          ></div>
+                        </div>
+
+                        {/* Project Details */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[project.status as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'}`}>
+                              {project.status}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[project.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700'}`}>
+                              {project.priority}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Company and Team */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <Building className="w-4 h-4 text-slate-400" />
+                            <span className="text-sm text-slate-700">{project.company}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-slate-400" />
+                            <span className="text-sm text-slate-700">{project.team?.split(',').length || 0} members</span>
+                          </div>
+                        </div>
+
+                        {/* Dates */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-slate-400" />
+                            <span className="text-sm text-slate-700">{project.startDate}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Target className="w-4 h-4 text-slate-400" />
+                            <span className="text-sm text-slate-700">{project.endDate}</span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-between">
+                          <button className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                            View Details
             </button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button 
-                key={i} 
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  page === i + 1 
-                    ? "bg-blue-600 text-white" 
-                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
-                }`} 
-                onClick={() => setPage(i + 1)}
-              >
-                {i + 1}
+                          <div className="flex items-center gap-2">
+                            <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                              <Edit className="w-4 h-4" />
               </button>
-            ))}
-            <button 
-              className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-              disabled={page === totalPages} 
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            >
-              Next
+                            <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                              <Share2 className="w-4 h-4" />
+                            </button>
+                            <button className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                              <ExternalLink className="w-4 h-4" />
             </button>
           </div>
-        )}
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Progress Bar for List View */}
+                    {viewMode === "list" && (
+                      <div className="w-full bg-slate-200 rounded-full h-1 mt-3">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-1 rounded-full transition-all duration-300"
+                          style={{ width: `${project.progress || 0}%` }}
+                        ></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

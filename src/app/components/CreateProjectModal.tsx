@@ -2,11 +2,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Plus, Building2 } from "lucide-react";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
+import { ProjectApiService, ProjectData } from "../utils/projectApi";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate?: (projectData: any) => void;
+  onCreate?: (projectData: ProjectData) => void;
 }
 
 export default function CreateProjectModal({ isOpen, onClose, onCreate }: CreateProjectModalProps) {
@@ -110,7 +111,7 @@ export default function CreateProjectModal({ isOpen, onClose, onCreate }: Create
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name && company && onCreate) {
-      onCreate({
+      const projectData: ProjectData = {
         name,
         description,
         company,
@@ -120,9 +121,13 @@ export default function CreateProjectModal({ isOpen, onClose, onCreate }: Create
         endDate,
         budget,
         team,
-        tags,
+        assignee: "",
+        progress: 0,
+        tasks: 0,
+        tags: JSON.stringify(tags),
         notes
-      });
+      };
+      onCreate(projectData);
       onClose();
     }
   };

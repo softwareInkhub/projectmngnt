@@ -1,5 +1,5 @@
 // Task API service
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://54.85.164.84:5001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 interface ApiResponse<T> {
   success: boolean;

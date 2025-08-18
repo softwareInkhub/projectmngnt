@@ -1,7 +1,7 @@
 // Test script for API and DynamoDB integration
 // Using global fetch (available in Node.js 18+)
 
-const API_BASE_URL = 'http://54.85.164.84:5001';
+const API_BASE_URL = 'http://localhost:5001';
 
 async function testAPI() {
   console.log('🧪 Testing API and DynamoDB Integration...\n');

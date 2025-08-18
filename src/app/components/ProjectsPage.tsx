@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   CheckCircle, 
   AlertCircle, 
@@ -54,6 +54,7 @@ import {
   ArrowLeft,
   Folder
 } from "lucide-react";
+import { ProjectApiService, ProjectData, ProjectWithUI, transformProjectToUI, transformUIToProject } from "../utils/projectApi";
 
 interface Project {
   id: string;
@@ -71,50 +72,50 @@ interface Project {
 }
 
 export default function ProjectsPage({ context }: { context?: { company: string } }) {
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: "1",
-      name: "E-commerce Platform",
-      description: "Modern e-commerce platform with advanced features",
-      assignee: "Sarah Johnson",
-      progress: 75,
-      status: "In Progress",
-      priority: "High",
-      endDate: "2024-03-15",
-      team: "Frontend Team",
-      tasks: 24,
-      budget: "$45,000",
-      tags: ["React", "Node.js", "MongoDB"]
-    },
-    {
-      id: "2",
-      name: "Mobile App Development",
-      description: "Cross-platform mobile application",
-      assignee: "Mike Chen",
-      progress: 45,
-      status: "Planning",
-      priority: "Medium",
-      endDate: "2024-04-20",
-      team: "Mobile Team",
-      tasks: 18,
-      budget: "$32,000",
-      tags: ["React Native", "Firebase"]
-    },
-    {
-      id: "3",
-      name: "API Integration",
-      description: "Third-party API integration and optimization",
-      assignee: "Alex Rodriguez",
-      progress: 90,
-      status: "Almost Done",
-      priority: "High",
-      endDate: "2024-02-28",
-      team: "Backend Team",
-      tasks: 12,
-      budget: "$18,000",
-      tags: ["Python", "Django", "PostgreSQL"]
-    }
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+
+  // Form data for creating new project
+  const [createFormData, setCreateFormData] = useState({
+    name: "",
+    description: "",
+    company: context?.company || "",
+    status: "Planning",
+    priority: "Medium",
+    startDate: "",
+    endDate: "",
+    budget: "",
+    team: "",
+    assignee: "",
+    progress: 0,
+    tasks: 0,
+    tags: [] as string[],
+    notes: ""
+  });
+
+  // Form data for editing
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    company: context?.company || "",
+    status: "Planning",
+    priority: "Medium",
+    startDate: "",
+    endDate: "",
+    budget: "",
+    team: "",
+    assignee: "",
+    progress: 0,
+    tasks: 0,
+    tags: [] as string[],
+    notes: ""
+  });
 
   const projectStats = [
     { label: "Total Projects", value: projects.length, icon: Folder, color: "text-blue-600", bg: "bg-blue-50" },
@@ -148,8 +149,225 @@ export default function ProjectsPage({ context }: { context?: { company: string 
     }
   };
 
+  // Fetch projects from API
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await ProjectApiService.getProjects();
+      console.log('Projects API response:', response);
+      
+      if (response.success) {
+        // Handle different response structures
+        const projectsData = (response as any).items || response.data || [];
+        console.log('Projects data:', projectsData);
+        
+                if (Array.isArray(projectsData)) {
+          const transformedProjectsData = projectsData.map((project: ProjectData) => transformProjectToUI(project));
+          const filteredProjects = transformedProjectsData.filter(project => {
+            // Filter by company if context is provided
+            if (context?.company) {
+              return project.company === context.company;
+            }
+            return true;
+          });
+          
+          const transformedProjects: Project[] = filteredProjects.map(project => ({
+            id: project.id || '',
+            name: project.name,
+            description: project.description || '',
+            assignee: project.assignee,
+            progress: project.progress,
+            status: project.status,
+            priority: project.priority,
+            endDate: project.endDate,
+            team: project.team,
+            tasks: project.tasks,
+            budget: project.budget,
+            tags: project.tags
+          }));
+          
+          setProjects(transformedProjects);
+        } else {
+          console.warn('Projects data is not an array:', projectsData);
+          setProjects([]);
+        }
+      } else {
+        console.error('Failed to fetch projects:', response.error);
+        setError('Failed to fetch projects');
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setError('Failed to fetch projects');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load projects on component mount
+  useEffect(() => {
+    fetchProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context?.company]);
+
+  // Create project
+  const handleCreateProject = async (projectData: ProjectData) => {
+    try {
+      console.log('Creating project with data:', projectData);
+      const response = await ProjectApiService.createProject(projectData);
+      console.log('Project creation response:', response);
+      if (response.success) {
+        setSuccessMessage('Project created successfully!');
+        fetchProjects(); // Refresh the list
+        setShowCreateForm(false);
+        // Reset form data
+        setCreateFormData({
+          name: "",
+          description: "",
+          company: context?.company || "",
+          status: "Planning",
+          priority: "Medium",
+          startDate: "",
+          endDate: "",
+          budget: "",
+          team: "",
+          assignee: "",
+          progress: 0,
+          tasks: 0,
+          tags: [],
+          notes: ""
+        });
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        console.error('Failed to create project:', response.error);
+        setError('Failed to create project');
+      }
+    } catch (error) {
+      console.error('Error creating project:', error);
+      setError('Failed to create project');
+    }
+  };
+
+  // Delete project
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      const response = await ProjectApiService.deleteProject(projectId);
+      if (response.success) {
+        setSuccessMessage('Project deleted successfully!');
+        fetchProjects(); // Refresh the list
+        setOpenMenuId(null);
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        console.error('Failed to delete project:', response.error);
+        setError('Failed to delete project');
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      setError('Failed to delete project');
+    }
+  };
+
+  // Edit project
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setFormData({
+      name: project.name,
+      description: project.description,
+      company: context?.company || "",
+      status: project.status,
+      priority: project.priority,
+      startDate: "",
+      endDate: project.endDate,
+      budget: project.budget,
+      team: project.team,
+      assignee: project.assignee,
+      progress: project.progress,
+      tasks: project.tasks,
+      tags: project.tags,
+      notes: ""
+    });
+    setShowEditForm(true);
+    setOpenMenuId(null);
+  };
+
+  // Update project
+  const handleUpdateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProject) return;
+
+    try {
+      const updateFields = {
+        name: formData.name,
+        description: formData.description,
+        company: formData.company,
+        status: formData.status,
+        priority: formData.priority,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        budget: formData.budget,
+        team: formData.team,
+        assignee: formData.assignee,
+        progress: formData.progress,
+        tasks: formData.tasks,
+        tags: JSON.stringify(formData.tags),
+        notes: formData.notes,
+        updatedAt: new Date().toISOString()
+      };
+
+      const response = await ProjectApiService.updateProject(editingProject.id, updateFields);
+      if (response.success) {
+        setSuccessMessage('Project updated successfully!');
+        fetchProjects(); // Refresh the list
+        setShowEditForm(false);
+        setEditingProject(null);
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        console.error('Failed to update project:', response.error);
+        setError('Failed to update project');
+      }
+    } catch (error) {
+      console.error('Error updating project:', error);
+      setError('Failed to update project');
+    }
+  };
+
+  // Menu toggle functions
+  const toggleMenu = (projectId: string) => {
+    setOpenMenuId(openMenuId === projectId ? null : projectId);
+  };
+
+  const closeMenu = () => {
+    setOpenMenuId(null);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId && !(event.target as Element).closest('.menu-container')) {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openMenuId]);
+
   return (
     <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
+          {successMessage}
+        </div>
+      )}
+      
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
+          {error}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
         <div className="flex items-center gap-3">
@@ -162,18 +380,21 @@ export default function ProjectsPage({ context }: { context?: { company: string 
               Managing projects for {context.company}
             </div>
           )}
-        </div>
+          </div>
         <div className="flex items-center gap-3">
           <button className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring">
             <Download size={16} />
             Export
           </button>
-          <button className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring">
+          <button 
+            onClick={() => setShowCreateForm(true)}
+            className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring"
+          >
             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
             New Project
           </button>
+          </div>
         </div>
-      </div>
 
       <div className="p-6 space-y-6">
         {/* Stats Grid */}
@@ -202,9 +423,59 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                   </h3>
                   <p className="text-sm text-slate-600 line-clamp-2">{project.description}</p>
                 </div>
-                <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                  <MoreHorizontal size={16} />
-                </button>
+                <div className="relative menu-container">
+                  <button 
+                    onClick={() => toggleMenu(project.id)}
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <MoreHorizontal size={16} />
+                  </button>
+                  
+                  {openMenuId === project.id && (
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
+                      <div className="py-1">
+                        <button
+                          onClick={() => handleEditProject(project)}
+                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                        >
+                          <Edit size={14} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify(project, null, 2));
+                            setSuccessMessage('Project copied to clipboard!');
+                            setTimeout(() => setSuccessMessage(null), 2000);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                        >
+                          <Copy size={14} />
+                          Copy
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Archive functionality
+                            setSuccessMessage('Project archived!');
+                            setTimeout(() => setSuccessMessage(null), 2000);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                        >
+                          <Archive size={14} />
+                          Archive
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProject(project.id)}
+                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -265,11 +536,453 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                     </span>
                   )}
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
       </div>
+
+      {/* Create Project Form */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Plus className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Create New Project</h2>
+                  <p className="text-slate-600">Enter the details for your new project.</p>
+                </div>
+              </div>
+                             <button
+                 onClick={() => {
+                   setShowCreateForm(false);
+                   // Reset form data
+                   setCreateFormData({
+                     name: "",
+                     description: "",
+                     company: context?.company || "",
+                     status: "Planning",
+                     priority: "Medium",
+                     startDate: "",
+                     endDate: "",
+                     budget: "",
+                     team: "",
+                     assignee: "",
+                     progress: 0,
+                     tasks: 0,
+                     tags: [],
+                     notes: ""
+                   });
+                 }}
+                 className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+               >
+                 <X size={20} />
+               </button>
+            </div>
+
+                         <form onSubmit={(e) => {
+               e.preventDefault();
+               console.log('Form submitted with createFormData:', createFormData);
+               const projectData: ProjectData = {
+                 ...createFormData,
+                 tags: JSON.stringify(createFormData.tags),
+                 createdAt: new Date().toISOString(),
+                 updatedAt: new Date().toISOString()
+               };
+               console.log('Transformed projectData:', projectData);
+               handleCreateProject(projectData);
+             }} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Project Name *</label>
+                  <input
+                    type="text"
+                    value={createFormData.name}
+                    onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Company *</label>
+                  <input
+                    type="text"
+                    value={createFormData.company}
+                    onChange={(e) => setCreateFormData({ ...createFormData, company: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
+                  <select
+                    value={createFormData.status}
+                    onChange={(e) => setCreateFormData({ ...createFormData, status: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="Planning">Planning</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Almost Done">Almost Done</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Priority</label>
+                  <select
+                    value={createFormData.priority}
+                    onChange={(e) => setCreateFormData({ ...createFormData, priority: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={createFormData.startDate}
+                    onChange={(e) => setCreateFormData({ ...createFormData, startDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={createFormData.endDate}
+                    onChange={(e) => setCreateFormData({ ...createFormData, endDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Budget</label>
+                  <input
+                    type="text"
+                    value={createFormData.budget}
+                    onChange={(e) => setCreateFormData({ ...createFormData, budget: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="$0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Team</label>
+                  <input
+                    type="text"
+                    value={createFormData.team}
+                    onChange={(e) => setCreateFormData({ ...createFormData, team: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Assignee</label>
+                  <input
+                    type="text"
+                    value={createFormData.assignee}
+                    onChange={(e) => setCreateFormData({ ...createFormData, assignee: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Progress (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={createFormData.progress}
+                    onChange={(e) => setCreateFormData({ ...createFormData, progress: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Tasks</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={createFormData.tasks}
+                    onChange={(e) => setCreateFormData({ ...createFormData, tasks: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Description *</label>
+                <textarea
+                  value={createFormData.description}
+                  onChange={(e) => setCreateFormData({ ...createFormData, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  value={createFormData.tags.join(', ')}
+                  onChange={(e) => setCreateFormData({ ...createFormData, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag) })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="React, Node.js, MongoDB"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Notes</label>
+                <textarea
+                  value={createFormData.notes}
+                  onChange={(e) => setCreateFormData({ ...createFormData, notes: e.target.value })}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-6 border-t border-slate-200">
+                                 <button
+                   type="button"
+                   onClick={() => {
+                     setShowCreateForm(false);
+                     // Reset form data
+                     setCreateFormData({
+                       name: "",
+                       description: "",
+                       company: context?.company || "",
+                       status: "Planning",
+                       priority: "Medium",
+                       startDate: "",
+                       endDate: "",
+                       budget: "",
+                       team: "",
+                       assignee: "",
+                       progress: 0,
+                       tasks: 0,
+                       tags: [],
+                       notes: ""
+                     });
+                   }}
+                   className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2"
+                 >
+                   <ArrowLeft className="w-4 h-4" />
+                   <span>Cancel</span>
+                 </button>
+                <div className="flex items-center space-x-3">
+                  <button
+                    type="submit"
+                    className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center space-x-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Create Project</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Project Form */}
+      {showEditForm && editingProject && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Edit className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Edit Project</h2>
+                  <p className="text-slate-600">Update the project details below.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEditForm(false);
+                  setEditingProject(null);
+                }}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateProject} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Project Name</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Company</label>
+                  <input
+                    type="text"
+                    value={formData.company}
+                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="Planning">Planning</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Almost Done">Almost Done</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Priority</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Budget</label>
+                  <input
+                    type="text"
+                    value={formData.budget}
+                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="$0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Team</label>
+                  <input
+                    type="text"
+                    value={formData.team}
+                    onChange={(e) => setFormData({ ...formData, team: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Assignee</label>
+                  <input
+                    type="text"
+                    value={formData.assignee}
+                    onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Progress (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.progress}
+                    onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Tasks</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.tasks}
+                    onChange={(e) => setFormData({ ...formData, tasks: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  value={formData.tags.join(', ')}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag) })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="React, Node.js, MongoDB"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Notes</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-6 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditingProject(null);
+                  }}
+                  className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Cancel</span>
+                </button>
+                <div className="flex items-center space-x-3">
+                  <button
+                    type="submit"
+                    className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center space-x-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Update Project</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
