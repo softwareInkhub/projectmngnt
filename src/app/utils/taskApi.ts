@@ -63,8 +63,16 @@ export interface TaskData {
   comments: string;
   progress?: number;
   timeSpent?: string;
+  parentId?: string | null; // New field for nested subtasks
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Task Tree Node Interface for nested structure
+export interface TaskTreeNode extends TaskData {
+  children: TaskTreeNode[];
+  level: number;
+  isExpanded?: boolean;
 }
 
 // Task with UI-specific fields
@@ -79,6 +87,7 @@ export interface TaskWithUI extends Omit<TaskData, 'tags' | 'subtasks' | 'commen
   lastActivity: string;
   tags: string[];
   subtasks: { id: number; title: string; completed: boolean }[];
+  parentId?: string | null;
 }
 
 // Task API Service
@@ -193,7 +202,8 @@ export function transformTaskToUI(task: TaskData): TaskWithUI {
     created: task.createdAt ? task.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
     lastActivity: "Just now",
     tags: task.tags ? task.tags.split(',').filter((tag: string) => tag.trim() !== '') : [],
-    subtasks: parsedSubtasks
+    subtasks: parsedSubtasks,
+    parentId: task.parentId || null
   };
   
   return transformedTask;
@@ -217,8 +227,127 @@ export function transformUIToTask(task: TaskWithUI): TaskData {
     comments: task.comments.toString(),
     progress: task.progress,
     timeSpent: task.timeSpent,
+    parentId: task.parentId,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt
   };
+}
+
+// Tree building function to convert flat task list to nested tree structure
+export function buildTaskTree(tasks: TaskData[]): TaskTreeNode[] {
+  const taskMap = new Map<string, TaskTreeNode>();
+  
+  // Create map of all tasks with children array
+  tasks.forEach(task => {
+    taskMap.set(task.id!, {
+      ...task,
+      children: [],
+      level: 0,
+      isExpanded: false
+    });
+  });
+  
+  const roots: TaskTreeNode[] = [];
+  
+  // Build tree structure
+  tasks.forEach(task => {
+    const node = taskMap.get(task.id!);
+    if (!node) return;
+    
+    if (task.parentId && taskMap.has(task.parentId)) {
+      // This is a child task
+      const parent = taskMap.get(task.parentId);
+      if (parent) {
+        node.level = parent.level + 1;
+        parent.children.push(node);
+      }
+    } else {
+      // This is a root task
+      roots.push(node);
+    }
+  });
+  
+  return roots;
+}
+
+// Function to get all descendants of a task (for circular reference validation)
+export function getTaskDescendants(taskId: string, tasks: TaskData[]): string[] {
+  const descendants: string[] = [];
+  const taskMap = new Map<string, TaskData>();
+  
+  tasks.forEach(task => taskMap.set(task.id!, task));
+  
+  function collectDescendants(currentId: string) {
+    tasks.forEach(task => {
+      if (task.parentId === currentId) {
+        descendants.push(task.id!);
+        collectDescendants(task.id!);
+      }
+    });
+  }
+  
+  collectDescendants(taskId);
+  return descendants;
+}
+
+// Function to validate parent assignment and prevent circular references
+export function validateParentAssignment(
+  taskId: string, 
+  newParentId: string | null, 
+  tasks: TaskData[]
+): { isValid: boolean; error?: string } {
+  // Cannot assign to itself
+  if (taskId === newParentId) {
+    return { isValid: false, error: 'A task cannot be its own parent' };
+  }
+  
+  // If no parent, it's valid
+  if (!newParentId) {
+    return { isValid: true };
+  }
+  
+  // Check if new parent exists
+  const parentExists = tasks.some(task => task.id === newParentId);
+  if (!parentExists) {
+    return { isValid: false, error: 'Parent task does not exist' };
+  }
+  
+  // Check for circular references
+  const descendants = getTaskDescendants(taskId, tasks);
+  if (descendants.includes(newParentId)) {
+    return { isValid: false, error: 'Cannot assign parent: would create circular reference' };
+  }
+  
+  return { isValid: true };
+}
+
+// Function to get all possible parent tasks (excluding the current task and its descendants)
+export function getAvailableParents(
+  currentTaskId: string | null, 
+  tasks: TaskData[]
+): TaskData[] {
+  if (!currentTaskId) {
+    return tasks; // All tasks are available for root tasks
+  }
+  
+  const descendants = getTaskDescendants(currentTaskId, tasks);
+  return tasks.filter(task => 
+    task.id !== currentTaskId && 
+    !descendants.includes(task.id!)
+  );
+}
+
+// Function to flatten tree back to array (useful for operations)
+export function flattenTaskTree(tree: TaskTreeNode[]): TaskData[] {
+  const result: TaskData[] = [];
+  
+  function traverse(node: TaskTreeNode) {
+    const { children, level, isExpanded, ...taskData } = node;
+    result.push(taskData);
+    children.forEach(child => traverse(child));
+  }
+  
+  tree.forEach(node => traverse(node));
+  return result;
 }
 

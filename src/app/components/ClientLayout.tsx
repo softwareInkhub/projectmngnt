@@ -281,8 +281,15 @@ export default function ClientLayout() {
   };
 
   const handleSidebarDragStart = (e: React.DragEvent, item: Record<string, unknown>) => {
-    setDraggedItem(item);
-    e.dataTransfer.setData('application/json', JSON.stringify(item));
+    // Create proper drag data structure for grid layout
+    const dragData = {
+      type: item.type,
+      label: item.label,
+      title: item.label,
+      source: 'sidebar'
+    };
+    setDraggedItem(dragData);
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
     e.dataTransfer.effectAllowed = 'copy';
   };
 

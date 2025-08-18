@@ -465,7 +465,7 @@ export default function ContextSidebar({
   return (
     <>
       {(activeTab === 1 || activeTab === 2 || activeTab === 3 || activeTab === 4 || activeTab === 5 || activeTab === 6) && (
-        <aside className="sticky top-0 h-screen w-[260px] bg-white border-r border-neutral-200 flex flex-col overflow-y-auto z-20">
+        <aside className="sticky top-0 h-screen w-[320px] bg-white border-r border-neutral-200 flex flex-col overflow-y-auto z-20">
           {/* Header */}
           <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-neutral-800">
@@ -499,9 +499,9 @@ export default function ContextSidebar({
                 ) : (
                   tasksList.map((task) => (
                     <div key={task.id} className="space-y-1">
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
                       <button
-                          className="p-1 rounded hover:bg-neutral-100 transition-colors"
+                          className="p-1 rounded hover:bg-neutral-100 transition-colors flex-shrink-0"
                           onClick={() => {
                             setTasksList(prev => prev.map(t =>
                               t.id === task.id ? { ...t, expanded: !t.expanded } : t
@@ -510,13 +510,13 @@ export default function ContextSidebar({
                         >
                           {task.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
                       </button>
-                        <CheckSquare size={18} className="text-green-500" />
-                        <div className="flex-1 min-w-0">
+                        <CheckSquare size={18} className="text-green-500 flex-shrink-0" />
+                        <div className="flex-1 min-w-0 pr-2">
                           <div className="text-sm font-semibold text-neutral-800 truncate">{task.title}</div>
-                          <div className="text-xs text-neutral-500 truncate">{task.assignee} • {task.project}</div>
-                    </div>
-                        <div className="flex items-center gap-1">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          <div className="text-xs text-neutral-500 truncate">{task.assignee} • {task.status} • {task.priority}</div>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
                             task.status === "Done" ? "bg-green-100 text-green-700" :
                             task.status === "In Progress" ? "bg-blue-100 text-blue-700" :
                             task.status === "To Do" ? "bg-gray-100 text-gray-700" :
@@ -524,7 +524,7 @@ export default function ContextSidebar({
                       }`}>
                         {task.status}
                       </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
                             task.priority === "High" ? "bg-red-100 text-red-700" :
                             task.priority === "Medium" ? "bg-yellow-100 text-yellow-700" :
                             "bg-green-100 text-green-700"

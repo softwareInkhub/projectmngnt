@@ -32,7 +32,7 @@ const industries = [
 
 const priorities = ["Low", "Medium", "High", "Critical"];
 
-export default function CompaniesPage() {
+export default function CompaniesPage({ context }: { context?: { company: string } }) {
   const [selectedCompany, setSelectedCompany] = useState(1);
   const [view, setView] = useState("overview");
   const [expandedDepartments, setExpandedDepartments] = useState<number[]>([]);
@@ -48,14 +48,12 @@ export default function CompaniesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-
-
   const availableTags = [
     "AI", "Enterprise", "SaaS", "Cloud", "Startup", 
     "Innovation", "Research", "Consulting", "Manufacturing", "Healthcare"
   ];
 
-    const [companies, setCompanies] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -80,6 +78,29 @@ export default function CompaniesPage() {
   useEffect(() => {
     fetchCompanies();
   }, []);
+
+  const fetchCompanies = async () => {
+    try {
+      setLoading(true);
+      const response = await CompanyApiService.getCompanies();
+      
+      if (response.success) {
+        const companiesData = (response as any).items || response.data || [];
+        if (Array.isArray(companiesData)) {
+          setCompanies(companiesData);
+        } else {
+          console.warn('Companies data is not an array:', companiesData);
+          setCompanies([]);
+        }
+      } else {
+        console.error('Failed to fetch companies:', response.error);
+      }
+    } catch (err) {
+      console.error('Error fetching companies:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Menu management functions
   const toggleMenu = (companyId: string) => {
@@ -107,88 +128,30 @@ export default function CompaniesPage() {
       revenue: company.revenue || ""
     });
     setShowEditForm(true);
-    closeMenu();
   };
 
   const handleDeleteCompany = async (companyId: string) => {
-    if (confirm('Are you sure you want to delete this company? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to delete this company?')) {
       try {
         const response = await CompanyApiService.deleteCompany(companyId);
         if (response.success) {
           setCompanies(companies.filter(c => c.id !== companyId));
+          setSuccessMessage('Company deleted successfully');
         } else {
           console.error('Failed to delete company:', response.error);
         }
-      } catch (error) {
-        console.error('Error deleting company:', error);
-      }
-    }
-    closeMenu();
-  };
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!(event.target as Element).closest('.company-menu')) {
-        setOpenMenuId(null);
+      } catch (err) {
+        console.error('Error deleting company:', err);
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const fetchCompanies = async () => {
-    try {
-      setLoading(true);
-      const response = await CompanyApiService.getCompanies();
-      
-      if (response.success) {
-        // Handle different response structures
-        const companiesData = response.items || response.data || [];
-        console.log('Companies loaded:', companiesData.length);
-        
-        if (Array.isArray(companiesData)) {
-          setCompanies(companiesData);
-        } else {
-          console.warn('Companies data is not an array:', companiesData);
-          setCompanies([]);
-        }
-      } else {
-        console.error('Failed to fetch companies:', response.error);
-        // Fallback to empty array
-        setCompanies([]);
-      }
-    } catch (error) {
-      console.error('Error fetching companies:', error);
-      setCompanies([]);
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const handleCreateCompany = async (companyData: CompanyData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      // Add default values for missing fields
-      const enrichedCompanyData = {
-        ...companyData,
-        totalProjects: 0,
-        totalTeams: 0,
-        members: 0,
-        satisfaction: 85,
-        growth: "+12%",
-        lastActivity: "Just now",
-        archived: false
-      };
-
-      const response = await CompanyApiService.createCompany(enrichedCompanyData);
+      const response = await CompanyApiService.createCompany(formData as CompanyData);
       if (response.success) {
-        // Refresh the companies list
-        await fetchCompanies();
-        setShowCreateForm(false);
-        setShowEditForm(false);
-        setEditingCompany(null);
-        // Reset form
+        setShowCreateModal(false);
         setFormData({
           name: "",
           description: "",
@@ -202,74 +165,25 @@ export default function CompaniesPage() {
           phone: "",
           revenue: ""
         });
+        fetchCompanies();
+        setSuccessMessage('Company created successfully');
       } else {
         console.error('Failed to create company:', response.error);
-        alert('Failed to create company: ' + response.error);
       }
-    } catch (error) {
-      console.error('Error creating company:', error);
-      alert('Error creating company: ' + error);
+    } catch (err) {
+      console.error('Error creating company:', err);
     }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await handleCreateCompany(formData as CompanyData);
   };
 
   const handleUpdateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCompany) return;
-
+    
     try {
-      const updatedCompanyData: CompanyData = {
-        id: editingCompany.id,
-        name: formData.name || "",
-        description: formData.description || "",
-        industry: formData.industry || industries[0],
-        status: formData.status || "Active",
-        founded: formData.founded || "",
-        employees: formData.employees || 0,
-        location: formData.location || "",
-        website: formData.website || "",
-        email: formData.email || "",
-        phone: formData.phone || "",
-        revenue: formData.revenue || "",
-        createdAt: editingCompany.createdAt,
-        updatedAt: new Date().toISOString()
-      };
-
-      // Only send the fields that should be updated, not the entire object
-      const updateFields = {
-        name: formData.name || "",
-        description: formData.description || "",
-        industry: formData.industry || industries[0],
-        status: formData.status || "Active",
-        founded: formData.founded || "",
-        employees: formData.employees || 0,
-        location: formData.location || "",
-        website: formData.website || "",
-        email: formData.email || "",
-        phone: formData.phone || "",
-        revenue: formData.revenue || "",
-        updatedAt: new Date().toISOString()
-      };
-
-      console.log('Updating company with ID:', editingCompany.id);
-      console.log('Update fields:', updateFields);
-      
-      const response = await CompanyApiService.updateCompany(editingCompany.id, updateFields);
-      
-      console.log('Company update response:', response);
-      
+      const response = await CompanyApiService.updateCompany(editingCompany.id, formData as CompanyData);
       if (response.success) {
-        // Refresh the companies list
-        await fetchCompanies();
         setShowEditForm(false);
         setEditingCompany(null);
-        setSuccessMessage('Company updated successfully!');
-        setTimeout(() => setSuccessMessage(null), 3000);
-        // Reset form
         setFormData({
           name: "",
           description: "",
@@ -283,146 +197,31 @@ export default function CompaniesPage() {
           phone: "",
           revenue: ""
         });
+        fetchCompanies();
+        setSuccessMessage('Company updated successfully');
       } else {
         console.error('Failed to update company:', response.error);
-        alert('Failed to update company: ' + response.error);
       }
-    } catch (error) {
-      console.error('Error updating company:', error);
-      alert('Error updating company: ' + error);
+    } catch (err) {
+      console.error('Error updating company:', err);
     }
   };
 
-
-
-  const analytics = {
-    totalCompanies: Array.isArray(companies) ? companies.length : 0,
-    activeCompanies: Array.isArray(companies) ? companies.filter(c => c.status === "Active").length : 0,
-    totalProjects: Array.isArray(companies) ? companies.reduce((sum, c) => sum + (c.totalProjects || 0), 0) : 0,
-    totalTeams: Array.isArray(companies) ? companies.reduce((sum, c) => sum + (c.totalTeams || 0), 0) : 0,
-    totalMembers: Array.isArray(companies) ? companies.reduce((sum, c) => sum + (c.members || 0), 0) : 0,
-    avgRevenue: "$2.5M",
-    avgGrowth: "+17%",
-    avgSatisfaction: Array.isArray(companies) && companies.length > 0 
-      ? Math.round(companies.reduce((sum, c) => sum + (c.satisfaction || 0), 0) / companies.length)
-      : 0
-  };
-
-  const deleteCompany = (companyId: number) => {
-    setCompanies(companies.filter(company => company.id !== companyId));
-  };
-
-  const archiveCompany = (companyId: number) => {
-    setCompanies(companies.map(company => 
-      company.id === companyId ? { ...company, archived: !company.archived } : company
-    ));
-  };
-
-  const duplicateCompany = (company: typeof companies[0]) => {
-    const newCompany = {
-      ...company,
-      id: Math.max(...companies.map(c => c.id)) + 1,
-      name: `${company.name} (Copy)`,
-      lastActivity: "Just now"
-    };
-    setCompanies([...companies, newCompany]);
-  };
-
-  const exportCompany = (company: typeof companies[0]) => {
-    const companyData = `
-Company: ${company.name}
-Status: ${company.status}
-Type: ${company.type}
-Industry: ${company.industry}
-Employees: ${company.employees}
-Location: ${company.location}
-Revenue: ${company.revenue}
-Growth: ${company.growth}
-Projects: ${company.totalProjects}
-Teams: ${company.totalTeams}
-Members: ${company.members}
-    `;
-    
-    const dataBlob = new Blob([companyData], { type: 'text/plain' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${company.name.replace(/\s+/g, '_')}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const deleteProject = (companyId: number, projectId: number) => {
-    setCompanies(companies.map(company => 
-      company.id === companyId 
-        ? { ...company, projects: company.projects?.filter((p: any) => p.id !== projectId) || [] }
-        : company
-    ));
-  };
-
-  const archiveProject = (companyId: number, projectId: number) => {
-    setCompanies(companies.map(company => 
-      company.id === companyId 
-        ? { 
-            ...company, 
-            projects: company.projects?.map((p: any) => 
-              p.id === projectId ? { ...p, archived: !p.archived } : p
-            ) || []
-          }
-        : company
-    ));
-  };
-
-  const toggleDepartment = (deptId: number) => {
-    setExpandedDepartments(prev => 
-      prev.includes(deptId) 
-        ? prev.filter(id => id !== deptId)
-        : [...prev, deptId]
-    );
-  };
-
-  const toggleTeam = (teamId: number) => {
-    setExpandedTeams(prev => 
-      prev.includes(teamId) 
-        ? prev.filter(id => id !== teamId)
-        : [...prev, teamId]
-    );
-  };
-
-  const toggleSprint = (sprintId: number) => {
-    setExpandedSprints(prev => 
-      prev.includes(sprintId) 
-        ? prev.filter(id => id !== sprintId)
-        : [...prev, sprintId]
-    );
-  };
-
-  const toggleProject = (projectId: number) => {
-    setExpandedProjects(prev => 
-      prev.includes(projectId) 
-        ? prev.filter(id => id !== projectId)
-        : [...prev, projectId]
-    );
-  };
-
-  const toggleSubproject = (subprojectId: number) => {
-    setExpandedSubprojects(prev => 
-      prev.includes(subprojectId) 
-        ? prev.filter(id => id !== subprojectId)
-        : [...prev, subprojectId]
-    );
-  };
-
-  const contactCompany = (company: typeof companies[0], method: 'email' | 'phone' | 'website') => {
-    switch (method) {
-      case 'email':
-        window.open(`mailto:${company.email}`);
+  const handleCompanyAction = (company: any, action: string) => {
+    switch (action) {
+      case 'edit':
+        handleEditCompany(company);
         break;
-      case 'phone':
-        window.open(`tel:${company.phone}`);
+      case 'delete':
+        handleDeleteCompany(company.id);
+        break;
+      case 'view':
+        console.log('View company:', company);
         break;
       case 'website':
-        window.open(company.website, '_blank');
+        if (company.website) {
+          window.open(company.website, '_blank');
+        }
         break;
     }
   };
@@ -433,8 +232,16 @@ Members: ${company.members}
     setStatusFilter("All");
   };
 
+  // Analytics data
+  const analytics = {
+    totalCompanies: companies.length,
+    totalProjects: companies.reduce((sum, company) => sum + (company.projects?.length || 0), 0),
+    totalMembers: companies.reduce((sum, company) => sum + (company.members?.length || 0), 0),
+    avgSatisfaction: 92
+  };
+
   const filteredCompanies = Array.isArray(companies) ? companies.filter(company => {
-    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (company.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (company.industry || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (company.tags || []).some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -460,743 +267,272 @@ Members: ${company.members}
 
     return (
       <div className="space-y-6">
-      {/* Enhanced Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
-              <Building2 className="w-6 h-6" />
+        {/* Enhanced Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
+          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                <Building2 className="w-6 h-6" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
             </div>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
+            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalCompanies}</h3>
+            <p className="text-slate-600 text-sm font-medium">Total Companies</p>
+            <div className="mt-2 text-xs text-slate-500">+2 this quarter</div>
           </div>
-          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalCompanies}</h3>
-          <p className="text-slate-600 text-sm font-medium">Total Companies</p>
-          <div className="mt-2 text-xs text-slate-500">+2 this quarter</div>
+
+          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
+                <FolderKanban className="w-6 h-6" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
+            </div>
+            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalProjects}</h3>
+            <p className="text-slate-600 text-sm font-medium">Total Projects</p>
+            <div className="mt-2 text-xs text-slate-500">+8 this month</div>
+          </div>
+
+          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
+                <Users className="w-6 h-6" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
+            </div>
+            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalMembers}</h3>
+            <p className="text-slate-600 text-sm font-medium">Total Members</p>
+            <div className="mt-2 text-xs text-slate-500">+12 this month</div>
+          </div>
+
+          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
+                <Target className="w-6 h-6" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
+            </div>
+            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.avgSatisfaction}%</h3>
+            <p className="text-slate-600 text-sm font-medium">Avg Satisfaction</p>
+            <div className="mt-2 text-xs text-slate-500">+3% from last month</div>
+          </div>
         </div>
 
-        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
-              <FolderKanban className="w-6 h-6" />
-            </div>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
-          </div>
-          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalProjects}</h3>
-          <p className="text-slate-600 text-sm font-medium">Total Projects</p>
-          <div className="mt-2 text-xs text-slate-500">+8 this month</div>
-        </div>
-
-        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
-              <Users className="w-6 h-6" />
-            </div>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
-          </div>
-          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalMembers}</h3>
-          <p className="text-slate-600 text-sm font-medium">Total Members</p>
-          <div className="mt-2 text-xs text-slate-500">+12 this month</div>
-        </div>
-
-        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
-              <Target className="w-6 h-6" />
-            </div>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
-          </div>
-          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.avgSatisfaction}%</h3>
-          <p className="text-slate-600 text-sm font-medium">Avg Satisfaction</p>
-          <div className="mt-2 text-xs text-slate-500">+3% from last month</div>
-        </div>
-      </div>
-
-      {/* Companies Grid/List View */}
-      <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
-        {viewMode === "grid" ? (
-          // Grid View
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredCompanies.map((company, index) => (
-              <div 
-                key={company.id}
-                className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in"
-                style={{ animationDelay: `${300 + index * 100}ms` }}
-              >
-                {/* Company Header */}
-                <div className="p-6 border-b border-white/20">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
-                        {company.name}
-                      </h3>
-                      <p className="text-sm text-slate-600 mb-3 line-clamp-2">
-                        {company.description}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
-                        <Heart size={16} />
-                      </button>
-                      <div className="relative company-menu">
-                        <button 
+        {/* Companies Grid/List View */}
+        <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
+          {viewMode === "grid" ? (
+            // Grid View
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredCompanies.map((company, index) => (
+                <div 
+                  key={company.id}
+                  className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in"
+                  style={{ animationDelay: `${300 + index * 100}ms` }}
+                >
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                          <Building2 className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-slate-900 mb-1">{company.name}</h3>
+                          <p className="text-sm text-slate-600">{company.industry}</p>
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <button
                           onClick={() => toggleMenu(company.id)}
-                          className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200"
+                          className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
                         >
-                          <MoreHorizontal size={16} />
+                          <MoreHorizontal className="w-5 h-5" />
                         </button>
-                        
-                        {/* Dropdown Menu */}
                         {openMenuId === company.id && (
-                          <div className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-fade-in">
-                            <div className="py-1">
+                          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                            <button
+                              onClick={() => handleCompanyAction(company, 'view')}
+                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => handleCompanyAction(company, 'edit')}
+                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Edit
+                            </button>
+                            {company.website && (
                               <button
-                                onClick={() => handleEditCompany(company)}
-                                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                onClick={() => handleCompanyAction(company, 'website')}
+                                className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                               >
-                                <Edit className="w-4 h-4" />
-                                Edit Company
+                                <ExternalLink className="w-4 h-4" />
+                                Visit Website
                               </button>
-                                                              <button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(JSON.stringify(company, null, 2));
-                                    setSuccessMessage('Company details copied to clipboard!');
-                                    setTimeout(() => setSuccessMessage(null), 2000);
-                                    closeMenu();
-                                  }}
-                                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                              >
-                                <Copy className="w-4 h-4" />
-                                Copy Details
-                              </button>
-                                                              <button
-                                  onClick={() => {
-                                    setSuccessMessage('Archive feature coming soon!');
-                                    setTimeout(() => setSuccessMessage(null), 2000);
-                                    closeMenu();
-                                  }}
-                                className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                              >
-                                <Archive className="w-4 h-4" />
-                                Archive
-                              </button>
-                              <div className="border-t border-slate-200 my-1"></div>
-                              <button
-                                onClick={() => handleDeleteCompany(company.id)}
-                                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Delete Company
-                              </button>
-                            </div>
+                            )}
+                            <button
+                              onClick={() => handleCompanyAction(company, 'delete')}
+                              className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
                           </div>
                         )}
                       </div>
                     </div>
-                  </div>
-
-                  {/* Company Stats */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-900">{company.totalProjects}</div>
-                      <div className="text-xs text-slate-500">Projects</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-900">{company.members}</div>
-                      <div className="text-xs text-slate-500">Members</div>
-                    </div>
-                  </div>
-                  
-                  {/* Company Meta */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
+                    
+                    <p className="text-slate-600 text-sm mb-4 line-clamp-2">{company.description}</p>
+                    
+                    <div className="flex items-center gap-2 mb-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        company.status === "Active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
+                        company.status === "Active" ? "bg-green-100 text-green-700" :
+                        company.status === "Inactive" ? "bg-red-100 text-red-700" :
+                        "bg-yellow-100 text-yellow-700"
                       }`}>
                         {company.status}
                       </span>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                        {company.type}
-                      </span>
+                      {company.employees && (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                          {company.employees} employees
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span className="flex items-center gap-1">
-                        <TrendingUp size={12} />
-                        {company.growth}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Company Details */}
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1">
-                        <MapPin size={12} />
-                        {company.location}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users size={12} />
-                        {company.employees} employees
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center gap-1">
-                        <Clock size={12} />
-                        {company.lastActivity}
-                      </span>
+                    
+                    <div className="flex items-center justify-between text-sm text-slate-500">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        <span>{company.location || 'Location not specified'}</span>
+                      </div>
+                      {company.founded && (
+                        <span>Founded {company.founded}</span>
+                      )}
                     </div>
                   </div>
                 </div>
-
-                {/* Company Actions */}
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                  onClick={() => setSelectedCompany(company.id)}
-                >
-                  <Eye size={14} />
-                  View Details
-                  </button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
-                  <Edit size={14} />
-                    </button>
-                <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
-                  <Share2 size={14} />
-                </button>
-                <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
-                  <ExternalLink size={14} />
-                    </button>
-                        </div>
-                      </div>
-                                    </div>
               ))}
             </div>
           ) : (
             // List View
-            <div className="space-y-4">
-              {filteredCompanies.map((company) => (
-                <div key={company.id} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group">
-                  <div className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 flex-1">
-                        {/* Company Icon */}
-                        <div className="flex-shrink-0">
-                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Building2 className="w-6 h-6 text-blue-600" />
-                          </div>
-                        </div>
-                        
-                        {/* Company Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
-                              {company.name}
-                            </h3>
-                            <div className="flex items-center gap-2 ml-4">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                company.status === "Active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
-                              }`}>
-                                {company.status}
-                              </span>
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                {company.type}
-                              </span>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Company</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Industry</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Employees</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Location</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {filteredCompanies.map((company) => (
+                      <tr key={company.id} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="p-2 rounded-lg bg-blue-100 text-blue-600 mr-3">
+                              <Building2 className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-slate-900">{company.name}</div>
+                              <div className="text-sm text-slate-500">{company.description}</div>
                             </div>
                           </div>
-                          
-                          <p className="text-sm text-slate-600 mt-1 line-clamp-2">
-                            {company.description}
-                          </p>
-                          
-                          <div className="flex items-center gap-6 mt-3 text-sm text-slate-500">
-                            <div className="flex items-center gap-2">
-                              <MapPin className="w-4 h-4" />
-                              <span>{company.location}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Users className="w-4 h-4" />
-                              <span>{company.employees} employees</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <FolderKanban className="w-4 h-4" />
-                              <span>{company.totalProjects} projects</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <TrendingUp className="w-4 h-4" />
-                              <span>{company.growth} growth</span>
-                            </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{company.industry}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            company.status === "Active" ? "bg-green-100 text-green-700" :
+                            company.status === "Inactive" ? "bg-red-100 text-red-700" :
+                            "bg-yellow-100 text-yellow-700"
+                          }`}>
+                            {company.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{company.employees || 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{company.location || 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleCompanyAction(company, 'view')}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleCompanyAction(company, 'edit')}
+                              className="text-slate-600 hover:text-slate-900"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleCompanyAction(company, 'delete')}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
-                        </div>
-                      </div>
-                      
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 ml-4">
-                        <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
-                          <Heart className="w-4 h-4" />
-                        </button>
-                        <div className="relative company-menu">
-                          <button 
-                            onClick={() => toggleMenu(company.id)}
-                            className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                          
-                          {/* Dropdown Menu */}
-                          {openMenuId === company.id && (
-                            <div className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-fade-in">
-                              <div className="py-1">
-                                <button
-                                  onClick={() => handleEditCompany(company)}
-                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                  Edit Company
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(JSON.stringify(company, null, 2));
-                                    setSuccessMessage('Company details copied to clipboard!');
-                                    setTimeout(() => setSuccessMessage(null), 2000);
-                                    closeMenu();
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                >
-                                  <Copy className="w-4 h-4" />
-                                  Copy Details
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSuccessMessage('Archive feature coming soon!');
-                                    setTimeout(() => setSuccessMessage(null), 2000);
-                                    closeMenu();
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                >
-                                  <Archive className="w-4 h-4" />
-                                  Archive
-                                </button>
-                                <div className="border-t border-slate-200 my-1"></div>
-                                <button
-                                  onClick={() => handleDeleteCompany(company.id)}
-                                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete Company
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Company Stats for List View */}
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
-                        <span>Company Overview</span>
-                        <span>Last activity: {company.lastActivity}</span>
-                      </div>
-                      <div className="grid grid-cols-4 gap-4 text-center">
-                        <div>
-                          <div className="text-lg font-semibold text-slate-900">{company.totalProjects}</div>
-                          <div className="text-xs text-slate-500">Projects</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-semibold text-slate-900">{company.members}</div>
-                          <div className="text-xs text-slate-500">Members</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-semibold text-slate-900">{company.totalTeams}</div>
-                          <div className="text-xs text-slate-500">Teams</div>
-                        </div>
-                        <div>
-                          <div className="text-lg font-semibold text-slate-900">{company.satisfaction}%</div>
-                          <div className="text-xs text-slate-500">Satisfaction</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          
+          {filteredCompanies.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <div className="text-slate-400 mb-4">
+                <Building2 size={48} className="mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-slate-900 mb-2">No companies found</h3>
+              <p className="text-slate-600">Try adjusting your search or filter criteria</p>
             </div>
           )}
         </div>
-
-      {/* Empty State */}
-      {filteredCompanies.length === 0 && (
-        <div className="text-center py-12 animate-fade-in">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-            <Building2 className="w-8 h-8 text-slate-400" />
-        </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">No companies found</h3>
-          <p className="text-slate-600 mb-4">Try adjusting your search or filters</p>
-                  <button
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            onClick={clearFilters}
-          >
-            Clear Filters
-                  </button>
-                </div>
-              )}
-    </div>
-  );
+      </div>
+    );
   };
 
 
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
-      {/* Success Message */}
-      {successMessage && (
-        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in">
-          {successMessage}
-        </div>
-      )}
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow-lg">
-            <Building2 className="text-white mr-1" size={20} />
-            <span>Companies</span>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Companies</h1>
+            <p className="text-slate-600">Manage and monitor all your companies</p>
           </div>
-        <div className="flex items-center gap-3">
-          <button 
-            className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 hover:scale-105 shadow-lg"
           >
-            <Download size={16} />
-            Export All
+            <Plus className="w-5 h-5" />
+            Add Company
           </button>
-                     <button
-             onClick={() => setShowCreateForm(true)}
-             className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring"
-           >
-             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
-             New Company
-           </button>
         </div>
-      </div>
 
-      <div className="p-6 space-y-6">
-                 {/* Company Creation Form */}
-         {(showCreateForm || showEditForm) && (
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 animate-fade-in">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-900">{showEditForm ? 'Edit Company' : 'Create New Company'}</h2>
-                  <p className="text-slate-600">{showEditForm ? 'Update the company details below.' : 'Fill in the details below to create a new company.'}</p>
-                </div>
+        {/* Search and Filters */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search companies..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-white/20 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
-            </div>
-
-            <form onSubmit={showEditForm ? handleUpdateCompany : handleSubmit} className="space-y-8">
-              {/* Company Information */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Company Information</h3>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Company Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Enter company name"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        required
-                      />
-                    </div>
-
-
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Industry *
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={formData.industry}
-                          onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-                          required
-                        >
-                          {industries.map(industry => (
-                            <option key={industry} value={industry}>{industry}</option>
-                          ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <Building className="w-4 h-4 text-slate-400" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Description
-                      </label>
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Describe the company's business, mission, and key activities..."
-                        rows={4}
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Status *
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={formData.status}
-                          onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-                          required
-                        >
-                          <option value="Active">Active</option>
-                          <option value="Inactive">Inactive</option>
-                          <option value="Pending">Pending</option>
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <CheckCircle className="w-4 h-4 text-slate-400" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Company Details */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Info className="w-4 h-4 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Company Details</h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Founded Year
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={formData.founded}
-                        onChange={(e) => setFormData(prev => ({ ...prev, founded: e.target.value }))}
-                        placeholder="e.g., 2020"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Number of Employees
-                    </label>
-                    <div className="relative">
-                                             <input
-                         type="number"
-                         value={formData.employees}
-                         onChange={(e) => setFormData(prev => ({ ...prev, employees: parseInt(e.target.value) || 0 }))}
-                         placeholder="e.g., 150"
-                         className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <Users className="w-4 h-4 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Revenue
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={formData.revenue}
-                        onChange={(e) => setFormData(prev => ({ ...prev, revenue: e.target.value }))}
-                        placeholder="e.g., $2.5M"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <DollarSign className="w-4 h-4 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-purple-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Contact Information</h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Location
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                        placeholder="e.g., San Francisco, CA"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <MapPin className="w-4 h-4 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Website
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="url"
-                        value={formData.website}
-                        onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-                        placeholder="https://company.com"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <Globe className="w-4 h-4 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Email
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        placeholder="contact@company.com"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <Mail className="w-4 h-4 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Phone
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="+1 (555) 123-4567"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <Phone className="w-4 h-4 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-6 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setShowEditForm(false);
-                    setEditingCompany(null);
-                    setFormData({
-                      name: "",
-                      description: "",
-                      industry: industries[0],
-                      status: "Active",
-                      founded: "",
-                      employees: 0,
-                      location: "",
-                      website: "",
-                      email: "",
-                      phone: "",
-                      revenue: ""
-                    });
-                  }}
-                  className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Cancel</span>
-                </button>
-
-                <div className="flex items-center space-x-3">
-                  <button
-                    type="button"
-                    className="px-6 py-3 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors flex items-center space-x-2"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>Save Draft</span>
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center space-x-2"
-                  >
-                    <Building2 className="w-4 h-4" />
-                    <span>{showEditForm ? 'Update Company' : 'Create Company'}</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Enhanced Search and Filters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search companies, descriptions, or industries..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
-              />
             </div>
             
             <div className="flex items-center gap-3">
@@ -1317,7 +653,129 @@ Members: ${company.members}
         {view === "sprints" && <div className="text-center py-12 text-slate-600">Sprints view coming soon...</div>}
       </div>
 
-      
+      {/* Create Company Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-semibold mb-4">Create New Company</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Industry</label>
+                <select
+                  value={formData.industry}
+                  onChange={(e) => setFormData({...formData, industry: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {industries.map(industry => (
+                    <option key={industry} value={industry}>{industry}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Company Modal */}
+      {showEditForm && editingCompany && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-semibold mb-4">Edit Company</h2>
+            <form onSubmit={handleUpdateCompany} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Industry</label>
+                <select
+                  value={formData.industry}
+                  onChange={(e) => setFormData({...formData, industry: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {industries.map(industry => (
+                    <option key={industry} value={industry}>{industry}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditingCompany(null);
+                  }}
+                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+          {successMessage}
+        </div>
+      )}
     </div>
   );
 } 

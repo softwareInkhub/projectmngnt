@@ -39,6 +39,7 @@ import SettingsPage from './SettingsPage';
 import NotificationsPage from './NotificationsPage';
 import CompaniesPage from './CompaniesPage';
 import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
+import TasksPage from './TasksPage';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -87,6 +88,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
   const availableSheets = useMemo(() => [
     { type: 'dashboard', title: 'Dashboard', component: DashboardPage },
     { type: 'projects', title: 'Projects', component: ProjectsPage },
+    { type: 'tasks', title: 'Tasks', component: TasksPage },
     { type: 'teams', title: 'Teams', component: TeamsPageSheet },
     { type: 'departments', title: 'Departments', component: DepartmentsPage },
     { type: 'sprints', title: 'Sprints', component: SprintsPage },
@@ -133,26 +135,39 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
   // Handle drop from sidebar or tabs
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    console.log('Grid drop event triggered', { draggedItem, onDropItem });
+    
     if (draggedItem && onDropItem) {
+      const draggedItemData = draggedItem as Record<string, unknown>;
+      console.log('Processing drop for:', draggedItemData);
+      
       // Check if it's a tab drop (has component property)
-      if ((draggedItem as Record<string, unknown>).component) {
+      if (draggedItemData.component) {
+        console.log('Tab drop detected, adding sheet with component');
         // This is a tab drop - use the component directly
         addSheet(
-          (draggedItem as Record<string, unknown>).type as string, 
-          (draggedItem as Record<string, unknown>).component as React.ComponentType<any>, 
-          (draggedItem as Record<string, unknown>).context as Record<string, unknown>
+          draggedItemData.type as string, 
+          draggedItemData.component as React.ComponentType<any>, 
+          draggedItemData.context as Record<string, unknown>
         );
         onDropItem(draggedItem);
       } else {
         // This is a sidebar drop - find the component
-        const sheetType = (draggedItem as Record<string, unknown>).type as string;
+        const sheetType = draggedItemData.type as string;
+        console.log('Sidebar drop detected, looking for sheet type:', sheetType);
         const sheetInfo = availableSheets.find(sheet => sheet.type === sheetType);
         
         if (sheetInfo) {
+          console.log('Found sheet info:', sheetInfo);
           addSheet(sheetInfo.type, sheetInfo.component);
           onDropItem(draggedItem);
+        } else {
+          console.warn(`No sheet component found for type: ${sheetType}`);
+          console.log('Available sheets:', availableSheets.map(s => s.type));
         }
       }
+    } else {
+      console.warn('Drop event missing draggedItem or onDropItem');
     }
   }, [draggedItem, onDropItem, availableSheets, addSheet]);
 
@@ -775,10 +790,14 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
       {/* Grid Container */}
       <div 
         className={`grid-container ${isFullscreen ? 'h-full' : 'h-full'} ${
-          draggedItem ? 'border-2 border-dashed border-blue-400 bg-blue-50' : ''
+          draggedItem ? 'border-2 border-dashed border-blue-400 bg-blue-50/30' : ''
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+        }}
       >
         <ResponsiveReactGridLayout
           className={`layout ${showGrid ? 'show-grid' : ''}`}
@@ -808,11 +827,12 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
         
         {/* Drop Zone Indicator */}
         {draggedItem && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-blue-100 border-2 border-blue-400 rounded-lg p-8 text-center shadow-lg">
-              <div className="text-blue-600 font-medium mb-2 text-lg">Drop to add sheet</div>
-              <div className="text-blue-500 text-sm mb-2">{(draggedItem as any)?.label || (draggedItem as any)?.title}</div>
-              <div className="text-blue-400 text-xs">Drag from sidebar or tabs to add sheets to the grid</div>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <div className="bg-blue-100/90 backdrop-blur-sm border-2 border-blue-400 rounded-xl p-8 text-center shadow-2xl">
+              <div className="text-blue-600 font-semibold mb-3 text-xl">Drop to add sheet</div>
+              <div className="text-blue-500 text-lg mb-3 font-medium">{(draggedItem as any)?.label || (draggedItem as any)?.title}</div>
+              <div className="text-blue-400 text-sm">Drag from sidebar or tabs to add sheets to the grid</div>
+              <div className="mt-4 text-blue-300 text-xs">Release to add this component to your grid layout</div>
             </div>
           </div>
         )}

@@ -53,8 +53,9 @@ import {
   Save,
   ArrowLeft
 } from "lucide-react";
-import { TaskApiService, TaskData, TaskWithUI, transformTaskToUI, validateTaskData } from "../utils/taskApi";
+import { TaskApiService, TaskData, TaskWithUI, transformTaskToUI, validateTaskData, buildTaskTree, TaskTreeNode, validateParentAssignment, getAvailableParents } from "../utils/taskApi";
 import { ApiResponse } from "../utils/api";
+import { TaskTreeView } from "./TaskTreeView";
 
 // Use imported interfaces and functions from taskApi.ts
 
@@ -118,6 +119,12 @@ export default function TasksPage({ context }: { context?: { company: string } }
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<any | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
+  
+  // Nested subtask state
+  const [taskTree, setTaskTree] = useState<TaskTreeNode[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [showTreeView, setShowTreeView] = useState(true);
+  const [expandedTreeNodes, setExpandedTreeNodes] = useState<Set<string>>(new Set());
 
   // Function to fetch tasks from API
   const fetchTasks = async () => {
@@ -143,9 +150,14 @@ export default function TasksPage({ context }: { context?: { company: string } }
             .map((item: TaskData) => transformTaskToUI(item));
           
           setTasks(uiTasks);
+          
+          // Build task tree for nested view
+          const tree = buildTaskTree(tasksData);
+          setTaskTree(tree);
         } else {
           console.warn('Tasks data is not an array:', tasksData);
           setTasks([]);
+          setTaskTree([]);
         }
       } else {
         console.error('Failed to fetch tasks:', response.error);
@@ -176,7 +188,8 @@ export default function TasksPage({ context }: { context?: { company: string } }
     estimatedHours: "",
     tags: [] as string[],
     subtasks: [] as { id: number; title: string; completed: boolean }[],
-    comments: ""
+    comments: "",
+    parentId: null as string | null
   });
 
   const analytics = {
@@ -258,6 +271,7 @@ export default function TasksPage({ context }: { context?: { company: string } }
       tags: formData.tags.join(','), // Convert array to comma-separated string
       subtasks: JSON.stringify(formData.subtasks), // Convert to JSON string
       comments: formData.comments.trim(),
+      parentId: formData.parentId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -322,7 +336,8 @@ export default function TasksPage({ context }: { context?: { company: string } }
         estimatedHours: "",
         tags: [],
         subtasks: [],
-        comments: ""
+        comments: "",
+        parentId: null
       });
       
     } catch (err) {
@@ -475,7 +490,8 @@ export default function TasksPage({ context }: { context?: { company: string } }
       estimatedHours: task.estimatedHours ? task.estimatedHours.toString() : '',
       tags: tags,
       subtasks: subtasks,
-      comments: task.comments || ''
+      comments: task.comments || '',
+      parentId: task.parentId || null
     });
     setShowEditForm(true);
     setOpenMenuId(null);
@@ -502,6 +518,7 @@ export default function TasksPage({ context }: { context?: { company: string } }
       tags: formData.tags.join(','),
       subtasks: JSON.stringify(formData.subtasks),
       comments: formData.comments.trim(),
+      parentId: formData.parentId,
       createdAt: editingTask.createdAt,
       updatedAt: new Date().toISOString()
     };
@@ -533,6 +550,68 @@ export default function TasksPage({ context }: { context?: { company: string } }
     };
   }, []);
 
+  // Task Tree Functions
+  const handleTaskSelect = (task: TaskTreeNode) => {
+    setSelectedTaskId(task.id!);
+  };
+
+  const handleAddSubtask = (parentId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      parentId: parentId
+    }));
+    setShowCreateForm(true);
+    setShowEditForm(false);
+  };
+
+  const handleEditTaskFromTree = (task: TaskTreeNode) => {
+    setEditingTask(task);
+    setFormData({
+      title: task.title,
+      description: task.description,
+      project: task.project,
+      assignee: task.assignee,
+      status: task.status,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      startDate: task.startDate || '',
+      estimatedHours: task.estimatedHours ? task.estimatedHours.toString() : '',
+      tags: task.tags ? task.tags.split(',').filter(tag => tag.trim() !== '') : [],
+      subtasks: [],
+      comments: task.comments || '',
+      parentId: task.parentId || null
+    });
+    setShowEditForm(true);
+    setShowCreateForm(false);
+  };
+
+  const handleDeleteTaskFromTree = async (task: TaskTreeNode) => {
+    if (confirm(`Are you sure you want to delete "${task.title}"? This will also delete all its subtasks.`)) {
+      await deleteTask(task.id!);
+    }
+  };
+
+  const handleToggleExpand = (taskId: string) => {
+    const newExpanded = new Set(expandedTreeNodes);
+    if (newExpanded.has(taskId)) {
+      newExpanded.delete(taskId);
+    } else {
+      newExpanded.add(taskId);
+    }
+    setExpandedTreeNodes(newExpanded);
+    
+    // Update the task tree with expanded state
+    const updateTreeExpandedState = (nodes: TaskTreeNode[]): TaskTreeNode[] => {
+      return nodes.map(node => ({
+        ...node,
+        isExpanded: newExpanded.has(node.id!),
+        children: updateTreeExpandedState(node.children)
+      }));
+    };
+    
+    setTaskTree(updateTreeExpandedState(taskTree));
+  };
+
   return (
     <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
       {/* Enhanced Header */}
@@ -549,6 +628,13 @@ export default function TasksPage({ context }: { context?: { company: string } }
           )}
         </div>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowTreeView(!showTreeView)}
+            className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
+          >
+            <Layers size={16} />
+            {showTreeView ? 'Hide Tree' : 'Show Tree'}
+          </button>
           <button 
             className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
           >
@@ -665,6 +751,84 @@ export default function TasksPage({ context }: { context?: { company: string } }
                       >
                         {showNewProject ? "Cancel" : "+ Add New Project"}
                       </button>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Parent Task
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={formData.parentId || ''}
+                          onChange={(e) => {
+                            const parentId = e.target.value || null;
+                            // Validate parent assignment
+                            if (editingTask && parentId) {
+                              const taskDataArray = tasks.map(t => ({
+                                id: t.id,
+                                title: t.title,
+                                description: t.description,
+                                project: t.project,
+                                assignee: t.assignee,
+                                status: t.status,
+                                priority: t.priority,
+                                dueDate: t.dueDate,
+                                startDate: t.startDate,
+                                estimatedHours: t.estimatedHours,
+                                tags: t.tags.join(','),
+                                subtasks: JSON.stringify(t.subtasks),
+                                comments: t.comments,
+                                progress: t.progress,
+                                timeSpent: t.timeSpent,
+                                estimatedTime: t.estimatedTime,
+                                parentId: t.parentId,
+                                createdAt: t.createdAt,
+                                updatedAt: t.updatedAt
+                              }));
+                              const validation = validateParentAssignment(editingTask.id!, parentId, taskDataArray);
+                              if (!validation.isValid) {
+                                alert(validation.error);
+                                return;
+                              }
+                            }
+                            setFormData(prev => ({ ...prev, parentId }));
+                          }}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                        >
+                          <option value="">No Parent (Root Task)</option>
+                          {getAvailableParents(editingTask?.id || null, tasks.map(t => ({
+                            id: t.id,
+                            title: t.title,
+                            description: t.description,
+                            project: t.project,
+                            assignee: t.assignee,
+                            status: t.status,
+                            priority: t.priority,
+                            dueDate: t.dueDate,
+                            startDate: t.startDate,
+                            estimatedHours: t.estimatedHours,
+                            tags: t.tags.join(','),
+                            subtasks: JSON.stringify(t.subtasks),
+                            comments: t.comments,
+                            progress: t.progress,
+                            timeSpent: t.timeSpent,
+                            estimatedTime: t.estimatedTime,
+                            parentId: t.parentId,
+                            createdAt: t.createdAt,
+                            updatedAt: t.updatedAt
+                          }))).map(task => (
+                            <option key={task.id} value={task.id}>
+                              {task.title}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <Layers className="w-4 h-4 text-slate-400" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Select a parent task to create a subtask, or leave empty for a root task
+                      </p>
                     </div>
                   </div>
 
@@ -1136,6 +1300,21 @@ export default function TasksPage({ context }: { context?: { company: string } }
           )}
         </div>
         )}
+
+                 {/* Task Tree View */}
+                 {showTreeView && !isLoading && (
+                   <div className="mb-6">
+                     <TaskTreeView
+                       tasks={taskTree}
+                       selectedTaskId={selectedTaskId || undefined}
+                       onTaskSelect={handleTaskSelect}
+                       onAddSubtask={handleAddSubtask}
+                       onEditTask={handleEditTaskFromTree}
+                       onDeleteTask={handleDeleteTaskFromTree}
+                       onToggleExpand={handleToggleExpand}
+                     />
+                   </div>
+                 )}
 
                  {/* Task Grid/List View */}
          {!isLoading && (

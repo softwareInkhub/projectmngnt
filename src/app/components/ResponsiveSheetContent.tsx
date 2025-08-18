@@ -3,12 +3,17 @@
 import React from 'react';
 import DashboardPage from './DashboardPage';
 import ProjectsPage from './ProjectsPage';
-import TeamsPage from './TeamsPage';
+import TeamsPageSheet from './TeamsPageSheet';
 import TasksPage from './TasksPage';
 import CalendarPage from './CalendarPage';
 import ReportsPage from './ReportsPage';
 import NotificationsPage from './NotificationsPage';
 import SettingsPage from './SettingsPage';
+import CompaniesPage from './CompaniesPage';
+import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
+import DepartmentsPage from './DepartmentsPage';
+import SprintsPage from './SprintsPage';
+import StoriesPage from './StoriesPage';
 
 interface ResponsiveSheetContentProps {
   sheetType: string;
@@ -78,7 +83,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <TeamsPage 
+            <TeamsPageSheet 
+              open={true}
+              onClose={() => {}}
               onOpenTab={onOpenTab}
               context={context as { company: string } | undefined}
             />
@@ -138,6 +145,74 @@ export default function ResponsiveSheetContent({
             data-sheet-height={height}
           >
             <SettingsPage />
+          </div>
+        );
+      case 'companies':
+        return (
+          <div 
+            className={`h-full w-full overflow-auto ${responsiveClass}`}
+            data-sheet-width={width}
+            data-sheet-height={height}
+          >
+            <CompaniesPage 
+              context={context as { company: string } | undefined}
+            />
+          </div>
+        );
+      case 'projects-analytics':
+        return (
+          <div 
+            className={`h-full w-full overflow-auto ${responsiveClass}`}
+            data-sheet-width={width}
+            data-sheet-height={height}
+          >
+            <ProjectsAnalyticsPage 
+              onOpenTab={onOpenTab ? (tabType: string, context?: Record<string, unknown>) => {
+                onOpenTab(tabType, undefined, context);
+              } : undefined}
+            />
+          </div>
+        );
+      case 'departments':
+        return (
+          <div 
+            className={`h-full w-full overflow-auto ${responsiveClass}`}
+            data-sheet-width={width}
+            data-sheet-height={height}
+          >
+            <DepartmentsPage 
+              open={true}
+              onClose={() => {}}
+              onOpenTab={onOpenTab}
+            />
+          </div>
+        );
+      case 'sprints':
+        return (
+          <div 
+            className={`h-full w-full overflow-auto ${responsiveClass}`}
+            data-sheet-width={width}
+            data-sheet-height={height}
+          >
+            <SprintsPage 
+              open={true}
+              onClose={() => {}}
+              onOpenTab={onOpenTab}
+            />
+          </div>
+        );
+      case 'stories':
+        return (
+          <div 
+            className={`h-full w-full overflow-auto ${responsiveClass}`}
+            data-sheet-width={width}
+            data-sheet-height={height}
+          >
+            <StoriesPage 
+              open={true}
+              onClose={() => {}}
+              onOpenTab={onOpenTab}
+            />
           </div>
         );
       default:

@@ -49,16 +49,16 @@ export default function Sidebar({
   }, []);
 
   const navItems = [
-    { label: "Dashboard", icon: LayoutDashboard },
-    { label: "Projects", icon: FolderOpen },
-    { label: "Tasks", icon: CheckSquare },
-    { label: "Teams", icon: Users },
-    { label: "Companies", icon: Building },
-    { label: "Calendar", icon: Calendar },
-    { label: "Reports", icon: BarChart3 },
-    { label: "Grid Layout", icon: Grid3X3 },
-    { label: "Settings", icon: Settings },
-    { label: "Notifications", icon: Bell },
+    { label: "Dashboard", icon: LayoutDashboard, type: "dashboard" },
+    { label: "Projects", icon: FolderOpen, type: "projects" },
+    { label: "Tasks", icon: CheckSquare, type: "tasks" },
+    { label: "Teams", icon: Users, type: "teams" },
+    { label: "Companies", icon: Building, type: "companies" },
+    { label: "Calendar", icon: Calendar, type: "calendar" },
+    { label: "Reports", icon: BarChart3, type: "reports" },
+    { label: "Grid Layout", icon: Grid3X3, type: "grid-layout" },
+    { label: "Settings", icon: Settings, type: "settings" },
+    { label: "Notifications", icon: Bell, type: "notifications" },
   ];
 
   const handleDragStart = (e: React.DragEvent, item: any) => {
@@ -175,7 +175,7 @@ export default function Sidebar({
                   ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25" 
                   : "hover:bg-neutral-100 hover:text-neutral-700 text-neutral-500 hover:shadow-md"
               } ${isExpanded ? 'justify-start gap-3' : 'justify-center'} ${
-                isDraggable ? 'cursor-grab active:cursor-grabbing' : ''
+                isDraggable ? 'cursor-grab active:cursor-grabbing hover:shadow-lg' : ''
               }`}
               onClick={() => {
                 if (isGridLayoutItem && onToggleGridMode) {
@@ -200,6 +200,9 @@ export default function Sidebar({
                   size={20} 
                   strokeWidth={isActive ? 2.5 : 1.5} 
                 />
+                {isDraggable && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                )}
               </div>
               {isExpanded && (
                 <span className="text-sm font-medium truncate transition-all duration-300">
