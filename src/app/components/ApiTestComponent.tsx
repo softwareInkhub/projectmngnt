@@ -10,6 +10,8 @@ export default function ApiTestComponent() {
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
+
   const addDebugInfo = (info: string) => {
     setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${info}`]);
   };
@@ -24,7 +26,7 @@ export default function ApiTestComponent() {
         addDebugInfo('Starting API test...');
         addDebugInfo(`NODE_ENV: ${process.env.NODE_ENV}`);
         addDebugInfo(`NEXT_PUBLIC_API_URL: ${process.env.NEXT_PUBLIC_API_URL || 'NOT_SET'}`);
-        addDebugInfo(`API_BASE_URL fallback: http://localhost:5001`);
+        addDebugInfo(`NEXT_PUBLIC_: ${process.env.NEXT_PUBLIC_API_BASE_URL}`);
 
         // Test if fetch is available
         addDebugInfo(`Fetch available: ${typeof fetch !== 'undefined' ? 'YES' : 'NO'}`);
@@ -32,7 +34,7 @@ export default function ApiTestComponent() {
         // Test direct fetch first
         addDebugInfo('Testing direct fetch...');
         try {
-          const directResponse = await fetch('http://localhost:5001/crud?tableName=project-management-companies');
+          const directResponse = await fetch(`${API_BASE_URL}/crud?tableName=project-management-companies`);
           addDebugInfo(`Direct fetch status: ${directResponse.status}`);
           addDebugInfo(`Direct fetch ok: ${directResponse.ok}`);
           
@@ -78,7 +80,7 @@ export default function ApiTestComponent() {
     };
 
     testApi();
-  }, []);
+  }, [API_BASE_URL]);
 
   if (loading) {
     return (

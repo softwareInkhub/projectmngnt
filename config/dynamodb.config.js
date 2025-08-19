@@ -3,7 +3,7 @@
 
 module.exports = {
   // API Configuration
-  NEXT_PUBLIC_API_URL: 'http://54.85.164.84:5001',
+  NEXT_PUBLIC_API_URL: process.env. || 'http://localhost:5001',
   
   // AWS DynamoDB Configuration
   AWS_REGION: 'us-east-1',

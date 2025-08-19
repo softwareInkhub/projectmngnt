@@ -379,6 +379,57 @@ export default function ContextSidebar({
         </div>
         
         <div className="mobile-space-y-3 p-3 flex-1 overflow-y-auto">
+          {activeTab === 1 && (
+            // Projects context (moved from dashboard)
+            <div className="mobile-space-y-3">
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Projects Overview</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="mobile-card p-2">
+                    <div className="mobile-text-xs mobile-text-secondary">Projects</div>
+                    <div className="mobile-text-base font-semibold">{projectsList.length}</div>
+                  </div>
+                  <div className="mobile-card p-2">
+                    <div className="mobile-text-xs mobile-text-secondary">Tasks</div>
+                    <div className="mobile-text-base font-semibold">{tasksList.length}</div>
+                  </div>
+                  <div className="mobile-card p-2">
+                    <div className="mobile-text-xs mobile-text-secondary">Teams</div>
+                    <div className="mobile-text-base font-semibold">{teamsList.length}</div>
+                  </div>
+                  <div className="mobile-card p-2">
+                    <div className="mobile-text-xs mobile-text-secondary">Companies</div>
+                    <div className="mobile-text-base font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Quick Actions</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs" onClick={() => onOpenTab('create-project')}>+ Project</button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs" onClick={() => onOpenTab('create-task')}>+ Task</button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs" onClick={() => onOpenTab('create-team')}>+ Team</button>
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs" onClick={() => onOpenTab('projects')}>All Projects</button>
+                </div>
+              </div>
+
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Recent Projects</h3>
+                <div className="mobile-space-y-2">
+                  {projectsList.slice(0,3).map((p, idx) => (
+                    <div key={idx} className="mobile-flex mobile-items-center mobile-gap-2 mobile-p-2 mobile-rounded-lg mobile-bg-neutral-50">
+                      <FolderOpen size={12} className="text-blue-600" />
+                      <div className="mobile-text-xs mobile-flex-1 truncate">{p.name}</div>
+                    </div>
+                  ))}
+                  {projectsList.length === 0 && (
+                    <div className="mobile-text-xs mobile-text-secondary">No recent items</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           {activeTab === 2 && (
             <div className="mobile-space-y-3">
               <div className="mobile-card">
@@ -414,6 +465,31 @@ export default function ContextSidebar({
                       }`}>
                         {task.status}
                       </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 3 && (
+            <div className="mobile-space-y-3">
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Team Filters</h3>
+                <div className="mobile-space-y-2">
+                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <Users size={12} />
+                    All Teams
+                  </button>
+                </div>
+              </div>
+              <div className="mobile-card">
+                <h3 className="mobile-h4 mb-2">Recent Teams</h3>
+                <div className="mobile-space-y-2">
+                  {teamsList.slice(0,3).map((team, idx) => (
+                    <div key={idx} className="mobile-flex mobile-items-center mobile-gap-2 mobile-p-2 mobile-rounded-lg mobile-bg-neutral-50">
+                      <Users size={12} className="text-purple-600" />
+                      <div className="mobile-text-xs mobile-flex-1 truncate">{team.name}</div>
                     </div>
                   ))}
                 </div>

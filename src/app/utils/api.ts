@@ -1,77 +1,36 @@
-// API utility functions
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+// ========================================
+// LEGACY API UTILITIES (DEPRECATED)
+// ========================================
+// 
+// This file is kept for backward compatibility.
+// New code should use the optimized apiService from './apiService'
+// and the environment configuration from '../config/environment'
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  // Additional properties from your API response
-  items?: T[];
-  count?: number;
-  pagesFetched?: number;
-}
+import { apiService, ApiResponse } from './apiService';
+import { TABLE_NAMES } from '../config/environment';
 
-async function makeRequest<T>(
-  endpoint: string, 
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
+// Re-export types for backward compatibility
+export type { ApiResponse } from './apiService';
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    // Handle different response structures
-    if (data.success !== undefined) {
-      // Return the response as-is - let components handle the structure
-      return data;
-    } else {
-      return { success: true, data };
-    }
-  } catch (error) {
-    console.error('API request failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
-  }
-}
-
-// Generic CRUD operations
+// Legacy CRUD operations - now delegate to the new service
 export async function createItem<T>(tableName: string, item: T): Promise<ApiResponse<T>> {
-  return makeRequest<T>(`/crud?tableName=${tableName}`, {
-    method: 'POST',
-    body: JSON.stringify({ item }),
-  });
+  console.warn('createItem is deprecated. Use apiService.createItem instead.');
+  return apiService.createItem<T>(tableName, item);
 }
 
 export async function getItems<T>(tableName: string): Promise<ApiResponse<T[]>> {
-  return makeRequest<T[]>(`/crud?tableName=${tableName}`, {
-    method: 'GET',
-  });
+  console.warn('getItems is deprecated. Use apiService.getItems instead.');
+  return apiService.getItems<T>(tableName);
 }
 
 export async function updateItem<T>(tableName: string, id: string, item: Partial<T>): Promise<ApiResponse<T>> {
-  return makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
-    method: 'PUT',
-    body: JSON.stringify({ item }),
-  });
+  console.warn('updateItem is deprecated. Use apiService.updateItem instead.');
+  return apiService.updateItem<T>(tableName, id, item);
 }
 
 export async function deleteItem<T>(tableName: string, id: string): Promise<ApiResponse<T>> {
-  return makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
-    method: 'DELETE',
-    body: JSON.stringify({ id }),
-  });
+  console.warn('deleteItem is deprecated. Use apiService.deleteItem instead.');
+  return apiService.deleteItem<T>(tableName, id);
 }
 
 // Company-specific operations

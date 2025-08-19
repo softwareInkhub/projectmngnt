@@ -1,14 +1,17 @@
 // Test script for Project and Team API and DynamoDB integration
 // Using global fetch (available in Node.js 18+)
 
-const API_BASE_URL = 'http://localhost:5001';
+// Load environment variables
+require('dotenv').config({ path: '.env.local' });
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://brmh.in';
 
 async function testProjectTeamAPI() {
   console.log('🧪 Testing Project and Team API and DynamoDB Integration...\n');
 
   // Test 1: Health Check (skipped - external server)
   console.log('1. Skipping Health Check (external server)...');
-  console.log('✅ Using external server at:', API_BASE_URL);
+  console.log('✅ Using external server at:', NEXT_PUBLIC_);
 
   // Test 2: Create Project
   console.log('\n2. Testing Project Creation...');
@@ -144,7 +147,7 @@ async function testProjectTeamAPI() {
       whatsappGroupName: 'Test Team Group'
     };
 
-    const createTeamResponse = await fetch(`${API_BASE_URL}/crud?tableName=project-management-teams`, {
+    const createTeamResponse = await fetch(`${NEXT_PUBLIC_}/crud?tableName=project-management-teams`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ item: teamData })
@@ -211,7 +214,7 @@ async function testProjectTeamAPI() {
   // Test 8: Get All Projects
   console.log('\n8. Testing Get All Projects...');
   try {
-    const getProjectsResponse = await fetch(`${API_BASE_URL}/crud?tableName=project-management-projects`, {
+          const getProjectsResponse = await fetch(`${API_BASE_URL}/crud?tableName=project-management-projects`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -261,6 +264,7 @@ async function testProjectTeamAPI() {
 
 // Run the test
 testProjectTeamAPI().catch(console.error);
+
 
 
 

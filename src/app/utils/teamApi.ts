@@ -1,50 +1,9 @@
-// Team API service
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+// ========================================
+// OPTIMIZED TEAM API SERVICE
+// ========================================
 
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  // Additional properties from your API response
-  items?: T[];
-  count?: number;
-  pagesFetched?: number;
-}
-
-async function makeRequest<T>(
-  endpoint: string, 
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    // Handle different response structures
-    if (data.success !== undefined) {
-      // Return the response as-is - let components handle the structure
-      return data;
-    } else {
-      return { success: true, data };
-    }
-  } catch (error) {
-    console.error('API request failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
-  }
-}
+import { apiService, ApiResponse } from './apiService';
+import { TABLE_NAMES } from '../config/environment';
 
 // Team Member Interface
 export interface TeamMember {
@@ -204,45 +163,27 @@ export class TeamApiService {
       updatedAt: new Date().toISOString()
     };
 
-    console.log('Creating new team with generated ID:', teamWithId.id);
-
-    return makeRequest<TeamData>(`/crud?tableName=project-management-teams`, {
-      method: 'POST',
-      body: JSON.stringify({ item: teamWithId }),
-    });
+    return apiService.createItem<TeamData>(TABLE_NAMES.teams, teamWithId);
   }
 
   static async getTeams(): Promise<ApiResponse<TeamData[]>> {
-    return makeRequest<TeamData[]>(`/crud?tableName=project-management-teams`, {
-      method: 'GET',
-    });
+    return apiService.getItems<TeamData>(TABLE_NAMES.teams);
+  }
+
+  static async getTeam(id: string): Promise<ApiResponse<TeamData>> {
+    return apiService.getItem<TeamData>(TABLE_NAMES.teams, id);
   }
 
   static async updateTeam(id: string, team: Partial<TeamData>): Promise<ApiResponse<TeamData>> {
-    console.log('TeamApiService.updateTeam called with id:', id, 'team:', team);
-    
-    // Use proper UPDATE endpoint with UpdateCommand
-    const updatePayload = {
-      key: { id: id },
-      updates: {
-        ...team,
-        updatedAt: new Date().toISOString()
-      }
+    const updates = {
+      ...team,
+      updatedAt: new Date().toISOString()
     };
     
-    console.log('Update payload for UpdateCommand:', updatePayload);
-    
-    // Use UPDATE endpoint that uses DynamoDB UpdateCommand
-    return makeRequest<TeamData>(`/crud?tableName=project-management-teams&action=update`, {
-      method: 'POST',
-      body: JSON.stringify(updatePayload),
-    });
+    return apiService.updateItem<TeamData>(TABLE_NAMES.teams, id, updates);
   }
 
   static async deleteTeam(id: string): Promise<ApiResponse<TeamData>> {
-    return makeRequest<TeamData>(`/crud?tableName=project-management-teams&id=${id}`, {
-      method: 'DELETE',
-      body: JSON.stringify({ id }),
-    });
+    return apiService.deleteItem<TeamData>(TABLE_NAMES.teams, id);
   }
 }

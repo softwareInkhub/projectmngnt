@@ -32,6 +32,10 @@ const industries = [
 
 const priorities = ["Low", "Medium", "High", "Critical"];
 
+// Additional company metadata options
+const companySizes = ["Small", "Medium", "Large"];
+const companyStatuses = ["Active", "Inactive", "On Hold"];
+
 export default function CompaniesPage({ context }: { context?: { company: string } }) {
   const [selectedCompany, setSelectedCompany] = useState(1);
   const [view, setView] = useState("overview");
@@ -53,9 +57,8 @@ export default function CompaniesPage({ context }: { context?: { company: string
     "Innovation", "Research", "Consulting", "Manufacturing", "Healthcare"
   ];
 
-  const [companies, setCompanies] = useState<any[]>([]);
+    const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [editingCompany, setEditingCompany] = useState<any | null>(null);
@@ -64,6 +67,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
     name: "",
     description: "",
     industry: industries[0],
+    size: "Small",
     status: "Active",
     founded: "",
     employees: 0,
@@ -118,6 +122,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
       name: company.name || "",
       description: company.description || "",
       industry: company.industry || industries[0],
+      size: company.size || "Small",
       status: company.status || "Active",
       founded: company.founded || "",
       employees: company.employees || 0,
@@ -127,6 +132,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
       phone: company.phone || "",
       revenue: company.revenue || ""
     });
+    setShowCreateForm(false);
     setShowEditForm(true);
   };
 
@@ -151,7 +157,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
     try {
       const response = await CompanyApiService.createCompany(formData as CompanyData);
       if (response.success) {
-        setShowCreateModal(false);
+        setShowCreateForm(false);
         setFormData({
           name: "",
           description: "",
@@ -178,7 +184,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
   const handleUpdateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCompany) return;
-    
+
     try {
       const response = await CompanyApiService.updateCompany(editingCompany.id, formData as CompanyData);
       if (response.success) {
@@ -220,7 +226,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
         break;
       case 'website':
         if (company.website) {
-          window.open(company.website, '_blank');
+        window.open(company.website, '_blank');
         }
         break;
     }
@@ -266,82 +272,82 @@ export default function CompaniesPage({ context }: { context?: { company: string
     }
 
     return (
-      <div className="space-y-6">
-        {/* Enhanced Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
-                <Building2 className="w-6 h-6" />
-              </div>
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
+      <div className="space-y-4 md:space-y-6">
+      {/* Enhanced Analytics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fade-in">
+        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+              <Building2 className="w-6 h-6" />
             </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalCompanies}</h3>
-            <p className="text-slate-600 text-sm font-medium">Total Companies</p>
-            <div className="mt-2 text-xs text-slate-500">+2 this quarter</div>
+            <TrendingUp className="w-5 h-5 text-emerald-500" />
           </div>
-
-          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
-                <FolderKanban className="w-6 h-6" />
-              </div>
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
-            </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalProjects}</h3>
-            <p className="text-slate-600 text-sm font-medium">Total Projects</p>
-            <div className="mt-2 text-xs text-slate-500">+8 this month</div>
-          </div>
-
-          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
-                <Users className="w-6 h-6" />
-              </div>
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
-            </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalMembers}</h3>
-            <p className="text-slate-600 text-sm font-medium">Total Members</p>
-            <div className="mt-2 text-xs text-slate-500">+12 this month</div>
-          </div>
-
-          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
-                <Target className="w-6 h-6" />
-              </div>
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
-            </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.avgSatisfaction}%</h3>
-            <p className="text-slate-600 text-sm font-medium">Avg Satisfaction</p>
-            <div className="mt-2 text-xs text-slate-500">+3% from last month</div>
-          </div>
+          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalCompanies}</h3>
+          <p className="text-slate-600 text-sm font-medium">Total Companies</p>
+          <div className="mt-2 text-xs text-slate-500">+2 this quarter</div>
         </div>
 
-        {/* Companies Grid/List View */}
-        <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
-          {viewMode === "grid" ? (
-            // Grid View
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredCompanies.map((company, index) => (
-                <div 
-                  key={company.id}
-                  className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in"
-                  style={{ animationDelay: `${300 + index * 100}ms` }}
-                >
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
+              <FolderKanban className="w-6 h-6" />
+            </div>
+            <TrendingUp className="w-5 h-5 text-emerald-500" />
+          </div>
+          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalProjects}</h3>
+          <p className="text-slate-600 text-sm font-medium">Total Projects</p>
+          <div className="mt-2 text-xs text-slate-500">+8 this month</div>
+        </div>
+
+        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
+              <Users className="w-6 h-6" />
+            </div>
+            <TrendingUp className="w-5 h-5 text-emerald-500" />
+          </div>
+          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalMembers}</h3>
+          <p className="text-slate-600 text-sm font-medium">Total Members</p>
+          <div className="mt-2 text-xs text-slate-500">+12 this month</div>
+        </div>
+
+        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
+              <Target className="w-6 h-6" />
+            </div>
+            <TrendingUp className="w-5 h-5 text-emerald-500" />
+          </div>
+          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.avgSatisfaction}%</h3>
+          <p className="text-slate-600 text-sm font-medium">Avg Satisfaction</p>
+          <div className="mt-2 text-xs text-slate-500">+3% from last month</div>
+        </div>
+      </div>
+
+      {/* Companies Grid/List View */}
+      <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
+        {viewMode === "grid" ? (
+          // Grid View
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredCompanies.map((company, index) => (
+              <div 
+                key={company.id}
+                className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in"
+                style={{ animationDelay: `${300 + index * 100}ms` }}
+              >
+                  <div className="p-4 md:p-6">
+                  <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
                           <Building2 className="w-6 h-6" />
-                        </div>
+                    </div>
                         <div>
                           <h3 className="text-lg font-semibold text-slate-900 mb-1">{company.name}</h3>
                           <p className="text-sm text-slate-600">{company.industry}</p>
                         </div>
                       </div>
                       <div className="relative">
-                        <button
+                        <button 
                           onClick={() => toggleMenu(company.id)}
                           className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
                         >
@@ -349,22 +355,22 @@ export default function CompaniesPage({ context }: { context?: { company: string
                         </button>
                         {openMenuId === company.id && (
                           <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
-                            <button
+                              <button
                               onClick={() => handleCompanyAction(company, 'view')}
                               className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                            >
+                              >
                               <Eye className="w-4 h-4" />
                               View Details
-                            </button>
-                            <button
+                              </button>
+                                                              <button
                               onClick={() => handleCompanyAction(company, 'edit')}
                               className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                             >
                               <Edit className="w-4 h-4" />
                               Edit
-                            </button>
+                              </button>
                             {company.website && (
-                              <button
+                                                              <button
                                 onClick={() => handleCompanyAction(company, 'website')}
                                 className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                               >
@@ -372,18 +378,18 @@ export default function CompaniesPage({ context }: { context?: { company: string
                                 Visit Website
                               </button>
                             )}
-                            <button
+                              <button
                               onClick={() => handleCompanyAction(company, 'delete')}
                               className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
-                            >
-                              <Trash2 className="w-4 h-4" />
+                              >
+                                <Trash2 className="w-4 h-4" />
                               Delete
-                            </button>
+                              </button>
                           </div>
                         )}
-                      </div>
                     </div>
-                    
+                  </div>
+
                     <p className="text-slate-600 text-sm mb-4 line-clamp-2">{company.description}</p>
                     
                     <div className="flex items-center gap-2 mb-4">
@@ -395,23 +401,23 @@ export default function CompaniesPage({ context }: { context?: { company: string
                         {company.status}
                       </span>
                       {company.employees && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                          {company.employees} employees
-                        </span>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                        {company.employees} employees
+                      </span>
                       )}
-                    </div>
-                    
+                </div>
+
                     <div className="flex items-center justify-between text-sm text-slate-500">
                       <div className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
                         <span>{company.location || 'Location not specified'}</span>
-                      </div>
+                  </div>
                       {company.founded && (
                         <span>Founded {company.founded}</span>
                       )}
-                    </div>
-                  </div>
-                </div>
+                        </div>
+                      </div>
+                                    </div>
               ))}
             </div>
           ) : (
@@ -430,73 +436,73 @@ export default function CompaniesPage({ context }: { context?: { company: string
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {filteredCompanies.map((company) => (
+              {filteredCompanies.map((company) => (
                       <tr key={company.id} className="hover:bg-slate-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="p-2 rounded-lg bg-blue-100 text-blue-600 mr-3">
                               <Building2 className="w-5 h-5" />
-                            </div>
+                          </div>
                             <div>
                               <div className="text-sm font-medium text-slate-900">{company.name}</div>
                               <div className="text-sm text-slate-500">{company.description}</div>
-                            </div>
+                        </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{company.industry}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             company.status === "Active" ? "bg-green-100 text-green-700" :
                             company.status === "Inactive" ? "bg-red-100 text-red-700" :
                             "bg-yellow-100 text-yellow-700"
-                          }`}>
-                            {company.status}
-                          </span>
+                              }`}>
+                                {company.status}
+                              </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{company.employees || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{company.location || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center gap-2">
-                            <button
+                            <div className="flex items-center gap-2">
+                          <button 
                               onClick={() => handleCompanyAction(company, 'view')}
                               className="text-blue-600 hover:text-blue-900"
-                            >
+                          >
                               <Eye className="w-4 h-4" />
-                            </button>
-                            <button
+                          </button>
+                                <button
                               onClick={() => handleCompanyAction(company, 'edit')}
                               className="text-slate-600 hover:text-slate-900"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
                               onClick={() => handleCompanyAction(company, 'delete')}
                               className="text-red-600 hover:text-red-900"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
             </div>
+        </div>
           )}
           
           {filteredCompanies.length === 0 && !loading && (
             <div className="text-center py-12">
               <div className="text-slate-400 mb-4">
                 <Building2 size={48} className="mx-auto" />
-              </div>
+        </div>
               <h3 className="text-lg font-medium text-slate-900 mb-2">No companies found</h3>
               <p className="text-slate-600">Try adjusting your search or filter criteria</p>
-            </div>
-          )}
+                </div>
+              )}
         </div>
-      </div>
-    );
+    </div>
+  );
   };
 
 
@@ -505,19 +511,244 @@ export default function CompaniesPage({ context }: { context?: { company: string
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Companies</h1>
-            <p className="text-slate-600">Manage and monitor all your companies</p>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 hover:scale-105 shadow-lg"
-          >
-            <Plus className="w-5 h-5" />
-            Add Company
-          </button>
+        <div className="bg-white border-b border-slate-200 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-4 md:px-8 md:py-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-2 md:p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                <Building2 className="w-5 h-5 md:w-6 md:h-6" />
         </div>
+              <div>
+                <h1 className="text-lg md:text-xl font-bold text-slate-900 leading-tight">Companies</h1>
+                <p className="text-slate-600 mt-0.5 md:mt-1 text-xs md:text-base">Manage and monitor all your companies</p>
+            </div>
+          </div>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="relative hidden md:block">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
+                <input type="text" placeholder="Search companies..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64" />
+              </div>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="All">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="On Hold">On Hold</option>
+              </select>
+              <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="All">All Types</option>
+                <option value="Technology">Technology</option>
+                <option value="Research">Research</option>
+                <option value="Consulting">Consulting</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Finance">Finance</option>
+                <option value="Education">Education</option>
+                <option value="Retail">Retail</option>
+                <option value="Media">Media</option>
+                <option value="Transportation">Transportation</option>
+              </select>
+              <button className="hidden md:flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold" onClick={() => setShowCreateForm(true)}>
+             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
+                New
+           </button>
+        </div>
+      </div>
+                </div>
+        <div className="flex md:hidden items-center gap-2 w-full justify-end px-4 mt-2">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-2 py-2 border border-slate-300 rounded-lg text-xs">
+            <option value="All">Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="On Hold">On Hold</option>
+          </select>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="px-2 py-2 border border-slate-300 rounded-lg text-xs">
+            <option value="All">Type</option>
+            <option value="Technology">Technology</option>
+            <option value="Research">Research</option>
+            <option value="Consulting">Consulting</option>
+            <option value="Manufacturing">Manufacturing</option>
+          </select>
+          <button onClick={() => setShowCreateForm(true)} className="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-xs">New</button>
+                </div>
+        <div className="md:hidden px-4 mt-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search companies..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            />
+              </div>
+            </div>
+
+        {/* Inline Create Company Form */}
+        {showCreateForm && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+            <h2 className="text-xl font-semibold mb-4">Create New Company</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Row: Name, Industry */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Industry</label>
+                        <select
+                          value={formData.industry}
+                    onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {industries.map((industry) => (
+                      <option key={industry} value={industry}>
+                        {industry}
+                      </option>
+                          ))}
+                        </select>
+                    </div>
+                  </div>
+
+              {/* Row: Size, Status */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Size</label>
+                  <select
+                    value={(formData as any).size || "Small"}
+                    onChange={(e) => setFormData({ ...formData, size: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {companySizes.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                    </div>
+                    <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                        <select
+                    value={formData.status || "Active"}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {companyStatuses.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                        </select>
+                </div>
+              </div>
+
+              {/* Row: Founded, Employees */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Founded</label>
+                      <input
+                    type="text"
+                    value={formData.founded || ""}
+                    onChange={(e) => setFormData({ ...formData, founded: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., 2024"
+                  />
+                      </div>
+                  <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Employees</label>
+                                             <input
+                         type="number"
+                    value={formData.employees ?? 0}
+                    onChange={(e) => setFormData({ ...formData, employees: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min={0}
+                  />
+                    </div>
+                  </div>
+
+              {/* Row: Location, Website */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
+                      <input
+                        type="text"
+                    value={formData.location || ""}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                      </div>
+                  <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Website</label>
+                      <input
+                    type="url"
+                    value={formData.website || ""}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://example.com"
+                  />
+                    </div>
+                  </div>
+
+              {/* Row: Email, Phone */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                      <input
+                    type="email"
+                    value={formData.email || ""}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="name@company.com"
+                  />
+                      </div>
+                  <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                      <input
+                    type="text"
+                    value={formData.phone || ""}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="+1-555-0123"
+                  />
+                    </div>
+                  </div>
+
+              {/* Row: Revenue */}
+                  <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Revenue</label>
+                      <input
+                  type="text"
+                  value={formData.revenue || ""}
+                  onChange={(e) => setFormData({ ...formData, revenue: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="$1M"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateForm(false)}
+                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                  </button>
+                  <button
+                    type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                  Create
+                  </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Search and Filters */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
@@ -525,13 +756,13 @@ export default function CompaniesPage({ context }: { context?: { company: string
             <div className="flex items-center gap-4 flex-1">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input
-                  type="text"
+              <input
+                type="text"
                   placeholder="Search companies..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-white/20 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              />
               </div>
             </div>
             
@@ -653,120 +884,176 @@ export default function CompaniesPage({ context }: { context?: { company: string
         {view === "sprints" && <div className="text-center py-12 text-slate-600">Sprints view coming soon...</div>}
       </div>
 
-      {/* Create Company Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-4">Create New Company</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Industry</label>
-                <select
-                  value={formData.industry}
-                  onChange={(e) => setFormData({...formData, industry: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {industries.map(industry => (
-                    <option key={industry} value={industry}>{industry}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Create
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Create Company Modal removed in favor of inline form */}
 
-      {/* Edit Company Modal */}
+      {/* Inline Edit Company Form */}
       {showEditForm && editingCompany && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-4">Edit Company</h2>
-            <form onSubmit={handleUpdateCompany} className="space-y-4">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 mt-4">
+          <h2 className="text-xl font-semibold mb-4">Edit Company</h2>
+          <form onSubmit={handleUpdateCompany} className="space-y-6">
+            {/* Row: Name, Industry */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Industry</label>
                 <select
                   value={formData.industry}
-                  onChange={(e) => setFormData({...formData, industry: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {industries.map(industry => (
-                    <option key={industry} value={industry}>{industry}</option>
+                  {industries.map((industry) => (
+                    <option key={industry} value={industry}>
+                      {industry}
+                    </option>
                   ))}
                 </select>
               </div>
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowEditForm(false);
-                    setEditingCompany(null);
-                  }}
-                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+            </div>
+
+            {/* Row: Size, Status */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Size</label>
+                <select
+                  value={(formData as any).size || "Small"}
+                  onChange={(e) => setFormData({ ...formData, size: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Update
-                </button>
+                  {companySizes.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </form>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                <select
+                  value={formData.status || "Active"}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {companyStatuses.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Row: Founded, Employees */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Founded</label>
+                <input
+                  type="text"
+                  value={formData.founded || ""}
+                  onChange={(e) => setFormData({ ...formData, founded: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., 2024"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Employees</label>
+                <input
+                  type="number"
+                  value={formData.employees ?? 0}
+                  onChange={(e) => setFormData({ ...formData, employees: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min={0}
+                />
+              </div>
+            </div>
+
+            {/* Row: Location, Website */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
+                <input
+                  type="text"
+                  value={formData.location || ""}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Website</label>
+                <input
+                  type="url"
+                  value={formData.website || ""}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+
+            {/* Row: Email, Phone */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={formData.email || ""}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="name@company.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                <input
+                  type="text"
+                  value={formData.phone || ""}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="+1-555-0123"
+                />
+              </div>
+            </div>
+
+            {/* Row: Revenue */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Revenue</label>
+              <input
+                type="text"
+                value={formData.revenue || ""}
+                onChange={(e) => setFormData({ ...formData, revenue: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="$1M"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditForm(false);
+                  setEditingCompany(null);
+                }}
+                className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Update
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

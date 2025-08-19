@@ -10,7 +10,7 @@
     <div id="results"></div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:5001';
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
         
         async function testAPI() {
             const resultsDiv = document.getElementById('results');
@@ -18,7 +18,7 @@
             try {
                 // Test companies endpoint
                 console.log('Testing companies endpoint...');
-                const companiesResponse = await fetch(`${API_BASE_URL}/crud?tableName=project-management-companies`);
+                const companiesResponse = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/crud?tableName=project-management-companies`);
                 const companiesData = await companiesResponse.json();
                 
                 resultsDiv.innerHTML += `
@@ -31,7 +31,7 @@
                 
                 // Test tasks endpoint
                 console.log('Testing tasks endpoint...');
-                const tasksResponse = await fetch(`${API_BASE_URL}/crud?tableName=project-management-tasks`);
+                const tasksResponse = await fetch(`${NEXT_PUBLIC_API_BASE_URL}/crud?tableName=project-management-tasks`);
                 const tasksData = await tasksResponse.json();
                 
                 resultsDiv.innerHTML += `

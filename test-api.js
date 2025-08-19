@@ -1,7 +1,10 @@
 // Test script for API and DynamoDB integration
 // Using global fetch (available in Node.js 18+)
 
-const API_BASE_URL = 'http://localhost:5001';
+// Load environment variables
+require('dotenv').config({ path: '.env.local' });
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://brmh.in';
 
 async function testAPI() {
   console.log('🧪 Testing API and DynamoDB Integration...\n');
@@ -173,7 +176,7 @@ async function testAPI() {
     }
 
     // Get all companies
-    const getCompaniesResponse = await fetch(`${API_BASE_URL}/crud?tableName=project-management-companies`);
+          const getCompaniesResponse = await fetch(`${API_BASE_URL}/crud?tableName=project-management-companies`);
     const getCompaniesData = await getCompaniesResponse.json();
     console.log('📋 Get Companies Response:', getCompaniesData);
     console.log('✅ Companies Retrieved:', getCompaniesData.data?.length || getCompaniesData.items?.length || getCompaniesData.length || 0, 'companies');

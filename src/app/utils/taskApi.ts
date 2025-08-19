@@ -1,50 +1,9 @@
-// Task API service
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+// ========================================
+// OPTIMIZED TASK API SERVICE
+// ========================================
 
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  // Additional properties from your API response
-  items?: T[];
-  count?: number;
-  pagesFetched?: number;
-}
-
-async function makeRequest<T>(
-  endpoint: string, 
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    // Handle different response structures
-    if (data.success !== undefined) {
-      // Return the response as-is - let components handle the structure
-      return data;
-    } else {
-      return { success: true, data };
-    }
-  } catch (error) {
-    console.error('API request failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
-  }
-}
+import { apiService, ApiResponse } from './apiService';
+import { TABLE_NAMES } from '../config/environment';
 
 // Task Data Interface
 export interface TaskData {
@@ -99,39 +58,23 @@ export class TaskApiService {
       id: task.id || `task-${Date.now()}`
     };
     
-    return makeRequest<TaskData>('/crud?tableName=project-management-tasks', {
-      method: 'POST',
-      body: JSON.stringify({ item: taskWithId }),
-    });
+    return apiService.createItem<TaskData>(TABLE_NAMES.tasks, taskWithId);
   }
 
   static async getTasks(): Promise<ApiResponse<TaskData[]>> {
-    return makeRequest<TaskData[]>('/crud?tableName=project-management-tasks', {
-      method: 'GET',
-    });
-  }
-
-  static async updateTask(id: string, task: Partial<TaskData>): Promise<ApiResponse<TaskData>> {
-    return makeRequest<TaskData>(`/crud?tableName=project-management-tasks&id=${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ 
-        key: { id },
-        updates: task 
-      }),
-    });
-  }
-
-  static async deleteTask(id: string): Promise<ApiResponse<TaskData>> {
-    return makeRequest<TaskData>(`/crud?tableName=project-management-tasks&id=${id}`, {
-      method: 'DELETE',
-      body: JSON.stringify({ id }),
-    });
+    return apiService.getItems<TaskData>(TABLE_NAMES.tasks);
   }
 
   static async getTaskById(id: string): Promise<ApiResponse<TaskData>> {
-    return makeRequest<TaskData>(`/crud?tableName=project-management-tasks&id=${id}`, {
-      method: 'GET',
-    });
+    return apiService.getItem<TaskData>(TABLE_NAMES.tasks, id);
+  }
+
+  static async updateTask(id: string, task: Partial<TaskData>): Promise<ApiResponse<TaskData>> {
+    return apiService.updateItem<TaskData>(TABLE_NAMES.tasks, id, task);
+  }
+
+  static async deleteTask(id: string): Promise<ApiResponse<TaskData>> {
+    return apiService.deleteItem<TaskData>(TABLE_NAMES.tasks, id);
   }
 }
 

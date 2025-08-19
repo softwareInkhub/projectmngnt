@@ -1,50 +1,9 @@
-// Project API service
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+// ========================================
+// OPTIMIZED PROJECT API SERVICE
+// ========================================
 
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  // Additional properties from your API response
-  items?: T[];
-  count?: number;
-  pagesFetched?: number;
-}
-
-async function makeRequest<T>(
-  endpoint: string, 
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    // Handle different response structures
-    if (data.success !== undefined) {
-      // Return the response as-is - let components handle the structure
-      return data;
-    } else {
-      return { success: true, data };
-    }
-  } catch (error) {
-    console.error('API request failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
-  }
-}
+import { apiService, ApiResponse } from './apiService';
+import { TABLE_NAMES } from '../config/environment';
 
 // Project Data Interface
 export interface ProjectData {
@@ -154,32 +113,22 @@ export class ProjectApiService {
       updatedAt: new Date().toISOString()
     };
 
-    return makeRequest<ProjectData>(`/crud?tableName=project-management-projects`, {
-      method: 'POST',
-      body: JSON.stringify({ item: projectWithId }),
-    });
+    return apiService.createItem<ProjectData>(TABLE_NAMES.projects, projectWithId);
   }
 
   static async getProjects(): Promise<ApiResponse<ProjectData[]>> {
-    return makeRequest<ProjectData[]>(`/crud?tableName=project-management-projects`, {
-      method: 'GET',
-    });
+    return apiService.getItems<ProjectData>(TABLE_NAMES.projects);
+  }
+
+  static async getProject(id: string): Promise<ApiResponse<ProjectData>> {
+    return apiService.getItem<ProjectData>(TABLE_NAMES.projects, id);
   }
 
   static async updateProject(id: string, project: Partial<ProjectData>): Promise<ApiResponse<ProjectData>> {
-    return makeRequest<ProjectData>(`/crud?tableName=project-management-projects&id=${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        key: { id }, // Changed to match external API expectation
-        updates: project
-      }),
-    });
+    return apiService.updateItem<ProjectData>(TABLE_NAMES.projects, id, project);
   }
 
   static async deleteProject(id: string): Promise<ApiResponse<ProjectData>> {
-    return makeRequest<ProjectData>(`/crud?tableName=project-management-projects&id=${id}`, {
-      method: 'DELETE',
-      body: JSON.stringify({ id }),
-    });
+    return apiService.deleteItem<ProjectData>(TABLE_NAMES.projects, id);
   }
 }

@@ -1,50 +1,9 @@
-// Company API service
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+// ========================================
+// OPTIMIZED COMPANY API SERVICE
+// ========================================
 
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  // Additional properties from your API response
-  items?: T[];
-  count?: number;
-  pagesFetched?: number;
-}
-
-async function makeRequest<T>(
-  endpoint: string, 
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    // Handle different response structures
-    if (data.success !== undefined) {
-      // Return the response as-is - let components handle the structure
-      return data;
-    } else {
-      return { success: true, data };
-    }
-  } catch (error) {
-    console.error('API request failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
-  }
-}
+import { apiService, ApiResponse } from './apiService';
+import { TABLE_NAMES } from '../config/environment';
 
 export interface CompanyData {
   id?: string;
@@ -71,33 +30,23 @@ export class CompanyApiService {
       ...company,
       id: company.id || `company-${Date.now()}`
     };
-    return makeRequest<CompanyData>('/crud?tableName=project-management-companies', {
-      method: 'POST',
-      body: JSON.stringify({ item: companyWithId }),
-    });
+    return apiService.createItem<CompanyData>(TABLE_NAMES.companies, companyWithId);
   }
 
   static async getCompanies(): Promise<ApiResponse<CompanyData[]>> {
-    return makeRequest<CompanyData[]>('/crud?tableName=project-management-companies', {
-      method: 'GET',
-    });
+    return apiService.getItems<CompanyData>(TABLE_NAMES.companies);
+  }
+
+  static async getCompany(id: string): Promise<ApiResponse<CompanyData>> {
+    return apiService.getItem<CompanyData>(TABLE_NAMES.companies, id);
   }
 
   static async updateCompany(id: string, company: Partial<CompanyData>): Promise<ApiResponse<CompanyData>> {
-    return makeRequest<CompanyData>(`/crud?tableName=project-management-companies&id=${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ 
-        key: { id },
-        updates: company 
-      }),
-    });
+    return apiService.updateItem<CompanyData>(TABLE_NAMES.companies, id, company);
   }
 
   static async deleteCompany(id: string): Promise<ApiResponse<CompanyData>> {
-    return makeRequest<CompanyData>(`/crud?tableName=project-management-companies&id=${id}`, {
-      method: 'DELETE',
-      body: JSON.stringify({ id }),
-    });
+    return apiService.deleteItem<CompanyData>(TABLE_NAMES.companies, id);
   }
 }
 
