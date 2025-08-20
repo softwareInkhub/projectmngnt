@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import ContextSidebar from "./ContextSidebar";
 import SnapLayoutManager from "./SnapLayoutManager";
 import GridLayoutManager from "./GridLayoutManager";
-import { Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen, CheckCircle, Users, Building, Calendar, ChevronDown, CheckSquare } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen, CheckCircle, Users, Building, Calendar, ChevronDown, CheckSquare, Settings, MoreHorizontal, Home } from "lucide-react";
 
 interface Project {
   name: string;
@@ -355,7 +355,7 @@ export default function ClientLayout() {
               console.log('Hamburger clicked, current state:', isMobileSidebarOpen);
               setIsMobileSidebarOpen(!isMobileSidebarOpen);
             }}
-            className="mobile-btn mobile-btn-secondary mobile-text-xs"
+            className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
           >
             <Menu size={16} />
           </button>
@@ -373,9 +373,9 @@ export default function ClientLayout() {
               console.log('Context button clicked, current state:', isMobileContextSidebarOpen);
               setIsMobileContextSidebarOpen(!isMobileContextSidebarOpen);
             }}
-            className="mobile-btn mobile-btn-secondary mobile-text-xs"
+            className="p-2 text-gray-600 hover:text-gray-800 transition-colors ml-auto"
           >
-            <ChevronRight size={16} />
+            <MoreHorizontal size={16} />
           </button>
         </header>
 
@@ -393,28 +393,7 @@ export default function ClientLayout() {
         {/* Mobile Context Sidebar (right) */}
         <ContextSidebar
           activeTab={sidebarActiveTab}
-          onOpenTab={(tabName, context) => openTab(tabName, undefined, context)}
-          onAddDepartments={() => {
-            openTab("departments", "Company Departments", { company: "whapi project management" });
-            setIsMobileContextSidebarOpen(false);
-          }}
-          onAddTeams={() => {
-            openTab("company-teams", "Company Teams", { company: "whapi project management" });
-            setIsMobileContextSidebarOpen(false);
-          }}
-          onAddSprints={() => {
-            openTab("sprints", "Company Sprints", { company: "whapi project management" });
-            setIsMobileContextSidebarOpen(false);
-          }}
-          onAddStories={() => {
-            openTab("stories", "Company Stories", { company: "whapi project management" });
-            setIsMobileContextSidebarOpen(false);
-          }}
-          onAddTasks={() => {
-            openTab("company-tasks", "Company Tasks", { company: "whapi project management" });
-            setIsMobileContextSidebarOpen(false);
-          }}
-          onOpenCompanyProjects={onOpenCompanyProjects}
+          onOpenTab={(tabName) => openTab(tabName, undefined, {})}
           onClose={() => setIsMobileContextSidebarOpen(false)}
           isMobile={true}
           isMobileOpen={isMobileContextSidebarOpen}
@@ -450,6 +429,14 @@ export default function ClientLayout() {
 
         {/* Mobile Quick Actions Footer */}
         <nav className="mobile-tab-bar">
+          <button 
+            onClick={() => onSidebarNavClick(0)}
+            className="mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs"
+            aria-label="Dashboard"
+          >
+            <Home size={16} />
+            <span>Home</span>
+          </button>
           <button 
             onClick={() => onSidebarNavClick(1)}
             className="mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs"
@@ -500,18 +487,13 @@ export default function ClientLayout() {
         onDragStart={handleSidebarDragStart}
       />
       {/* Show ContextSidebar for all tabs except Dashboard */}
-      {sidebarActiveTab !== 0 && (
+      {(sidebarActiveTab === 1 || sidebarActiveTab === 2 || sidebarActiveTab === 3 || sidebarActiveTab === 4 || sidebarActiveTab === 5 || sidebarActiveTab === 6) && (
         <ContextSidebar
           activeTab={sidebarActiveTab}
-          onOpenTab={openTab}
-          onAddDepartments={() => openTab("departments", "Company Departments", { company: "whapi project management" })}
-          onAddTeams={() => openTab("company-teams", "Company Teams", { company: "whapi project management" })}
-          onAddSprints={() => openTab("sprints", "Company Sprints", { company: "whapi project management" })}
-          onAddStories={() => openTab("stories", "Company Stories", { company: "whapi project management" })}
-          onAddTasks={() => openTab("company-tasks", "Company Tasks", { company: "whapi project management" })}
-          onOpenCompanyProjects={onOpenCompanyProjects}
+          onOpenTab={(tabName) => openTab(tabName, undefined, {})}
           onClose={() => {}}
           isMobile={isMobile}
+          isMobileOpen={false}
         />
       )}
       <main className="flex-1 min-w-0 bg-background flex flex-col">

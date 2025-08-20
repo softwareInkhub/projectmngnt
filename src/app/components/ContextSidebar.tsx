@@ -99,254 +99,137 @@ const allReports = [
     title: "Team Productivity Analysis",
     description: "Detailed breakdown of team performance and productivity trends",
     status: "Draft",
-    author: "Alex Lee"
+    author: "Mike Chen"
   }
 ];
 
-export default function ContextSidebar({ 
-  activeTab, 
-  onOpenTab, 
-  onAddDepartments, 
-  onAddTeams, 
-  onAddSprints,
-  onAddStories,
-  onAddTasks,
-  onOpenCompanyProjects,
-  onClose,
+interface ContextSidebarProps {
+  activeTab: number;
+  isMobile: boolean;
+  isMobileOpen: boolean;
+  onMobileClose?: () => void;
+  onClose?: () => void;
+  onOpenTab?: (tab: string) => void;
+}
+
+export default function ContextSidebar({
+  activeTab,
   isMobile,
   isMobileOpen,
-  onMobileClose
-}: {
-  activeTab: number;
-  onOpenTab: (tabName: string, context?: any) => void;
-  onAddDepartments?: () => void;
-  onAddTeams?: () => void;
-  onAddSprints?: () => void;
-  onAddStories?: () => void;
-  onAddTasks?: () => void;
-  onOpenCompanyProjects?: (companyName: string) => void;
-  onClose: () => void;
-  isMobile: boolean;
-  isMobileOpen?: boolean;
-  onMobileClose?: () => void;
-}) {
-  const [expandedTeams, setExpandedTeams] = useState<number[]>([]);
-  const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
-  
-  // State for companies from API
-  const [companiesList, setCompaniesList] = useState<CompanySidebarData[]>([]);
-  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
-  const [companiesError, setCompaniesError] = useState<string | null>(null);
-
-  // State for tasks from API
-  const [tasksList, setTasksList] = useState<TaskSidebarData[]>([]);
-  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
-  const [tasksError, setTasksError] = useState<string | null>(null);
+  onMobileClose,
+  onClose,
+  onOpenTab
+}: ContextSidebarProps) {
+  const [companiesList, setCompaniesList] = useState<CompanyData[]>([]);
+  const [tasksList, setTasksList] = useState<TaskData[]>([]);
   const [projectsList, setProjectsList] = useState<ProjectData[]>([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
-  const [projectsError, setProjectsError] = useState<string | null>(null);
   const [teamsList, setTeamsList] = useState<TeamData[]>([]);
-  const [isLoadingTeams, setIsLoadingTeams] = useState(true);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  const [companiesError, setCompaniesError] = useState<string | null>(null);
+  const [tasksError, setTasksError] = useState<string | null>(null);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
   const [teamsError, setTeamsError] = useState<string | null>(null);
+  const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
+  const [expandedTeams, setExpandedTeams] = useState<number[]>([]);
 
-  // Fallback companies if API fails
-  const fallbackCompanies: CompanySidebarData[] = [
-    {
-      id: 1,
-      name: "TechCorp Solutions",
-      expanded: false,
-      sections: {
-        projects: { expanded: false },
-        departments: { expanded: false, subdepartments: [] },
-        teams: { expanded: false, subteams: [] },
-        sprints: { expanded: false },
-        calendar: { expanded: false },
-        stories: { expanded: false, substories: [] },
-        tasks: { expanded: false, subtasks: [] }
-      }
-    },
-    {
-      id: 2,
-      name: "Innovate Labs",
-      expanded: false,
-      sections: {
-        projects: { expanded: false },
-        departments: { expanded: false, subdepartments: [] },
-        teams: { expanded: false, subteams: [] },
-        sprints: { expanded: false },
-        calendar: { expanded: false },
-        stories: { expanded: false, substories: [] },
-        tasks: { expanded: false, subtasks: [] }
-      }
-    }
+  // Fallback data
+  const fallbackCompanies = [
+    { id: "1", name: "TechCorp", industry: "Technology", status: "Active", employees: 150, location: "San Francisco", founded: "2018", website: "techcorp.com", description: "Leading technology solutions provider", size: "Medium" },
+    { id: "2", name: "InnovateLab", industry: "Research", status: "Active", employees: 75, location: "Boston", founded: "2020", website: "innovatelab.com", description: "Cutting-edge research and development", size: "Small" }
   ];
 
-  // Fetch companies from API
-  const fetchCompanies = async () => {
-    try {
+  const fallbackTasks = [
+    { id: "1", title: "Design System Implementation", status: "In Progress", priority: "High", assignee: "Sarah Johnson", project: "UI/UX Redesign", expanded: false },
+    { id: "2", title: "API Integration Testing", status: "To Do", priority: "Medium", assignee: "Mike Chen", project: "Backend Development", expanded: false },
+    { id: "3", title: "Database Optimization", status: "Done", priority: "Low", assignee: "Alex Rodriguez", project: "Performance Improvement", expanded: false }
+  ];
+
+  const fallbackProjects = [
+    { id: "1", name: "E-commerce Platform", status: "In Progress", description: "Modern e-commerce solution", startDate: "2024-01-15", endDate: "2024-06-30", budget: 50000, manager: "Sarah Johnson" },
+    { id: "2", name: "Mobile App Development", status: "Planning", description: "Cross-platform mobile application", startDate: "2024-03-01", endDate: "2024-08-31", budget: 75000, manager: "Mike Chen" }
+  ];
+
+  const fallbackTeams = [
+    { id: "1", name: "Frontend Team", members: ["Sarah Johnson", "Alex Rodriguez"], project: "E-commerce Platform", health: "excellent", budget: "On Track", performance: 95, startDate: "2024-01-15", tasksCompleted: 12, totalTasks: 15, description: "Responsible for user interface development" },
+    { id: "2", name: "Backend Team", members: ["Mike Chen", "David Kim"], project: "Mobile App", health: "good", budget: "Under Budget", performance: 88, startDate: "2024-02-01", tasksCompleted: 8, totalTasks: 12, description: "Handles server-side logic and APIs" }
+  ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch companies
       setIsLoadingCompanies(true);
-      setCompaniesError(null);
-      
       const response = await CompanyApiService.getCompanies();
-      
-      if (response.success) {
-        // Handle different response structures
-        const companiesData = response.items || response.data || [];
-        console.log('Companies response structure:', { success: response.success, count: (response as any).count, itemsLength: companiesData.length });
-        console.log('CompaniesData type:', typeof companiesData, 'IsArray:', Array.isArray(companiesData));
-        console.log('CompaniesData value:', companiesData);
-        
-        if (Array.isArray(companiesData)) {
-          const transformedCompanies: CompanySidebarData[] = companiesData
-            .filter((item: any) => item.name && item.id)
-            .map((item: any, index: number) => ({
-              id: parseInt(item.id) || index + 1,
-              name: item.name,
-              expanded: false,
-              sections: {
-                projects: { expanded: false },
-                departments: { expanded: false, subdepartments: [] },
-                teams: { expanded: false, subteams: [] },
-                sprints: { expanded: false },
-                calendar: { expanded: false },
-                stories: { expanded: false, substories: [] },
-                tasks: { expanded: false, subtasks: [] }
-              }
-            }));
-          
-          setCompaniesList(transformedCompanies);
-          console.log('Transformed companies count:', transformedCompanies.length);
+        if (response.success && response.data) {
+          setCompaniesList(response.data);
         } else {
-          console.warn('Companies data is not an array:', companiesData);
-          setCompaniesList([]);
-        }
-      } else {
-        setCompaniesList([]);
+          setCompaniesList(fallbackCompanies as any);
       }
     } catch (error) {
       console.error('Error fetching companies:', error);
-      setCompaniesError(null);
-      setCompaniesList([]);
+        setCompaniesError('Failed to load companies');
+        setCompaniesList(fallbackCompanies as any);
     } finally {
       setIsLoadingCompanies(false);
     }
-  };
 
-  // Fetch tasks from API
-  const fetchTasks = async () => {
     try {
+        // Fetch tasks
       setIsLoadingTasks(true);
-      setTasksError(null);
-      
       const response = await TaskApiService.getTasks();
-      
-      if (response.success) {
-        // Handle different response structures
-        const tasksData = response.items || response.data || [];
-        
-        if (Array.isArray(tasksData)) {
-          const transformedTasks: TaskSidebarData[] = tasksData
-            .filter((item: any) => item.title && item.id)
-            .map((item: any) => ({
-              id: item.id,
-              title: item.title,
-              status: item.status || 'To Do',
-              priority: item.priority || 'Medium',
-              assignee: item.assignee || 'Unassigned',
-              project: item.project || 'Default Project',
-              expanded: false
-            }));
-          
-          setTasksList(transformedTasks);
+        if (response.success && response.data) {
+          setTasksList(response.data as any);
         } else {
-          setTasksList([]);
-        }
-      } else {
-        setTasksList([]);
+          setTasksList(fallbackTasks as any);
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);
-      setTasksError(null);
-      setTasksList([]);
+        setTasksError('Failed to load tasks');
+        setTasksList(fallbackTasks as any);
     } finally {
       setIsLoadingTasks(false);
     }
-  };
 
-  // Fetch projects from API
-  const fetchProjects = async () => {
     try {
+        // Fetch projects
       setIsLoadingProjects(true);
-      setProjectsError(null);
-      
       const response = await ProjectApiService.getProjects();
-      
-      if (response.success) {
-        // Handle different response structures
-        const projectsData = (response as any).items || response.data || [];
-        
-        if (Array.isArray(projectsData)) {
-          setProjectsList(projectsData);
+        if (response.success && response.data) {
+          setProjectsList(response.data as any);
         } else {
-          setProjectsList([]);
-        }
-      } else {
-        setProjectsList([]);
+          setProjectsList(fallbackProjects as any);
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
-      setProjectsError(null);
-      setProjectsList([]);
+        setProjectsError('Failed to load projects');
+        setProjectsList(fallbackProjects as any);
     } finally {
       setIsLoadingProjects(false);
     }
-  };
 
-  // Fetch teams from API
-  const fetchTeams = async () => {
     try {
+        // Fetch teams
       setIsLoadingTeams(true);
-      setTeamsError(null);
-      
       const response = await TeamApiService.getTeams();
-      
-      if (response.success) {
-        // Handle different response structures
-        const teamsData = (response as any).items || response.data || [];
-        
-        if (Array.isArray(teamsData)) {
-          setTeamsList(teamsData);
+        if (response.success && response.data) {
+          setTeamsList(response.data as any);
         } else {
-          setTeamsList([]);
-        }
-      } else {
-        setTeamsList([]);
+          setTeamsList(fallbackTeams as any);
       }
     } catch (error) {
       console.error('Error fetching teams:', error);
-      setTeamsError(null);
-      setTeamsList([]);
+        setTeamsError('Failed to load teams');
+        setTeamsList(fallbackTeams as any);
     } finally {
       setIsLoadingTeams(false);
     }
   };
 
-  // Load companies, tasks, projects, and teams on component mount
-  useEffect(() => {
-    fetchCompanies();
-    fetchTasks();
-    fetchProjects();
-    fetchTeams();
+    fetchData();
   }, []);
-
-  // Helper to toggle section expansion
-  const toggleSection = (companyId: number, section: string) => {
-    setCompaniesList(prev => prev.map(c =>
-      c.id === companyId
-        ? { ...c, sections: { ...c.sections, [section]: { ...c.sections[section as keyof typeof c.sections], expanded: !c.sections[section as keyof typeof c.sections].expanded } } }
-        : c
-    ));
-  };
 
   const toggleTask = (taskId: number) => {
     setExpandedTasks(prev => 
@@ -364,180 +247,235 @@ export default function ContextSidebar({
     );
   };
 
-  // Mobile context sidebar
+  // Mobile context sidebar - Enhanced
   if (isMobile) {
     return (
-      <aside className={`mobile-sidebar mobile-right-0 mobile-left-auto ${isMobileOpen ? 'open' : ''}`}>
-        <div className="mobile-flex mobile-items-center mobile-justify-between p-3 border-b border-neutral-200 flex-shrink-0">
-          <h2 className="mobile-h3">Context</h2>
+      <aside className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out ${
+        isMobileOpen ? 'translate-x-0' : 'translate-x-full'
+      }`}>
+        {/* Backdrop */}
+        <div 
+          className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${
+            isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={onMobileClose || onClose}
+          style={{ zIndex: 49 }}
+        />
+        
+        {/* Sidebar Content */}
+        <div className="absolute right-0 h-full w-64 max-w-[75vw] bg-white shadow-2xl flex flex-col" style={{ zIndex: 50 }}>
+          {/* Header */}
+          <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                <span className="text-white text-xs font-bold">C</span>
+              </div>
+              <div>
+                <h2 className="text-xs font-semibold text-gray-900">Context</h2>
+                <p className="text-xs text-gray-500">Quick actions</p>
+              </div>
+            </div>
           <button 
             onClick={onMobileClose || onClose}
-            className="mobile-btn mobile-btn-secondary mobile-text-xs"
+              className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700 relative z-10"
+              style={{ zIndex: 51 }}
           >
-            <X size={14} />
+              <X size={16} />
           </button>
         </div>
         
-        <div className="mobile-space-y-3 p-3 flex-1 overflow-y-auto">
-          {activeTab === 1 && (
-            // Projects context (moved from dashboard)
-            <div className="mobile-space-y-3">
-              <div className="mobile-card">
-                <h3 className="mobile-h4 mb-2">Projects Overview</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="mobile-card p-2">
-                    <div className="mobile-text-xs mobile-text-secondary">Projects</div>
-                    <div className="mobile-text-base font-semibold">{projectsList.length}</div>
-                  </div>
-                  <div className="mobile-card p-2">
-                    <div className="mobile-text-xs mobile-text-secondary">Tasks</div>
-                    <div className="mobile-text-base font-semibold">{tasksList.length}</div>
-                  </div>
-                  <div className="mobile-card p-2">
-                    <div className="mobile-text-xs mobile-text-secondary">Teams</div>
-                    <div className="mobile-text-base font-semibold">{teamsList.length}</div>
-                  </div>
-                  <div className="mobile-card p-2">
-                    <div className="mobile-text-xs mobile-text-secondary">Companies</div>
-                    <div className="mobile-text-base font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mobile-card">
-                <h3 className="mobile-h4 mb-2">Quick Actions</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs" onClick={() => onOpenTab('create-project')}>+ Project</button>
-                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs" onClick={() => onOpenTab('create-task')}>+ Task</button>
-                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs" onClick={() => onOpenTab('create-team')}>+ Team</button>
-                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs" onClick={() => onOpenTab('projects')}>All Projects</button>
-                </div>
-              </div>
-
-              <div className="mobile-card">
-                <h3 className="mobile-h4 mb-2">Recent Projects</h3>
-                <div className="mobile-space-y-2">
-                  {projectsList.slice(0,3).map((p, idx) => (
-                    <div key={idx} className="mobile-flex mobile-items-center mobile-gap-2 mobile-p-2 mobile-rounded-lg mobile-bg-neutral-50">
-                      <FolderOpen size={12} className="text-blue-600" />
-                      <div className="mobile-text-xs mobile-flex-1 truncate">{p.name}</div>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            {activeTab === 1 && (
+              // Projects context
+              <div className="space-y-3">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Projects Overview</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Projects</div>
+                      <div className="text-sm font-semibold">{projectsList.length}</div>
                     </div>
-                  ))}
-                  {projectsList.length === 0 && (
-                    <div className="mobile-text-xs mobile-text-secondary">No recent items</div>
-                  )}
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Tasks</div>
+                      <div className="text-sm font-semibold">{tasksList.length}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Teams</div>
+                      <div className="text-sm font-semibold">{teamsList.length}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Companies</div>
+                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Quick Actions</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button className="bg-blue-50 text-blue-700 rounded-lg p-2 text-xs font-medium hover:bg-blue-100 transition-colors" onClick={() => onOpenTab?.('create-project')}>+ Project</button>
+                    <button className="bg-green-50 text-green-700 rounded-lg p-2 text-xs font-medium hover:bg-green-100 transition-colors" onClick={() => onOpenTab?.('create-task')}>+ Task</button>
+                    <button className="bg-purple-50 text-purple-700 rounded-lg p-2 text-xs font-medium hover:bg-purple-100 transition-colors" onClick={() => onOpenTab?.('create-team')}>+ Team</button>
+                    <button className="bg-gray-50 text-gray-700 rounded-lg p-2 text-xs font-medium hover:bg-gray-100 transition-colors" onClick={() => onOpenTab?.('projects')}>All Projects</button>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Projects</h3>
+                  <div className="space-y-2">
+                    {projectsList.slice(0,3).map((p, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                        <FolderOpen size={12} className="text-blue-600" />
+                        <div className="text-xs flex-1 truncate">{p.name}</div>
+                      </div>
+                    ))}
+                    {projectsList.length === 0 && (
+                      <div className="text-xs text-gray-500">No recent items</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+            
           {activeTab === 2 && (
-            <div className="mobile-space-y-3">
-              <div className="mobile-card">
-                <h3 className="mobile-h4 mb-2">Task Filters</h3>
-                <div className="mobile-space-y-2">
-                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+              <div className="space-y-3">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Task Filters</h3>
+                  <div className="space-y-2">
+                    <button className="w-full flex items-center gap-2 p-2 rounded-lg bg-gray-50 text-gray-700 text-xs font-medium hover:bg-gray-100 transition-colors">
                     <CheckSquare size={12} />
                     All Tasks
                   </button>
-                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
+                    <button className="w-full flex items-center gap-2 p-2 rounded-lg bg-gray-50 text-gray-700 text-xs font-medium hover:bg-gray-100 transition-colors">
                     <Star size={12} />
                     Favorites
                   </button>
                 </div>
               </div>
               
-              <div className="mobile-card">
-                <h3 className="mobile-h4 mb-2">Recent Tasks</h3>
-                <div className="mobile-space-y-2">
-                  {tasksList.slice(0, 3).map((task, idx) => (
-                    <div key={idx} className="mobile-flex mobile-items-center mobile-gap-2 mobile-p-2 mobile-rounded-lg mobile-bg-neutral-50">
-                      <div className="mobile-w-6 mobile-h-6 mobile-rounded-full mobile-bg-green-100 mobile-flex mobile-items-center mobile-justify-center">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Tasks</h3>
+                  <div className="space-y-2">
+                    {tasksList.slice(0,3).map((task, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
                         <CheckSquare size={12} className="text-green-600" />
-                      </div>
-                      <div className="mobile-flex-1">
-                        <div className="mobile-text-xs font-medium truncate">{task.title}</div>
-                        <div className="mobile-text-xs mobile-text-secondary">{task.assignee}</div>
-                      </div>
-                      <span className={`mobile-px-2 mobile-py-1 mobile-rounded-full mobile-text-xs mobile-font-medium ${
-                        task.status === "Done" ? "mobile-bg-green-100 mobile-text-green-700" :
-                        task.status === "In Progress" ? "mobile-bg-blue-100 mobile-text-blue-700" :
-                        "mobile-bg-gray-100 mobile-text-gray-700"
+                        <div className="text-xs flex-1 truncate">{task.title}</div>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                          task.status === "Done" ? "bg-green-100 text-green-700" :
+                          task.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                          "bg-gray-100 text-gray-700"
                       }`}>
                         {task.status}
                       </span>
                     </div>
                   ))}
+                    {tasksList.length === 0 && (
+                      <div className="text-xs text-gray-500">No recent tasks</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeTab === 3 && (
-            <div className="mobile-space-y-3">
-              <div className="mobile-card">
-                <h3 className="mobile-h4 mb-2">Team Filters</h3>
-                <div className="mobile-space-y-2">
-                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
-                    <Users size={12} />
-                    All Teams
-                  </button>
-                </div>
-              </div>
-              <div className="mobile-card">
-                <h3 className="mobile-h4 mb-2">Recent Teams</h3>
-                <div className="mobile-space-y-2">
-                  {teamsList.slice(0,3).map((team, idx) => (
-                    <div key={idx} className="mobile-flex mobile-items-center mobile-gap-2 mobile-p-2 mobile-rounded-lg mobile-bg-neutral-50">
-                      <Users size={12} className="text-purple-600" />
-                      <div className="mobile-text-xs mobile-flex-1 truncate">{team.name}</div>
+            {activeTab === 3 && (
+              <div className="space-y-3">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Team Overview</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Active Teams</div>
+                      <div className="text-sm font-semibold">{teamsList.length}</div>
                     </div>
-                  ))}
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Total Members</div>
+                      <div className="text-sm font-semibold">{teamsList.reduce((acc, team) => acc + team.members.length, 0)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Teams</h3>
+                  <div className="space-y-2">
+                    {teamsList.slice(0,3).map((team, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                        <Users size={12} className="text-purple-600" />
+                        <div className="text-xs flex-1 truncate">{team.name}</div>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                          team.health === 'excellent' ? 'bg-green-100 text-green-700' :
+                          team.health === 'good' ? 'bg-blue-100 text-blue-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {team.health}
+                        </span>
+                      </div>
+                    ))}
+                    {teamsList.length === 0 && (
+                      <div className="text-xs text-gray-500">No recent teams</div>
+                    )}
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === 4 && (
-            <div className="mobile-space-y-3">
-              <div className="mobile-card">
-                <h3 className="mobile-h4 mb-2">Company Filters</h3>
-                <div className="mobile-space-y-2">
-                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
-                    <Building size={12} />
-                    All Companies
-                  </button>
-                  <button className="mobile-btn mobile-btn-secondary mobile-text-xs mobile-w-full mobile-justify-start">
-                    <Star size={12} />
-                    Favorites
-                  </button>
-                </div>
+              <div className="space-y-3">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Company Overview</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Total Companies</div>
+                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Active</div>
+                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                    </div>
+                  </div>
               </div>
               
-              <div className="mobile-card">
-                <h3 className="mobile-h4 mb-2">Recent Companies</h3>
-                <div className="mobile-space-y-2">
-                  {(companiesList.length > 0 ? companiesList : fallbackCompanies).slice(0, 3).map((company, idx) => (
-                    <div key={idx} className="mobile-flex mobile-items-center mobile-gap-2 mobile-p-2 mobile-rounded-lg mobile-bg-neutral-50">
-                      <div className="mobile-w-6 mobile-h-6 mobile-rounded-full mobile-bg-blue-100 mobile-flex mobile-items-center mobile-justify-center">
-                        <span className="mobile-text-xs font-medium text-blue-600">
-                          {company.name.charAt(0)}
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Companies</h3>
+                  <div className="space-y-2">
+                    {(companiesList.length > 0 ? companiesList : fallbackCompanies).slice(0,3).map((company, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                        <Building2 size={12} className="text-blue-600" />
+                        <div className="text-xs flex-1 truncate">{company.name}</div>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                          company.status === "Active" ? "bg-green-100 text-green-700" :
+                          "bg-gray-100 text-gray-700"
+                        }`}>
+                          {company.status}
                         </span>
                       </div>
-                      <div className="mobile-flex-1">
-                        <div className="mobile-text-xs font-medium">{company.name}</div>
-                        <div className="mobile-text-xs mobile-text-secondary">Company</div>
-                      </div>
+                    ))}
                     </div>
-                  ))}
                 </div>
               </div>
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="p-2 border-t border-gray-100 bg-gray-50">
+            <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-600 to-pink-700 flex items-center justify-center shadow-sm">
+                <span className="text-white text-xs font-bold">A</span>
+              </div>
+              <div className="flex-1">
+                <div className="text-xs font-medium text-gray-900">Actions</div>
+                <div className="text-xs text-gray-500">Quick access</div>
+              </div>
+              <button className="p-1 rounded-md hover:bg-gray-100 transition-colors">
+                <Plus size={12} className="text-gray-500" />
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </aside>
     );
   }
 
+  // Desktop sidebar
   return (
     <>
       {(activeTab === 1 || activeTab === 2 || activeTab === 3 || activeTab === 4 || activeTab === 5 || activeTab === 6) && (
@@ -561,277 +499,235 @@ export default function ContextSidebar({
 
           {/* Content based on active tab */}
           <div className="flex-1 px-4 py-4 space-y-4 overflow-y-auto">
-            {activeTab === 2 && (
-              /* Tasks Content */
-              <nav className="space-y-1">
-                {isLoadingTasks ? (
-                  <div className="text-center py-4">Loading tasks...</div>
-                ) : tasksError ? (
-                  <div className="text-center py-4 text-red-500">{tasksError}</div>
-                ) : tasksList.length === 0 ? (
-                  <div className="text-center py-4">
-                    <div className="text-sm text-gray-500 mb-2">No tasks found</div>
-                    </div>
-                ) : (
-                  tasksList.map((task) => (
-                    <div key={task.id} className="space-y-1">
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
-                      <button
-                          className="p-1 rounded hover:bg-neutral-100 transition-colors flex-shrink-0"
-                          onClick={() => {
-                            setTasksList(prev => prev.map(t =>
-                              t.id === task.id ? { ...t, expanded: !t.expanded } : t
-                            ));
-                          }}
-                        >
-                          {task.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                      </button>
-                        <CheckSquare size={18} className="text-green-500 flex-shrink-0" />
-                        <div className="flex-1 min-w-0 pr-2">
-                          <div className="text-sm font-semibold text-neutral-800 truncate">{task.title}</div>
-                          <div className="text-xs text-neutral-500 truncate">{task.assignee} • {task.status} • {task.priority}</div>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                            task.status === "Done" ? "bg-green-100 text-green-700" :
-                            task.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                            task.status === "To Do" ? "bg-gray-100 text-gray-700" :
-                            "bg-yellow-100 text-yellow-700"
-                      }`}>
-                        {task.status}
-                      </span>
-                          <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                            task.priority === "High" ? "bg-red-100 text-red-700" :
-                            task.priority === "Medium" ? "bg-yellow-100 text-yellow-700" :
-                            "bg-green-100 text-green-700"
-                          }`}>
-                            {task.priority}
-                          </span>
-                        </div>
-                        </div>
-                      </div>
-                  ))
-                )}
-              </nav>
-            )}
-
+            {/* Projects Tab */}
             {activeTab === 1 && (
-              /* Projects Content */
-              <nav className="space-y-1">
-                {isLoadingProjects ? (
-                  <div className="text-center py-4">Loading projects...</div>
-                ) : projectsError ? (
-                  <div className="text-center py-4 text-red-500">{projectsError}</div>
-                ) : projectsList.length === 0 ? (
-                  <div className="text-center py-4">
-                    <div className="text-sm text-gray-500 mb-2">No projects found</div>
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Project Overview</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Total Projects</div>
+                      <div className="text-sm font-semibold">{(projectsList.length || fallbackProjects.length)}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Active</div>
+                      <div className="text-sm font-semibold">{(projectsList.filter((p: any) => p.status === 'In Progress').length)}</div>
+                    </div>
                   </div>
-                ) : (
-                  projectsList.map((project) => (
-                    <div key={project.id} className="space-y-1">
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
-                        <FolderOpen size={18} className="text-blue-500" />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-neutral-800 truncate">{project.name}</div>
-                          <div className="text-xs text-neutral-500 truncate">{project.company} • {project.assignee}</div>
-                    </div>
-                        <div className="flex items-center gap-1">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            project.status === "Completed" ? "bg-green-100 text-green-700" :
-                            project.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                            project.status === "Planning" ? "bg-gray-100 text-gray-700" :
-                            "bg-yellow-100 text-yellow-700"
-                          }`}>
-                            {project.status}
-                          </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            project.priority === "High" ? "bg-red-100 text-red-700" :
-                            project.priority === "Medium" ? "bg-yellow-100 text-yellow-700" :
-                            "bg-green-100 text-green-700"
-                          }`}>
-                            {project.priority}
-                      </span>
-                        </div>
-                        </div>
-                      </div>
-                  ))
-                    )}
-              </nav>
-            )}
-
-            {activeTab === 3 && (
-              /* Teams Content */
-              <nav className="space-y-1">
-                {isLoadingTeams ? (
-                  <div className="text-center py-4">Loading teams...</div>
-                ) : teamsError ? (
-                  <div className="text-center py-4 text-red-500">{teamsError}</div>
-                ) : teamsList.length === 0 ? (
-                  <div className="text-center py-4">
-                    <div className="text-sm text-gray-500 mb-2">No teams found</div>
-                    </div>
-                ) : (
-                  teamsList.map((team) => (
-                    <div key={team.id} className="space-y-1">
-                      <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
-                        <Users size={18} className="text-purple-500" />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-neutral-800 truncate">{team.name}</div>
-                          <div className="text-xs text-neutral-500 truncate">{team.project} • {team.department}</div>
-                    </div>
-                        <div className="flex items-center gap-1">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            team.health === "excellent" ? "bg-green-100 text-green-700" :
-                            team.health === "good" ? "bg-blue-100 text-blue-700" :
-                            team.health === "warning" ? "bg-yellow-100 text-yellow-700" :
-                            "bg-red-100 text-red-700"
-                          }`}>
-                            {team.health}
-                          </span>
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                            {team.budget}
-                          </span>
-                        </div>
-                        </div>
-                      </div>
-                  ))
-                    )}
-              </nav>
-            )}
-
-            {activeTab === 4 && (
-              /* Companies Content */
-              <nav className="space-y-1">
-                {isLoadingCompanies ? (
-                  <div className="text-center py-4">Loading companies...</div>
-                ) : companiesError ? (
-                  <div className="text-center py-4 text-red-500">{companiesError}</div>
-                ) : (companiesList.length === 0 && !isLoadingCompanies) ? (
-                  <div className="text-center py-4">
-                    <div className="text-sm text-gray-500 mb-2">Using sample data</div>
-                    {fallbackCompanies.map((company) => (
-                      <div key={company.id} className="space-y-1">
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
-                          <button
-                            className="p-1 rounded hover:bg-neutral-100 transition-colors"
-                            onClick={() => {
-                              setCompaniesList(prev => prev.map(c =>
-                                c.id === company.id ? { ...c, expanded: !c.expanded } : c
-                              ));
-                            }}
-                          >
-                            {company.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                          </button>
-                          <Building2 size={18} className="text-blue-500" />
-                          <span className="text-sm font-semibold text-neutral-800 flex-1">{company.name}</span>
-                          <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-medium text-purple-600">AI</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  companiesList.map((company) => (
-                  <div key={company.id} className="space-y-1">
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50 relative group">
-                      <button
-                        className="p-1 rounded hover:bg-neutral-100 transition-colors"
-                        onClick={() => {
-                          setCompaniesList(prev => prev.map(c =>
-                            c.id === company.id ? { ...c, expanded: !c.expanded } : c
-                          ));
-                        }}
-                      >
-                        {company.expanded ? <ChevronDown size={16} className="text-neutral-400" /> : <ChevronRight size={16} className="text-neutral-400" />}
-                      </button>
-                      <Building2 size={18} className="text-blue-500" />
-                      <span className="text-sm font-semibold text-neutral-800 flex-1">{company.name}</span>
-                      <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-medium text-purple-600">AI</span>
-                      </div>
-                    </div>
-
-
-                          </div>
-                  ))
-                )}
-              </nav>
-            )}
-
-            {activeTab === 5 && (
-              /* Calendar Events Content */
-              <div className="space-y-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-neutral-800">Calendar Views</h3>
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
-                    <Calendar size={16} className="text-blue-500" />
-                    <span className="text-sm">Month View</span>
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Projects</h3>
+                  <div className="space-y-2">
+                    {(projectsList.length > 0 ? projectsList : fallbackProjects).slice(0,3).map((project, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                        <FolderKanban size={12} className="text-blue-600" />
+                        <div className="text-xs flex-1 truncate">{project.name}</div>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                          project.status === "In Progress" ? "bg-green-100 text-green-700" :
+                          project.status === "Planning" ? "bg-blue-100 text-blue-700" :
+                          "bg-gray-100 text-gray-700"
+                        }`}>
+                          {project.status}
+                        </span>
+                      </div>
+                    ))}
+                    {(projectsList.length === 0 && fallbackProjects.length === 0) && (
+                      <div className="text-xs text-gray-500">No recent projects</div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
-                    <Calendar size={16} className="text-green-500" />
-                    <span className="text-sm">Week View</span>
-                  </div>
-                </div>
-
-                <div className="border-t border-neutral-200 pt-4">
-                  <h3 className="text-sm font-semibold text-neutral-800 mb-3">Upcoming Events</h3>
-                {allCalendarEvents.map((event) => (
-                    <div key={event.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer mb-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-neutral-900">{event.title}</h3>
-                    </div>
-                    <p className="text-xs text-neutral-600 mb-2">{event.description}</p>
-                    <div className="flex items-center gap-2 text-xs text-neutral-500">
-                      <span>{event.date} at {event.time}</span>
-                      <span>{event.duration}</span>
-                    </div>
-                  </div>
-                ))}
                 </div>
               </div>
             )}
 
-            {activeTab === 6 && (
-              /* All Reports Content */
-              <div className="space-y-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-neutral-800">Report Categories</h3>
+            {/* Tasks Tab */}
+            {activeTab === 2 && (
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Task Overview</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Total Tasks</div>
+                      <div className="text-sm font-semibold">{(tasksList.length || fallbackTasks.length)}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Completed</div>
+                      <div className="text-sm font-semibold">{(tasksList.filter((t: any) => t.status === 'Done').length)}</div>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
-                    <BarChart3 size={16} className="text-blue-500" />
-                    <span className="text-sm">Project Analytics</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition text-neutral-700 hover:bg-neutral-50">
-                    <PieChart size={16} className="text-green-500" />
-                    <span className="text-sm">Team Performance</span>
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Tasks</h3>
+                  <div className="space-y-2">
+                    {(tasksList.length > 0 ? tasksList : fallbackTasks).slice(0,3).map((task, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                        <CheckSquare size={12} className="text-green-600" />
+                        <div className="text-xs flex-1 truncate">{task.title}</div>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                          task.status === "Done" ? "bg-green-100 text-green-700" :
+                          task.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                          "bg-gray-100 text-gray-700"
+                        }`}>
+                          {task.status}
+                        </span>
+                      </div>
+                    ))}
+                    {(tasksList.length === 0 && fallbackTasks.length === 0) && (
+                      <div className="text-xs text-gray-500">No recent tasks</div>
+                    )}
                   </div>
                 </div>
+              </div>
+            )}
 
-                <div className="border-t border-neutral-200 pt-4">
-                  <h3 className="text-sm font-semibold text-neutral-800 mb-3">Recent Reports</h3>
-                {allReports.map((report) => (
-                    <div key={report.id} className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer mb-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-neutral-900">{report.title}</h3>
+            {/* Teams Tab */}
+            {activeTab === 3 && (
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Team Overview</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Total Teams</div>
+                      <div className="text-sm font-semibold">{(teamsList.length || fallbackTeams.length)}</div>
                     </div>
-                    <p className="text-xs text-neutral-600 mb-2">{report.description}</p>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className={`px-2 py-1 rounded ${
-                        report.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {report.status}
-                      </span>
-                      <span className="text-neutral-500">{report.author}</span>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Active</div>
+                      <div className="text-sm font-semibold">{(teamsList.length || fallbackTeams.length)}</div>
                     </div>
-                        </div>
-                  ))}
-                        </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Teams</h3>
+                  <div className="space-y-2">
+                    {(teamsList.length > 0 ? teamsList : fallbackTeams).slice(0,3).map((team, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                        <Users size={12} className="text-purple-600" />
+                        <div className="text-xs flex-1 truncate">{team.name}</div>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                          team.health === 'excellent' ? 'bg-green-100 text-green-700' :
+                          team.health === 'good' ? 'bg-blue-100 text-blue-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {team.health}
+                        </span>
+                      </div>
+                    ))}
+                    {(teamsList.length === 0 && fallbackTeams.length === 0) && (
+                      <div className="text-xs text-gray-500">No recent teams</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Companies Tab */}
+            {activeTab === 4 && (
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Company Overview</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Total Companies</div>
+                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Active</div>
+                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Companies</h3>
+                  <div className="space-y-2">
+                    {(companiesList.length > 0 ? companiesList : fallbackCompanies).slice(0,3).map((company, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                        <Building2 size={12} className="text-blue-600" />
+                        <div className="text-xs flex-1 truncate">{company.name}</div>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                          company.status === "Active" ? "bg-green-100 text-green-700" :
+                          "bg-gray-100 text-gray-700"
+                        }`}>
+                          {company.status}
+                        </span>
+                      </div>
+                    ))}
+                    {(companiesList.length === 0 && fallbackCompanies.length === 0) && (
+                      <div className="text-xs text-gray-500">No recent companies</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Calendar Tab */}
+            {activeTab === 5 && (
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Calendar Overview</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Total Events</div>
+                      <div className="text-sm font-semibold">{allCalendarEvents.length}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">This Week</div>
+                      <div className="text-sm font-semibold">{allCalendarEvents.length}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Upcoming Events</h3>
+                  <div className="space-y-2">
+                    {allCalendarEvents.slice(0,3).map((event, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                        <Calendar size={12} className="text-orange-600" />
+                        <div className="text-xs flex-1 truncate">{event.title}</div>
+                        <span className="text-xs text-gray-500">{event.date}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Reports Tab */}
+            {activeTab === 6 && (
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Reports Overview</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Total Reports</div>
+                      <div className="text-sm font-semibold">{allReports.length}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-500">Published</div>
+                      <div className="text-sm font-semibold">{allReports.filter(r => r.status === 'Published').length}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg border border-gray-200 p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Reports</h3>
+                  <div className="space-y-2">
+                    {allReports.slice(0,3).map((report, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                        <BarChart3 size={12} className="text-purple-600" />
+                        <div className="text-xs flex-1 truncate">{report.title}</div>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                          report.status === "Published" ? "bg-green-100 text-green-700" :
+                          "bg-yellow-100 text-yellow-700"
+                        }`}>
+                          {report.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -51,6 +51,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const availableTags = [
     "AI", "Enterprise", "SaaS", "Cloud", "Startup", 
@@ -273,222 +274,261 @@ export default function CompaniesPage({ context }: { context?: { company: string
 
     return (
       <div className="space-y-4 md:space-y-6">
-      {/* Enhanced Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fade-in">
-        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
-              <Building2 className="w-6 h-6" />
+        {/* Enhanced Analytics Cards - 2x2 Format */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 animate-fade-in">
+          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
+            <div className="w-6 h-6 bg-blue-50 rounded-md flex items-center justify-center mr-3">
+              <Building2 className="w-3 h-3 text-blue-600" />
             </div>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalCompanies}</h3>
+              <p className="text-xs text-slate-500">Total Companies</p>
           </div>
-          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalCompanies}</h3>
-          <p className="text-slate-600 text-sm font-medium">Total Companies</p>
-          <div className="mt-2 text-xs text-slate-500">+2 this quarter</div>
+            <div className="flex items-center gap-1 ml-2">
+              <TrendingUp className="w-3 h-3 text-emerald-500" />
+              <span className="text-xs text-slate-400">+2</span>
+            </div>
         </div>
 
-        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
-              <FolderKanban className="w-6 h-6" />
+          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
+            <div className="w-6 h-6 bg-emerald-50 rounded-md flex items-center justify-center mr-3">
+              <FolderKanban className="w-3 h-3 text-emerald-600" />
             </div>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalProjects}</h3>
+              <p className="text-xs text-slate-500">Total Projects</p>
           </div>
-          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalProjects}</h3>
-          <p className="text-slate-600 text-sm font-medium">Total Projects</p>
-          <div className="mt-2 text-xs text-slate-500">+8 this month</div>
+            <div className="flex items-center gap-1 ml-2">
+              <TrendingUp className="w-3 h-3 text-emerald-500" />
+              <span className="text-xs text-slate-400">+8</span>
+            </div>
         </div>
 
-        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
-              <Users className="w-6 h-6" />
+          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
+            <div className="w-6 h-6 bg-purple-50 rounded-md flex items-center justify-center mr-3">
+              <Users className="w-3 h-3 text-purple-600" />
             </div>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalMembers}</h3>
+              <p className="text-xs text-slate-500">Total Members</p>
           </div>
-          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalMembers}</h3>
-          <p className="text-slate-600 text-sm font-medium">Total Members</p>
-          <div className="mt-2 text-xs text-slate-500">+12 this month</div>
+            <div className="flex items-center gap-1 ml-2">
+              <TrendingUp className="w-3 h-3 text-emerald-500" />
+              <span className="text-xs text-slate-400">+12</span>
+            </div>
         </div>
 
-        <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
-              <Target className="w-6 h-6" />
+          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
+            <div className="w-6 h-6 bg-orange-50 rounded-md flex items-center justify-center mr-3">
+              <Target className="w-3 h-3 text-orange-600" />
             </div>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-slate-900">{analytics.avgSatisfaction}%</h3>
+              <p className="text-xs text-slate-500">Avg Satisfaction</p>
           </div>
-          <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.avgSatisfaction}%</h3>
-          <p className="text-slate-600 text-sm font-medium">Avg Satisfaction</p>
-          <div className="mt-2 text-xs text-slate-500">+3% from last month</div>
+            <div className="flex items-center gap-1 ml-2">
+              <TrendingUp className="w-3 h-3 text-emerald-500" />
+              <span className="text-xs text-slate-400">+3%</span>
+            </div>
         </div>
       </div>
 
       {/* Companies Grid/List View */}
       <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
         {viewMode === "grid" ? (
-          // Grid View
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            // Grid View - Mobile Optimized (2 cards side by side)
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             {filteredCompanies.map((company, index) => (
               <div 
                 key={company.id}
-                className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in"
-                style={{ animationDelay: `${300 + index * 100}ms` }}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group relative"
               >
-                  <div className="p-4 md:p-6">
-                  <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
-                          <Building2 className="w-6 h-6" />
+                  <div className="p-4 sm:p-6">
+                {/* Company Header */}
+                    <div className="flex items-start justify-between mb-3 sm:mb-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 group-hover:text-blue-600 transition-colors truncate">
+                        {company.name}
+                      </h3>
+                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                          {company.industry || "No industry specified"}
+                      </p>
                     </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-slate-900 mb-1">{company.name}</h3>
-                          <p className="text-sm text-slate-600">{company.industry}</p>
-                        </div>
-                      </div>
-                      <div className="relative">
+                      {/* Three-dot menu */}
+                      <div className="relative flex-shrink-0 ml-2">
                         <button 
-                          onClick={() => toggleMenu(company.id)}
-                          className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const menu = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (menu) {
+                              menu.classList.toggle('hidden');
+                            }
+                          }}
                         >
-                          <MoreHorizontal className="w-5 h-5" />
+                          <MoreHorizontal className="w-4 h-4" />
                         </button>
-                        {openMenuId === company.id && (
-                          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                        
+                        <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 hidden">
+                            <div className="py-1">
                               <button
                               onClick={() => handleCompanyAction(company, 'view')}
-                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                               >
-                              <Eye className="w-4 h-4" />
+                              <Eye size={14} />
                               View Details
                               </button>
                                                               <button
                               onClick={() => handleCompanyAction(company, 'edit')}
-                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit size={14} />
                               Edit
                               </button>
                             {company.website && (
                                                               <button
                                 onClick={() => handleCompanyAction(company, 'website')}
-                                className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                               >
-                                <ExternalLink className="w-4 h-4" />
+                                <ExternalLink size={14} />
                                 Visit Website
                               </button>
                             )}
                               <button
                               onClick={() => handleCompanyAction(company, 'delete')}
-                              className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                               >
-                                <Trash2 className="w-4 h-4" />
+                              <Trash2 size={14} />
                               Delete
                               </button>
-                          </div>
-                        )}
+                            </div>
+                      </div>
                     </div>
                   </div>
 
-                    <p className="text-slate-600 text-sm mb-4 line-clamp-2">{company.description}</p>
+                    {/* Company Description */}
+                    <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 line-clamp-2">{company.description || "No description provided"}</p>
                     
-                    <div className="flex items-center gap-2 mb-4">
+                    {/* Pill Badges */}
+                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         company.status === "Active" ? "bg-green-100 text-green-700" :
                         company.status === "Inactive" ? "bg-red-100 text-red-700" :
                         "bg-yellow-100 text-yellow-700"
                       }`}>
-                        {company.status}
+                        {company.status || "Active"}
                       </span>
-                      {company.employees && (
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                        {company.employees} employees
+                        {company.size || "Small"}
                       </span>
-                      )}
+                  </div>
+
+                    {/* Company Details - Compact */}
+                    <div className="space-y-2 mb-3 sm:mb-4">
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                        <span className="truncate">{company.location || "Location not specified"}</span>
+                    </div>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <Users className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                        <span>{company.employees || 0} employees</span>
+                    </div>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                        <span>Founded {company.founded || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                        <span className="truncate">{company.website || "No website"}</span>
+                  </div>
                 </div>
 
-                    <div className="flex items-center justify-between text-sm text-slate-500">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{company.location || 'Location not specified'}</span>
-                  </div>
-                      {company.founded && (
-                        <span>Founded {company.founded}</span>
-                      )}
+                    {/* Action Button */}
+                    <div className="flex items-center justify-between">
+                      <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                  View Details
+                    </button>
                         </div>
                       </div>
                                     </div>
               ))}
             </div>
           ) : (
-            // List View
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Company</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Industry</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Employees</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Location</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-              {filteredCompanies.map((company) => (
-                      <tr key={company.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="p-2 rounded-lg bg-blue-100 text-blue-600 mr-3">
-                              <Building2 className="w-5 h-5" />
+            // List View - Mobile Optimized
+            <div className="space-y-3">
+              {filteredCompanies.map((company, index) => (
+                <div key={`${company.id}-list-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group">
+                  <div className="p-4">
+                    {/* Company Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {/* Company Icon */}
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-4 h-4 text-blue-600" />
                           </div>
-                            <div>
-                              <div className="text-sm font-medium text-slate-900">{company.name}</div>
-                              <div className="text-sm text-slate-500">{company.description}</div>
                         </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{company.industry}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            company.status === "Active" ? "bg-green-100 text-green-700" :
-                            company.status === "Inactive" ? "bg-red-100 text-red-700" :
-                            "bg-yellow-100 text-yellow-700"
+                        
+                        {/* Company Title & Badges */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <h3 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                              {company.name}
+                            </h3>
+                            <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                company.status === "Active" ? "bg-green-100 text-green-700" :
+                                company.status === "Inactive" ? "bg-red-100 text-red-700" :
+                                "bg-yellow-100 text-yellow-700"
                               }`}>
-                                {company.status}
+                                {company.status || "Active"}
                               </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{company.employees || 'N/A'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{company.location || 'N/A'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex items-center gap-2">
-                          <button 
-                              onClick={() => handleCompanyAction(company, 'view')}
-                              className="text-blue-600 hover:text-blue-900"
-                          >
-                              <Eye className="w-4 h-4" />
-                          </button>
-                                <button
-                              onClick={() => handleCompanyAction(company, 'edit')}
-                              className="text-slate-600 hover:text-slate-900"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button
-                              onClick={() => handleCompanyAction(company, 'delete')}
-                              className="text-red-600 hover:text-red-900"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                {company.size || "Small"}
+                              </span>
+                            </div>
+                          </div>
+                            </div>
+                        </div>
+                      </div>
+                      
+                    {/* Company Details - Compact 2x2 Grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Building className="w-3 h-3 text-gray-400" />
+                        <span className="truncate">{company.industry || "N/A"}</span>
                               </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Users className="w-3 h-3 text-gray-400" />
+                        <span className="truncate">{company.employees || 0} employees</span>
+                            </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <MapPin className="w-3 h-3 text-gray-400" />
+                        <span className="truncate">{company.location || "N/A"}</span>
+                        </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Calendar className="w-3 h-3 text-gray-400" />
+                        <span className="truncate">Founded {company.founded || "N/A"}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Company Description */}
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-600 line-clamp-2">
+                        {company.description || "No description provided"}
+                      </p>
+                      </div>
+
+                    {/* Action Button */}
+                    <div className="flex items-center justify-between">
+                      <button className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                        View Details
+                      </button>
+                        </div>
+                  </div>
+                </div>
+              ))}
             </div>
-        </div>
           )}
           
           {filteredCompanies.length === 0 && !loading && (
@@ -508,79 +548,192 @@ export default function CompaniesPage({ context }: { context?: { company: string
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="bg-white border-b border-slate-200 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-4 md:px-8 md:py-6">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="p-2 md:p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
-                <Building2 className="w-5 h-5 md:w-6 md:h-6" />
+    <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+      {/* Success Message */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
+          {successMessage}
         </div>
-              <div>
-                <h1 className="text-lg md:text-xl font-bold text-slate-900 leading-tight">Companies</h1>
-                <p className="text-slate-600 mt-0.5 md:mt-1 text-xs md:text-base">Manage and monitor all your companies</p>
+      )}
+
+      {/* Enhanced Header - Mobile Optimized */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow-lg">
+            <Building2 className="text-white mr-1" size={16} />
+            <span className="text-sm sm:text-base">Companies</span>
             </div>
           </div>
-            <div className="hidden md:flex items-center gap-3">
-              <div className="relative hidden md:block">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
-                <input type="text" placeholder="Search companies..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64" />
-              </div>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="On Hold">On Hold</option>
-              </select>
-              <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option value="All">All Types</option>
-                <option value="Technology">Technology</option>
-                <option value="Research">Research</option>
-                <option value="Consulting">Consulting</option>
-                <option value="Manufacturing">Manufacturing</option>
-                <option value="Healthcare">Healthcare</option>
-                <option value="Finance">Finance</option>
-                <option value="Education">Education</option>
-                <option value="Retail">Retail</option>
-                <option value="Media">Media</option>
-                <option value="Transportation">Transportation</option>
-              </select>
-              <button className="hidden md:flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold" onClick={() => setShowCreateForm(true)}>
-             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
-                New
+                <div className="flex items-center gap-2 sm:gap-3">
+          <button 
+            className="hidden sm:flex group items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
+          >
+            <Download size={14} />
+            <span className="hidden sm:inline">Export</span>
+          </button>
+                     <button
+             onClick={() => setShowCreateForm(true)}
+            className="group flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring text-sm sm:text-base"
+           >
+            <Plus size={16} className="group-hover:rotate-90 transition-transform duration-200" />
+            <span className="hidden sm:inline">New Company</span>
+            <span className="sm:hidden">Add</span>
            </button>
-        </div>
-      </div>
+          
+          {/* Small Hamburger Menu Button */}
+          <button 
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="p-2 rounded-lg bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 transition-all duration-200 focus-ring"
+          >
+            <div className="w-4 h-4 flex flex-col justify-center items-center gap-0.5">
+              <div className={`w-3 h-0.5 bg-slate-600 transition-all duration-300 ${showMobileMenu ? 'rotate-45 translate-y-1' : ''}`}></div>
+              <div className={`w-3 h-0.5 bg-slate-600 transition-all duration-300 ${showMobileMenu ? 'opacity-0' : ''}`}></div>
+              <div className={`w-3 h-0.5 bg-slate-600 transition-all duration-300 ${showMobileMenu ? '-rotate-45 -translate-y-1' : ''}`}></div>
                 </div>
-        <div className="flex md:hidden items-center gap-2 w-full justify-end px-4 mt-2">
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-2 py-2 border border-slate-300 rounded-lg text-xs">
-            <option value="All">Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-            <option value="On Hold">On Hold</option>
-          </select>
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="px-2 py-2 border border-slate-300 rounded-lg text-xs">
-            <option value="All">Type</option>
-            <option value="Technology">Technology</option>
-            <option value="Research">Research</option>
-            <option value="Consulting">Consulting</option>
-            <option value="Manufacturing">Manufacturing</option>
-          </select>
-          <button onClick={() => setShowCreateForm(true)} className="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-xs">New</button>
-                </div>
-        <div className="md:hidden px-4 mt-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input
-              type="text"
-              placeholder="Search companies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            />
+          </button>
               </div>
             </div>
+
+      {/* Small Hamburger Dropdown Menu */}
+      {showMobileMenu && (
+        <div className="absolute top-16 right-4 z-50 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden animate-fade-in min-w-48">
+          <div className="p-2 space-y-1">
+            {[
+              { id: "overview", label: "Overview", icon: BarChart3 },
+              { id: "projects", label: "Projects", icon: FolderKanban },
+              { id: "teams", label: "Teams", icon: Users },
+              { id: "departments", label: "Departments", icon: Building },
+              { id: "sprints", label: "Sprints", icon: Calendar }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = view === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setView(tab.id);
+                    setShowMobileMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 p-2 rounded-md transition-all duration-200 ${
+                    isActive
+                      ? "bg-blue-50 text-blue-700"
+                      : "hover:bg-gray-50 text-gray-700"
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-gray-600"}`} />
+                  <span className="text-sm font-medium">{tab.label}</span>
+                  {isActive && (
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full ml-auto"></div>
+                  )}
+                </button>
+              );
+            })}
+                  </div>
+                </div>
+      )}
+
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+
+        {/* Compact Search and Filters - Mobile Optimized */}
+        <div className="space-y-3">
+          {/* Search Bar - Compact */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      <input
+                        type="text"
+              placeholder="Search companies, industries, or descriptions"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+
+          {/* Filters and View Toggle - Compact */}
+          <div className="flex items-center justify-between">
+            {/* Filters Button */}
+            <button 
+              className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="w-4 h-4" />
+              <span>Filters</span>
+            </button>
+            
+            {/* View Toggle - Compact */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 rounded-md transition-colors ${
+                  viewMode === "grid" 
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                <Grid3X3 size={14} />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 rounded-md transition-colors ${
+                  viewMode === "list" 
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                <List size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* Filters Panel - Compact */}
+          {showFilters && (
+            <div className="pt-3 border-t border-gray-200 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
+                        <select
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="All">All Types</option>
+                    {companyTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                  </div>
+
+                    <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                        <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="All">All Status</option>
+                    {companyStatuses.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                        </select>
+                        </div>
+                      </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setTypeFilter("All");
+                    setStatusFilter("All");
+                    setShowFilters(false);
+                  }}
+                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+                >
+                  <FilterX className="w-4 h-4" />
+                  <span>Clear Filters</span>
+                </button>
+                    </div>
+                  </div>
+          )}
+              </div>
 
         {/* Inline Create Company Form */}
         {showCreateForm && (
@@ -589,7 +742,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Row: Name, Industry */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
                       <input
                         type="text"
@@ -598,7 +751,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       />
-                    </div>
+                      </div>
                     <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Industry</label>
                         <select
@@ -617,7 +770,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
 
               {/* Row: Size, Status */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Size</label>
                   <select
                     value={(formData as any).size || "Small"}
@@ -630,7 +783,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
                       </option>
                     ))}
                   </select>
-                    </div>
+                      </div>
                     <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
                         <select
@@ -644,15 +797,15 @@ export default function CompaniesPage({ context }: { context?: { company: string
                       </option>
                     ))}
                         </select>
-                </div>
-              </div>
+                    </div>
+                  </div>
 
               {/* Row: Founded, Employees */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Founded</label>
                       <input
-                    type="text"
+                        type="text"
                     value={formData.founded || ""}
                     onChange={(e) => setFormData({ ...formData, founded: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -668,8 +821,8 @@ export default function CompaniesPage({ context }: { context?: { company: string
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min={0}
                   />
-                    </div>
-                  </div>
+                </div>
+              </div>
 
               {/* Row: Location, Website */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -685,7 +838,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
                   <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Website</label>
                       <input
-                    type="url"
+                        type="url"
                     value={formData.website || ""}
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -699,7 +852,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
                   <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                       <input
-                    type="email"
+                        type="email"
                     value={formData.email || ""}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -750,105 +903,10 @@ export default function CompaniesPage({ context }: { context?: { company: string
           </div>
         )}
 
-        {/* Search and Filters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input
-                type="text"
-                  placeholder="Search companies..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-white/20 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <button
-                className="group flex items-center gap-2 px-4 py-3 border border-white/20 rounded-xl hover:bg-white/50 transition-all duration-200 hover:scale-105 focus-ring"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === "grid" 
-                      ? "bg-blue-100 text-blue-600" 
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  <Grid3X3 size={18} />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === "list" 
-                      ? "bg-blue-100 text-blue-600" 
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  <List size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className="mt-4 pt-4 border-t border-white/20 animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-3 py-2 border border-white/20 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="All">All Types</option>
-                  <option value="Technology">Technology</option>
-                  <option value="Research">Research</option>
-                  <option value="Consulting">Consulting</option>
-                  <option value="Manufacturing">Manufacturing</option>
-                </select>
 
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-white/20 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="All">All Status</option>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="Pending">Pending</option>
-                </select>
-
-                <select className="px-3 py-2 border border-white/20 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>All Industries</option>
-                  <option>Software Development</option>
-                  <option>IT Services</option>
-                  <option>R&D</option>
-                  <option>Consulting</option>
-                </select>
-
-                <button
-                  onClick={clearFilters}
-                  className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
-                >
-                  <FilterX size={16} />
-                  Clear All
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* View Tabs */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-white/20">
+        {/* View Tabs - Desktop */}
+        <div className="hidden md:block bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-white/20">
           <div className="flex space-x-1">
             {[
               { id: "overview", label: "Overview", icon: BarChart3 },
@@ -875,6 +933,8 @@ export default function CompaniesPage({ context }: { context?: { company: string
             })}
           </div>
         </div>
+
+
 
         {/* Content */}
         {view === "overview" && renderOverview()}

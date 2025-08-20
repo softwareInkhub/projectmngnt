@@ -67,74 +67,111 @@ export default function Sidebar({
     }
   };
 
-  // Mobile sidebar
+  // Mobile sidebar - Enhanced
   if (isMobile) {
     return (
-      <aside className={`mobile-sidebar ${isMobileOpen ? 'open' : ''}`}>
-        <div className="mobile-flex mobile-items-center mobile-justify-between p-4 border-b border-neutral-200 flex-shrink-0 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <h2 className="mobile-h3 text-blue-900 font-semibold">Navigation</h2>
-          <button 
-            onClick={onMobileClose}
-            className="mobile-btn mobile-btn-secondary mobile-text-xs hover:bg-red-50 hover:text-red-600 transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
+      <aside className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out ${
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        {/* Backdrop */}
+        <div 
+          className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${
+            isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={onMobileClose}
+          style={{ zIndex: 49 }}
+        />
         
-        <nav className="mobile-space-y-2 p-4 flex-1 overflow-y-auto bg-white">
-          {navItems.map((item, index) => {
-            const Icon = item.icon;
-            const isGridLayoutItem = item.label === "Grid Layout";
-            const isDraggable = !isGridLayoutItem && isGridMode;
-            const isActive = activeTab === index;
-            
-            return (
-              <button
-                key={item.label}
-                onClick={() => {
-                  if (isGridLayoutItem && onToggleGridMode) {
-                    onToggleGridMode();
-                  } else {
-                    onNavClick(index);
-                  }
-                  // Close mobile sidebar after navigation
-                  if (onMobileClose) {
-                    onMobileClose();
-                  }
-                }}
-                className={`mobile-w-full mobile-flex mobile-items-center mobile-gap-4 mobile-p-3 mobile-rounded-xl mobile-transition-all mobile-duration-300 mobile-text-left mobile-font-medium ${
-                  isActive
-                    ? "mobile-bg-gradient-to-r mobile-from-blue-500 mobile-to-indigo-600 mobile-text-white mobile-shadow-lg mobile-shadow-blue-500/25"
-                    : "mobile-bg-white mobile-text-neutral-600 hover:mobile-bg-neutral-50 hover:mobile-text-neutral-800 mobile-border mobile-border-transparent hover:mobile-border-neutral-200"
-                }`}
-                draggable={isDraggable}
-                onDragStart={(e) => handleDragStart(e, item)}
-              >
-                <div className={`mobile-w-8 mobile-h-8 mobile-rounded-lg mobile-flex mobile-items-center mobile-justify-center mobile-transition-all mobile-duration-300 ${
-                  isActive 
-                    ? "mobile-bg-white/20 mobile-backdrop-blur-sm" 
-                    : "mobile-bg-neutral-100 mobile-text-neutral-500"
-                }`}>
-                  <Icon size={18} className={isActive ? "mobile-text-white" : "mobile-text-neutral-600"} />
-                </div>
-                <span className={`mobile-text-sm mobile-font-medium mobile-transition-colors mobile-duration-300 ${
-                  isActive ? "mobile-text-white" : "mobile-text-neutral-700"
-                }`}>
-                  {item.label}
-                </span>
-                {isDraggable && (
-                  <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight size={12} className="mobile-text-neutral-400" />
+        {/* Sidebar Content */}
+        <div className="relative h-full w-64 max-w-[75vw] bg-white shadow-2xl flex flex-col" style={{ zIndex: 50 }}>
+          {/* Header */}
+          <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <span className="text-white text-xs font-bold">N</span>
+              </div>
+              <div>
+                <h2 className="text-xs font-semibold text-gray-900">Navigation</h2>
+                <p className="text-xs text-gray-500">Menu</p>
+              </div>
+            </div>
+            <button 
+              onClick={onMobileClose}
+              className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700 relative z-10"
+              style={{ zIndex: 51 }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+          
+          {/* Navigation Items */}
+          <nav className="flex-1 overflow-y-auto p-2 space-y-1">
+            {navItems.map((item, index) => {
+              const Icon = item.icon;
+              const isGridLayoutItem = item.label === "Grid Layout";
+              const isDraggable = !isGridLayoutItem && isGridMode;
+              const isActive = activeTab === index;
+              
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    if (isGridLayoutItem && onToggleGridMode) {
+                      onToggleGridMode();
+                    } else {
+                      onNavClick(index);
+                    }
+                    // Close mobile sidebar after navigation
+                    if (onMobileClose) {
+                      onMobileClose();
+                    }
+                  }}
+                  className={`w-full flex items-center gap-2.5 p-2.5 rounded-lg transition-all duration-300 text-left font-medium group ${
+                    isActive
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm shadow-blue-500/25"
+                      : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 border border-transparent hover:border-gray-200"
+                  }`}
+                  draggable={isDraggable}
+                  onDragStart={(e) => handleDragStart(e, item)}
+                >
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                    isActive 
+                      ? "bg-white/20 backdrop-blur-sm" 
+                      : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
+                  }`}>
+                    <Icon size={14} className={isActive ? "text-white" : "text-gray-600"} />
                   </div>
-                )}
+                  <div className="flex-1 text-left">
+                    <span className={`text-xs font-medium transition-colors duration-300 ${
+                      isActive ? "text-white" : "text-gray-700"
+                    }`}>
+                      {item.label}
+                    </span>
+                  </div>
+                  {isDraggable && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ChevronRight size={12} className="text-gray-400" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+          
+          {/* Footer */}
+          <div className="p-2 border-t border-gray-100 bg-gray-50">
+            <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
+                <span className="text-white text-xs font-bold">U</span>
+              </div>
+              <div className="flex-1">
+                <div className="text-xs font-medium text-gray-900">Profile</div>
+                <div className="text-xs text-gray-500">User</div>
+              </div>
+              <button className="p-1 rounded-md hover:bg-gray-100 transition-colors">
+                <Settings size={12} className="text-gray-500" />
               </button>
-            );
-          })}
-        </nav>
-        
-        <div className="mobile-absolute mobile-bottom-6 mobile-left-4 flex-shrink-0">
-          <div className="mobile-w-10 mobile-h-10 mobile-rounded-full mobile-bg-gradient-to-r mobile-from-blue-600 mobile-to-indigo-700 mobile-flex mobile-items-center mobile-justify-center mobile-shadow-lg">
-            <span className="mobile-text-white mobile-text-sm mobile-font-bold">N</span>
+            </div>
           </div>
         </div>
       </aside>

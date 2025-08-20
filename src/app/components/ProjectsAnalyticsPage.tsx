@@ -420,13 +420,13 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-4 md:px-8 md:py-6">
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className="p-2 md:p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
-              <BarChart2 className="w-5 h-5 md:w-6 md:h-6" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-6">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="p-1.5 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md md:shadow-lg">
+              <BarChart2 className="w-4 h-4 md:w-6 md:h-6" />
             </div>
         <div>
-              <h1 className="text-lg md:text-xl font-bold text-slate-900 leading-tight">Projects Analytics</h1>
+              <h1 className="text-base md:text-xl font-bold text-slate-900 leading-tight">Projects Analytics</h1>
               <p className="text-slate-600 mt-0.5 md:mt-1 text-xs md:text-base">Analytics and insights for your projects</p>
         </div>
           </div>
@@ -463,9 +463,9 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           </button>
           </div>
 
-          {/* Mobile compact actions */}
-          <div className="flex md:hidden items-center gap-2 w-full justify-end">
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-2 py-2 border border-slate-300 rounded-lg text-xs">
+          {/* Mobile compact actions - optimized for better fit */}
+          <div className="flex md:hidden items-center gap-1.5 w-full justify-end">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white">
               <option value="All">Status</option>
               <option value="Planning">Planning</option>
               <option value="Active">Active</option>
@@ -473,15 +473,15 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>
-            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-2 py-2 border border-slate-300 rounded-lg text-xs">
+            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white">
               <option value="All">Priority</option>
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
               <option value="High">High</option>
               <option value="Critical">Critical</option>
             </select>
-            <button onClick={() => setShowCreateForm(true)} className="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-xs">New</button>
-            <button onClick={handleExportAll} className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs">Export</button>
+            <button onClick={() => setShowCreateForm(true)} className="px-2 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md text-xs font-medium">New</button>
+            <button onClick={handleExportAll} className="px-2 py-1.5 bg-white border border-slate-300 rounded-md text-xs">Export</button>
           </div>
         </div>
       </div>

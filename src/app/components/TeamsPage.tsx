@@ -762,25 +762,25 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         </div>
       )}
 
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold shadow-lg">
-            <Users className="text-white mr-1" size={20} />
-            <span>{context?.company ? `${context.company} Teams` : 'Teams'}</span>
+      {/* Enhanced Header - Mobile Optimized */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold shadow-lg">
+            <Users className="text-white mr-1" size={16} />
+            <span className="text-sm sm:text-base">{context?.company ? `${context.company} Teams` : 'Teams'}</span>
           </div>
           {context?.company && (
-            <div className="text-sm text-slate-600">
+            <div className="text-xs sm:text-sm text-slate-600 hidden sm:block">
               Managing teams for {context.company}
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button 
-            className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
+            className="hidden sm:flex group items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
           >
-            <Download size={16} />
-            Export
+            <Download size={14} />
+            <span className="hidden sm:inline">Export</span>
           </button>
           <button 
             onClick={() => {
@@ -807,26 +807,125 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
               });
               console.log('✅ Create mode activated (no team ID)');
             }}
-            className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring"
+            className="group flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring text-sm sm:text-base"
           >
-            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
-            New Team
+            <Plus size={16} className="group-hover:rotate-90 transition-transform duration-200" />
+            <span className="hidden sm:inline">New Team</span>
+            <span className="sm:hidden">Add</span>
           </button>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+
+        {/* Compact Search and Filters - Mobile Optimized */}
+        <div className="space-y-3">
+          {/* Search Bar - Compact */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search teams, members, or descriptions"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+            />
+          </div>
+          
+          {/* Filters and View Toggle - Compact */}
+          <div className="flex items-center justify-between">
+            {/* Filters Button */}
+            <button 
+              className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="w-4 h-4" />
+              <span>Filters</span>
+            </button>
+            
+            {/* View Toggle - Compact */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 rounded-md transition-colors ${
+                  viewMode === "grid" 
+                    ? "bg-white text-purple-600 shadow-sm" 
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                <Grid3X3 size={14} />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 rounded-md transition-colors ${
+                  viewMode === "list" 
+                    ? "bg-white text-purple-600 shadow-sm" 
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                <List size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* Filters Panel - Compact */}
+          {showFilters && (
+            <div className="pt-3 border-t border-gray-200 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Project</label>
+                  <select
+                    value={projectFilter}
+                    onChange={(e) => setProjectFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  >
+                    <option value="All">All Projects</option>
+                    {projects.map(project => (
+                      <option key={project} value={project}>{project}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Team Health</label>
+                  <select className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm">
+                    <option value="All">All Health</option>
+                    <option value="excellent">Excellent</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setProjectFilter("All");
+                    setShowFilters(false);
+                  }}
+                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+                >
+                  <FilterX className="w-4 h-4" />
+                  <span>Clear Filters</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Team Creation/Edit Form */}
         {(showCreateForm || showEditForm) && (
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 animate-fade-in">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-purple-600" />
+          <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-8 animate-fade-in">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">{showEditForm ? 'Edit Team' : 'Create New Team'}</h2>
-                  <p className="text-slate-600">{showEditForm ? 'Update the team details below.' : 'Fill in the details below to create a new team.'}</p>
+                  <h2 className="text-lg sm:text-2xl font-bold text-slate-900">{showEditForm ? 'Edit Team' : 'Create New Team'}</h2>
+                  <p className="text-xs sm:text-sm text-slate-600">{showEditForm ? 'Update the team details below.' : 'Fill in the details below to create a new team.'}</p>
                 </div>
               </div>
             </div>
@@ -847,20 +946,20 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                 console.log('✅ CREATE MODE: Calling handleSubmit for new team');
                 handleSubmit(e);
               }
-            }} className="space-y-8">
+            }} className="space-y-6 sm:space-y-8">
               {/* Team Information */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-4 h-4 text-blue-600" />
+              <div className="space-y-4 sm:space-y-6">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Team Information</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Team Information</h3>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">
                         Team Name *
                       </label>
                       <input
@@ -868,20 +967,20 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                         value={formData.name}
                         onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="Enter team name"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">
                         Project *
                       </label>
                       <div className="relative">
                         <select
                           value={formData.project}
                           onChange={(e) => setFormData(prev => ({ ...prev, project: e.target.value }))}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none text-sm"
                           required
                         >
                           {projects.map(project => (
@@ -906,16 +1005,16 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                       <button
                         type="button"
                         onClick={() => setShowNewProject(!showNewProject)}
-                        className="text-sm text-blue-600 hover:text-blue-700 mt-1"
+                        className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 mt-1"
                       >
                         {showNewProject ? "Cancel" : "+ Add New Project"}
                       </button>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">
                         Description *
                       </label>
                       <textarea
@@ -923,13 +1022,13 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Describe the team's purpose, responsibilities, and objectives..."
                         rows={4}
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">
                         Budget
                       </label>
                       <div className="relative">
@@ -938,7 +1037,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                           value={formData.budget}
                           onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value }))}
                           placeholder="e.g., $50,000"
-                          className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                         />
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                           <DollarSign className="w-4 h-4 text-slate-400" />
@@ -950,17 +1049,17 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
               </div>
 
               {/* Team Members */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <UserPlus className="w-4 h-4 text-green-600" />
+              <div className="space-y-4 sm:space-y-6">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Team Members</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Team Members</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">
                       Select Members
                     </label>
                     <div className="space-y-2 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3">
@@ -993,30 +1092,23 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">
                       Selected Members ({formData.members.length})
                     </label>
                     <div className="space-y-2">
                       {formData.members.map(member => (
-                        <div key={member} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                              <User className="w-4 h-4 text-purple-600" />
+                        <div key={member} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-medium text-purple-600">
+                                {member.split(' ').map(n => n[0]).join('')}
+                              </span>
                             </div>
-                          <div>
-                            <div className="text-sm font-medium text-slate-900">{member}</div>
-                            <div className="text-xs text-slate-500">
-                              {formData.roles[member] || "No role assigned"}
-                            </div>
+                            <span className="text-sm text-slate-700">{member}</span>
                           </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => toggleMember(member)}
-                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                          <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded">
+                            {formData.roles[member] || "Member"}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -1238,327 +1330,171 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           </div>
         </div>
 
-        {/* Enhanced Search and Filters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search teams, members, or descriptions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
-              />
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <button 
-                className="group flex items-center gap-2 px-4 py-3 border border-white/20 rounded-xl hover:bg-white/50 transition-all duration-200 hover:scale-105 focus-ring"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === "grid" 
-                      ? "bg-purple-100 text-purple-600" 
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  <Grid3X3 size={18} />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === "list" 
-                      ? "bg-purple-100 text-purple-600" 
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  <List size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="mt-4 pt-4 border-t border-white/20 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Project</label>
-                  <select
-                    value={projectFilter}
-                    onChange={(e) => setProjectFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
-                  >
-                    <option value="All">All Projects</option>
-                    <option value="Whapi Project Management">Whapi Project Management</option>
-                    <option value="E-commerce Platform">E-commerce Platform</option>
-                    <option value="Client Portal">Client Portal</option>
-                    <option value="Mobile App Development">Mobile App Development</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Team Health</label>
-                  <select className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 backdrop-blur-sm">
-                    <option value="All">All Health</option>
-                    <option value="excellent">Excellent</option>
-                    <option value="good">Good</option>
-                    <option value="fair">Fair</option>
-                    <option value="poor">Poor</option>
-                  </select>
-                </div>
-                
-                <div className="flex items-end">
-                  <button
-                    onClick={clearFilters}
-                    className="w-full px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <FilterX className="w-4 h-4" />
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Team Grid/List View */}
         <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
           {viewMode === "grid" ? (
-            // Grid View
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            // Grid View - Mobile Optimized (2 cards side by side)
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {uniqueTeams.map((team, index) => (
-                <div key={`${team.id}-grid-${index}`} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group relative">
-                  <div className="p-6">
+                <div key={`${team.id}-grid-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group relative">
+                  <div className="p-4 sm:p-6">
                     {/* Team Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
+                    <div className="flex items-start justify-between mb-3 sm:mb-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 group-hover:text-purple-600 transition-colors truncate">
                           {team.name}
                         </h3>
-                        <p className="text-sm text-slate-600 line-clamp-2">
-                          {team.description}
+                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                          {team.description || "No description provided"}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
-                          <Heart className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Three-dot menu positioned absolutely in top-right corner */}
-                    <div className="absolute top-2 right-2">
-                      <button 
-                        className="p-1 text-slate-400 hover:text-slate-600 transition-colors bg-white/80 backdrop-blur-sm rounded-lg shadow-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const menu = e.currentTarget.nextElementSibling as HTMLElement;
-                          if (menu) {
-                            menu.classList.toggle('hidden');
-                          }
-                        }}
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
                       
-                      <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 hidden">
-                        <div className="py-1">
-                          <button
-                            onClick={() => handleEditTeam(team)}
-                            className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
-                          >
-                            <Edit size={14} />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDuplicateTeam(team)}
-                            className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
-                          >
-                            <Copy size={14} />
-                            Duplicate
-                          </button>
-                          <button
-                            onClick={() => handleArchiveTeam(team)}
-                            className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
-                          >
-                            <Archive size={14} />
-                            Archive
-                          </button>
-                          <button
-                            onClick={() => handleExportTeam(team)}
-                            className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
-                          >
-                            <Download size={14} />
-                            Export
-                          </button>
-                          <button
-                            onClick={() => handleDeleteTeam(team.id)}
-                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                          >
-                            <Trash2 size={14} />
-                            Delete
-                          </button>
+                      {/* Three-dot menu */}
+                      <div className="relative flex-shrink-0 ml-2">
+                        <button 
+                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const menu = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (menu) {
+                              menu.classList.toggle('hidden');
+                            }
+                          }}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                        
+                        <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 hidden">
+                          <div className="py-1">
+                            <button
+                              onClick={() => handleEditTeam(team)}
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <Edit size={14} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDuplicateTeam(team)}
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <Copy size={14} />
+                              Duplicate
+                            </button>
+                            <button
+                              onClick={() => handleArchiveTeam(team)}
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <Archive size={14} />
+                              Archive
+                            </button>
+                            <button
+                              onClick={() => handleExportTeam(team)}
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <Download size={14} />
+                              Export
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTeam(team.id)}
+                              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            >
+                              <Trash2 size={14} />
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Team Stats */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-slate-900">{team.members.length}</div>
-                        <div className="text-xs text-slate-500">Members</div>
+                    {/* Progress and Tasks */}
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                      <div className="text-xs sm:text-sm text-gray-600">
+                        <span className="font-medium">{team.performance}%</span> Performance
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-slate-900">{team.performance}%</div>
-                        <div className="text-xs text-slate-500">Performance</div>
+                      <div className="text-xs sm:text-sm text-gray-600">
+                        {team.tasksCompleted}/{team.totalTasks} Tasks
                       </div>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="w-full bg-slate-200 rounded-full h-2 mb-4">
+                    <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 mb-3 sm:mb-4">
                       <div 
-                        className="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-gradient-to-r from-purple-500 to-pink-600 h-1.5 sm:h-2 rounded-full transition-all duration-300"
                         style={{ width: `${(team.tasksCompleted / team.totalTasks) * 100}%` }}
                       ></div>
                     </div>
 
-                    {/* Team Details */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          team.health === 'excellent' ? 'bg-green-100 text-green-700' :
-                          team.health === 'good' ? 'bg-blue-100 text-blue-700' :
-                          team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {team.health}
-                        </span>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                          {team.budget}
-                        </span>
+                    {/* Pill Badges */}
+                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        team.health === 'excellent' ? 'bg-green-100 text-green-700' :
+                        team.health === 'good' ? 'bg-blue-100 text-blue-700' :
+                        team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {team.health}
+                      </span>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                        {team.budget}
+                      </span>
+                    </div>
+
+                    {/* Team Details - Compact */}
+                    <div className="space-y-2 mb-3 sm:mb-4">
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <Building className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                        <span className="truncate">{team.project}</span>
                       </div>
-                      <div className="flex items-center gap-3 text-slate-400">
-                        <div className="flex items-center gap-1">
-                          <MessageSquare className="w-3 h-3" />
-                          <span className="text-xs">{team.tasksCompleted}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          <span className="text-xs">{team.totalTasks}</span>
-                        </div>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <Users className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                        <span>{team.members.length} members</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                        <span>{team.startDate}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <Target className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                        <span>{team.startDate}</span>
                       </div>
                     </div>
 
-                    {/* Project and Date */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Building className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-700">{team.project}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-700">{team.startDate}</span>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
+                    {/* Action Button */}
                     <div className="flex items-center justify-between">
-                      <button className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors">
-                        View Team
+                      <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                        View Details
                       </button>
-                    </div>
-                  </div>
-
-                  {/* Three-dot menu positioned absolutely in top-right corner */}
-                  <div className="absolute top-2 right-2">
-                    <button 
-                      className="p-1 text-slate-400 hover:text-slate-600 transition-colors bg-white/80 backdrop-blur-sm rounded-lg shadow-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const menu = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (menu) {
-                          menu.classList.toggle('hidden');
-                        }
-                      }}
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                    
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 hidden">
-                      <div className="py-1">
-                        <button
-                          onClick={() => handleEditTeam(team)}
-                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
-                        >
-                          <Edit size={14} />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDuplicateTeam(team)}
-                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
-                        >
-                          <Copy size={14} />
-                          Duplicate
-                        </button>
-                        <button
-                          onClick={() => handleArchiveTeam(team)}
-                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
-                        >
-                          <Archive size={14} />
-                          Archive
-                        </button>
-                        <button
-                          onClick={() => handleExportTeam(team)}
-                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
-                        >
-                          <Download size={14} />
-                          Export
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTeam(team.id)}
-                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                        >
-                          <Trash2 size={14} />
-                          Delete
-                        </button>
-                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            // List View
-            <div className="space-y-4">
+            // List View - Mobile Optimized
+            <div className="space-y-3">
               {uniqueTeams.map((team, index) => (
-                <div key={`${team.id}-list-${index}`} className="bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-200 group">
-                  <div className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 flex-1">
+                <div key={`${team.id}-list-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group">
+                  <div className="p-4">
+                    {/* Team Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
                         {/* Team Icon */}
                         <div className="flex-shrink-0">
-                          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <Users className="w-6 h-6 text-purple-600" />
+                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <Users className="w-4 h-4 text-purple-600" />
                           </div>
                         </div>
                         
-                        {/* Team Info */}
+                        {/* Team Title & Badges */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-slate-900 group-hover:text-purple-600 transition-colors truncate">
+                          <div className="flex items-start justify-between">
+                            <h3 className="text-sm font-semibold text-gray-900 group-hover:text-purple-600 transition-colors truncate">
                               {team.name}
                             </h3>
-                            <div className="flex items-center gap-2 ml-4">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                 team.health === 'excellent' ? 'bg-green-100 text-green-700' :
                                 team.health === 'good' ? 'bg-blue-100 text-blue-700' :
                                 team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
@@ -1566,57 +1502,54 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                               }`}>
                                 {team.health}
                               </span>
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
                                 {team.budget}
                               </span>
                             </div>
                           </div>
-                          
-                          <p className="text-sm text-slate-600 mt-1 line-clamp-2">
-                            {team.description}
-                          </p>
-                          
-                          <div className="flex items-center gap-6 mt-3 text-sm text-slate-500">
-                            <div className="flex items-center gap-2">
-                              <Users className="w-4 h-4" />
-                              <span>{team.members.length} members</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Building className="w-4 h-4" />
-                              <span>{team.project}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4" />
-                              <span>Started: {team.startDate}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Target className="w-4 h-4" />
-                              <span>{team.performance}% performance</span>
-                            </div>
-                          </div>
                         </div>
                       </div>
-                      
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 ml-4">
-                        <button className="p-1 text-slate-400 hover:text-red-500 transition-colors">
-                          <Heart className="w-4 h-4" />
-                        </button>
+                    </div>
+
+                    {/* Team Details - Compact 2x2 Grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Users className="w-3 h-3 text-gray-400" />
+                        <span className="truncate">{team.members.length} members</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Calendar className="w-3 h-3 text-gray-400" />
+                        <span className="truncate">{team.startDate}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Building className="w-3 h-3 text-gray-400" />
+                        <span className="truncate">{team.project}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Target className="w-3 h-3 text-gray-400" />
+                        <span className="truncate">{team.performance}% performance</span>
                       </div>
                     </div>
-                    
-                    {/* Progress Bar for List View */}
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
-                        <span>Task Progress</span>
+
+                    {/* Progress Bar */}
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                        <span>Progress</span>
                         <span>{team.tasksCompleted}/{team.totalTasks} tasks</span>
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 rounded-full h-1.5">
                         <div 
-                          className="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-gradient-to-r from-purple-500 to-pink-600 h-1.5 rounded-full transition-all duration-300"
                           style={{ width: `${(team.tasksCompleted / team.totalTasks) * 100}%` }}
                         ></div>
                       </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <div className="flex items-center justify-between">
+                      <button className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                        View Details
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1643,9 +1576,6 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           </div>
         )}
       </div>
-
-
-
     </div>
   );
 } 
