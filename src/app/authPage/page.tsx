@@ -23,36 +23,7 @@ export default function AuthPage() {
   const router = useRouter();
 
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      // Validate token
-      fetch(`${API_BASE_URL}/auth/validate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(res => {
-        if (res.ok) {
-          router.push('/'); // Redirect to main app
-        } else {
-          // Token invalid, clear it
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('id_token');
-          localStorage.removeItem('refresh_token');
-        }
-      })
-      .catch(() => {
-        // Network error, clear tokens
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('id_token');
-        localStorage.removeItem('refresh_token');
-      });
-    }
-  }, [router]);
+  // Removed automatic redirect to prevent loops - let main page handle authentication
 
 
   // Handle OAuth login
@@ -127,6 +98,11 @@ export default function AuthPage() {
         localStorage.setItem('access_token', tokens.access_token);
         localStorage.setItem('refresh_token', tokens.refresh_token);
         localStorage.setItem('token_expires', (Date.now() + (tokens.expires_in * 1000)).toString());
+        
+        // Try to store user email from token data
+        if (tokens.user_email) {
+          localStorage.setItem('user_email', tokens.user_email);
+        }
        
         // Clean up
         sessionStorage.removeItem('oauth_state');
@@ -176,9 +152,28 @@ export default function AuthPage() {
           localStorage.setItem('id_token', data.result.idToken.jwtToken);
           localStorage.setItem('access_token', data.result.accessToken.jwtToken);
           localStorage.setItem('refresh_token', data.result.refreshToken.token);
+          
+          console.log('✅ Tokens stored successfully');
+          console.log('🔑 Access token:', data.result.accessToken.jwtToken.substring(0, 20) + '...');
+          
+          // Store user email for context
+          if (username.includes('@')) {
+            localStorage.setItem('user_email', username);
+            console.log('📧 User email stored:', username);
+          } else if (email) {
+            localStorage.setItem('user_email', email);
+            console.log('📧 User email stored:', email);
+          }
+        } else if (!isLogin && data.success) {
+          // For signup, store the email
+          localStorage.setItem('user_email', email);
+          console.log('📧 User email stored (signup):', email);
         }
+        
         setMessage(isLogin ? 'Login successful!' : 'Signup successful! Please check your email.');
+        console.log('🔄 Redirecting to main app in 1 second...');
         setTimeout(() => {
+          console.log('🚀 Redirecting to main app now...');
           router.push('/');
         }, 1000);
       } else {
@@ -223,6 +218,14 @@ export default function AuthPage() {
         } else {
           sessionStorage.setItem('phone_signup_username', phoneNumber);
         }
+        
+        // Store user email for context if provided
+        if (email) {
+          localStorage.setItem('user_email', email);
+        } else {
+          // Use phone number as fallback
+          localStorage.setItem('user_email', phoneNumber);
+        }
       } else {
         setMessage(data.error || 'Signup failed');
       }
@@ -261,6 +264,10 @@ export default function AuthPage() {
         localStorage.setItem('id_token', data.result.idToken.jwtToken);
         localStorage.setItem('access_token', data.result.accessToken.jwtToken);
         localStorage.setItem('refresh_token', data.result.refreshToken.token);
+        
+        // Store phone number as user identifier for context
+        localStorage.setItem('user_email', phoneNumber);
+        
         setMessage('Login successful!');
         setTimeout(() => {
           router.push('/');
@@ -302,7 +309,15 @@ export default function AuthPage() {
         setMessage('Phone number verified successfully!');
         setShowOtpInput(false);
         setOtp('');
-        // Optionally redirect to login or auto-login
+        
+        // Store tokens if provided after verification
+        if (data.result) {
+          localStorage.setItem('id_token', data.result.idToken.jwtToken);
+          localStorage.setItem('access_token', data.result.accessToken.jwtToken);
+          localStorage.setItem('refresh_token', data.result.refreshToken.token);
+        }
+        
+        // Redirect to main app after successful verification
         setTimeout(() => {
           router.push('/');
         }, 1000);
@@ -661,6 +676,4 @@ export default function AuthPage() {
     </div>
   );
 }
-
-
 

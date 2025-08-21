@@ -307,17 +307,62 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         whatsappGroupName: team.whatsappGroupName
       };
 
+      // Optimistic update - add team to UI immediately
+      const optimisticTeam: Team = {
+        id: Date.now(), // Temporary ID
+        name: team.name,
+        description: team.description,
+        members: team.teamMembers.map((member, index) => ({
+          id: index + 1,
+          name: member,
+          role: "Member",
+          avatar: member.split(' ').map(n => n[0]).join(''),
+          email: `${member.toLowerCase().replace(' ', '.')}@company.com`,
+          status: "Online",
+          phone: `+1-555-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+          skills: ["General"],
+          experience: "1 year",
+          projects: 1
+        })),
+        project: team.company,
+        tasksCompleted: 0,
+        totalTasks: 0,
+        performance: 85,
+        velocity: 80,
+        health: "good",
+        budget: "$50K",
+        startDate: team.startDate,
+        archived: false,
+        tags: ["New Team"],
+        achievements: [],
+        lastActivity: "Just now"
+      };
+
+      setTeams(prev => [optimisticTeam, ...prev]);
+      setShowCreateForm(false);
+      setSuccessMessage('Team created successfully!');
+
+      // Make API call in background
       const response = await TeamApiService.createTeam(teamData);
+      
       if (response.success) {
+        // Replace optimistic team with real one
+        const realTeam = transformTeamToUI(response.data as TeamData);
+        setTeams(prev => prev.map(t => 
+          t.id === optimisticTeam.id ? { ...realTeam, id: (realTeam as any).id || Date.now() } : t
+        ));
         setSuccessMessage('Team created successfully!');
-        fetchTeams(); // Refresh the list
-        setShowCreateForm(false);
-        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
+        // Revert optimistic update on failure
+        setTeams(prev => prev.filter(t => t.id !== optimisticTeam.id));
         console.error('Failed to create team:', response.error);
         setError('Failed to create team');
       }
+      
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
+      // Revert optimistic update on error
+      setTeams(prev => prev.filter(t => t.id !== Date.now()));
       console.error('Error creating team:', error);
       setError('Failed to create team');
     }
@@ -326,17 +371,32 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   // Delete team
   const handleDeleteTeam = async (teamId: number) => {
     try {
+      // Optimistic update - remove team from UI immediately
+      const deletedTeam = teams.find(t => t.id === teamId);
+      setTeams(prev => prev.filter(t => t.id !== teamId));
+      setSuccessMessage('Team deleted successfully!');
+
+      // Make API call in background
       const response = await TeamApiService.deleteTeam(teamId.toString());
+      
       if (response.success) {
         setSuccessMessage('Team deleted successfully!');
-        fetchTeams(); // Refresh the list
-
-        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
+        // Revert optimistic update on failure
+        if (deletedTeam) {
+          setTeams(prev => [...prev, deletedTeam]);
+        }
         console.error('Failed to delete team:', response.error);
         setError('Failed to delete team');
       }
+      
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
+      // Revert optimistic update on error
+      const deletedTeam = teams.find(t => t.id === teamId);
+      if (deletedTeam) {
+        setTeams(prev => [...prev, deletedTeam]);
+      }
       console.error('Error deleting team:', error);
       setError('Failed to delete team');
     }

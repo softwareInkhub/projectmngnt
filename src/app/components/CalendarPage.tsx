@@ -183,7 +183,7 @@ const mockEvents: CalendarEvent[] = [
     date: '2024-01-15',
     time: '10:00 AM',
     type: 'meeting',
-    attendees: ['John Doe', 'Jane Smith'],
+            attendees: [],
     description: 'Review progress on E-commerce Platform project'
   },
   {

@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useUser } from '../contexts/UserContext';
 import { 
   Settings, User, Bell, Shield, Palette, Globe, Mail, Smartphone, Monitor, Moon, Sun, Save, Eye, EyeOff, ChevronRight, Star, FilterX, Grid3X3, List, Heart, ExternalLink, GitCommit, DollarSign, UserCheck, Timer, Flag, Layers, Zap, SortAsc, CheckSquare, Square, Play, Pause, StopCircle, RotateCcw, LineChart, Crown, Trophy, Medal, Users2, UserX, UserCheck2, UserMinus, UserPlus2, Video, Phone, MessageSquare, AlertCircle, Info, Award, TrendingUp, Paperclip, FileText, BarChart, PieChart, ScatterChart, AreaChart, Gauge, Target, TrendingDown, Activity, Filter, Share2, Archive, Copy, Trash2, ArrowUpRight, ArrowDownRight, Minus, Building, MapPin, Home, School, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Folder, HardDrive, Cpu, HardDriveIcon, Network, WifiIcon, Bluetooth, BluetoothSearching, SmartphoneIcon, Tablet, Download, Upload, Key, Lock, Unlock, Database, Server, Cloud, Wifi, WifiOff, Volume2, VolumeX, Languages, Briefcase
 } from "lucide-react";
 
 export default function SettingsPage() {
+  const { currentUser, loading } = useUser();
   const [activeTab, setActiveTab] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
   const [theme, setTheme] = useState("light");
@@ -51,12 +53,18 @@ export default function SettingsPage() {
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-            JD
+            {loading ? '...' : currentUser ? (currentUser.name?.charAt(0) || currentUser.email?.charAt(0) || 'U') : 'U'}
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900">John Doe</h3>
-            <p className="text-slate-600">Project Manager • Engineering</p>
-            <p className="text-sm text-slate-500">Member since January 2024</p>
+            <h3 className="text-xl font-bold text-slate-900">
+              {loading ? 'Loading...' : currentUser ? currentUser.name : 'User Profile'}
+            </h3>
+            <p className="text-slate-600">
+              {loading ? 'Loading user information...' : currentUser ? `${currentUser.role} • ${currentUser.department || 'No Department'}` : 'No user data'}
+            </p>
+            <p className="text-sm text-slate-500">
+              {loading ? 'Member since loading...' : currentUser ? `Member since ${new Date(currentUser.joinDate).toLocaleDateString()}` : 'Member since unknown'}
+            </p>
           </div>
         </div>
       </div>
@@ -72,7 +80,8 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
             <input
               type="text"
-              defaultValue="John"
+              defaultValue={currentUser?.name?.split(' ')[0] || ''}
+              placeholder="Enter first name"
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
             />
           </div>
@@ -80,7 +89,8 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Last Name</label>
             <input
               type="text"
-              defaultValue="Doe"
+              defaultValue={currentUser?.name?.split(' ').slice(1).join(' ') || ''}
+              placeholder="Enter last name"
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
             />
           </div>
@@ -88,7 +98,8 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
             <input
               type="email"
-              defaultValue="john.doe@company.com"
+              defaultValue={currentUser?.email || ''}
+              placeholder="Enter email address"
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
             />
           </div>
@@ -96,7 +107,8 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
             <input
               type="tel"
-              defaultValue="+1 (555) 123-4567"
+              defaultValue={currentUser?.phone || ''}
+              placeholder="Enter phone number"
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
             />
           </div>
@@ -114,7 +126,8 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Job Title</label>
             <input
               type="text"
-              defaultValue="Project Manager"
+              defaultValue={currentUser?.role || ''}
+              placeholder="Enter job title"
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
             />
           </div>
@@ -122,7 +135,8 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Department</label>
             <input
               type="text"
-              defaultValue="Engineering"
+              defaultValue={currentUser?.department || ''}
+              placeholder="Enter department"
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
             />
           </div>
@@ -130,15 +144,17 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-slate-700 mb-2">Employee ID</label>
             <input
               type="text"
-              defaultValue="EMP-2024-001"
+              defaultValue={currentUser?.id || ''}
+              placeholder="Enter employee ID"
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Location</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
             <input
               type="text"
-              defaultValue="San Francisco, CA"
+              defaultValue={currentUser?.status || ''}
+              placeholder="Enter status"
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
             />
           </div>

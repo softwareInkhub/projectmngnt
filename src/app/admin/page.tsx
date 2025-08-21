@@ -50,40 +50,8 @@ const projectGrowthData = [
   { month: 'Jun', projects: 35 },
 ];
 
-const mockActivities = [
-  {
-    id: '1',
-    type: 'project' as const,
-    action: 'created',
-    entity: 'E-commerce Platform',
-    user: 'John Doe',
-    timestamp: '2 hours ago'
-  },
-  {
-    id: '2',
-    type: 'task' as const,
-    action: 'completed',
-    entity: 'User Authentication',
-    user: 'Jane Smith',
-    timestamp: '4 hours ago'
-  },
-  {
-    id: '3',
-    type: 'company' as const,
-    action: 'updated',
-    entity: 'TechCorp Inc.',
-    user: 'Mike Johnson',
-    timestamp: '6 hours ago'
-  },
-  {
-    id: '4',
-    type: 'team' as const,
-    action: 'joined',
-    entity: 'Frontend Team',
-    user: 'Sarah Wilson',
-    timestamp: '1 day ago'
-  },
-];
+// Activity data will be fetched from real API
+const mockActivities: any[] = [];
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({

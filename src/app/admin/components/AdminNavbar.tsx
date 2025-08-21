@@ -11,6 +11,7 @@ import {
   LogOut,
   ChevronDown
 } from 'lucide-react';
+import { logout } from '../../utils/auth';
 
 interface AdminNavbarProps {
   onMenuClick: () => void;
@@ -89,7 +90,10 @@ export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
                   <span>Settings</span>
                 </button>
                 <hr className="my-2" />
-                <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center space-x-2 text-red-600">
+                <button 
+                  onClick={logout}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center space-x-2 text-red-600"
+                >
                   <LogOut size={16} />
                   <span>Sign Out</span>
                 </button>

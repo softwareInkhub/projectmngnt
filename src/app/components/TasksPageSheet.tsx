@@ -62,8 +62,8 @@ export default function TasksPageSheet({ open, onClose, onOpenTab, context }: {
       name: "Implement user authentication",
       status: "In Progress",
       priority: "High",
-      assignee: "John Doe",
-      reporter: "Jane Smith",
+              assignee: "",
+        reporter: "",
       storyPoints: 8,
       story: "User Management",
       sprint: "Sprint 1",
@@ -86,7 +86,7 @@ export default function TasksPageSheet({ open, onClose, onOpenTab, context }: {
       comments: [
         {
           id: 1,
-          author: "John Doe",
+          author: "",
           content: "Started implementing JWT token generation",
           timestamp: "2024-01-18T10:30:00Z"
         }

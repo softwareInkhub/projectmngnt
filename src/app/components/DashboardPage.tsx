@@ -5,8 +5,10 @@ import { CompanyApiService, CompanyData } from "../utils/companyApi";
 import { TaskApiService, TaskData } from "../utils/taskApi";
 import { ProjectApiService, ProjectData } from "../utils/projectApi";
 import { TeamApiService, TeamData } from "../utils/teamApi";
+import { useUser } from "../contexts/UserContext";
 
 export default function DashboardPage({ open, onClose, onOpenTab }: { open: boolean; onClose: () => void; onOpenTab: (tabName: string, context?: any) => void }) {
+  const { currentUser } = useUser();
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -274,7 +276,9 @@ export default function DashboardPage({ open, onClose, onOpenTab }: { open: bool
         {/* Mobile Header */}
         <div className="mobile-card">
           <h1 className="mobile-h2 mb-3">Dashboard</h1>
-          <p className="mobile-text-sm mobile-text-secondary">Welcome back! Here's what's happening today.</p>
+          <p className="mobile-text-sm mobile-text-secondary">
+            {currentUser ? `Welcome back, ${currentUser.name?.split(' ')[0] || currentUser.email}!` : 'Welcome back!'} Here's what's happening today.
+          </p>
         </div>
 
         {/* Mobile Stats Grid */}
@@ -479,7 +483,9 @@ export default function DashboardPage({ open, onClose, onOpenTab }: { open: bool
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-neutral-900">Dashboard</h1>
-            <p className="text-neutral-600 mt-2">Welcome back! Here's what's happening today.</p>
+            <p className="text-neutral-600 mt-2">
+              {currentUser ? `Welcome back, ${currentUser.name?.split(' ')[0] || currentUser.email}!` : 'Welcome back!'} Here's what's happening today.
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <button className="btn-secondary">

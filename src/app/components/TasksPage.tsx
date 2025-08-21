@@ -303,27 +303,33 @@ export default function TasksPage({ context }: { context?: { company: string } }
     try {
       console.log("About to call TaskApiService.createTask...");
 
-      // Use API service to create task
-      const response = await TaskApiService.createTask(taskData);
-      console.log("API response received:", response);
+      // Optimistic update - add task to UI immediately
+      const optimisticTask = {
+        id: `temp-${Date.now()}`,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        project: formData.project.trim(),
+        assignee: formData.assignee.trim(),
+        status: formData.status,
+        priority: formData.priority,
+        startDate: formData.startDate,
+        dueDate: formData.dueDate,
+        estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : 0,
+        tags: formData.tags,
+        subtasks: formData.subtasks,
+        comments: formData.comments.trim(),
+        progress: 0,
+        timeSpent: '0h',
+        estimatedTime: `${formData.estimatedHours || 0}h`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
 
-      if (!response.success) {
-        throw new Error(response.error || 'Failed to create task');
-      }
-
-      console.log("Task created successfully:", response.data);
-
-      // Show success message
+      setTasks(prev => [optimisticTask, ...prev]);
+      setShowCreateForm(false);
       setSuccessMessage(`Task "${formData.title}" created successfully!`);
 
-      // Refresh tasks from API to show the newly created task
-      await fetchTasks();
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(null), 3000);
-
-      // Reset form and hide it
-      setShowCreateForm(false);
+      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -340,7 +346,30 @@ export default function TasksPage({ context }: { context?: { company: string } }
         parentId: null
       });
 
+      // Make API call in background
+      const response = await TaskApiService.createTask(taskData);
+      console.log("API response received:", response);
+
+      if (!response.success) {
+        // Revert optimistic update on failure
+        setTasks(prev => prev.filter(t => t.id !== optimisticTask.id));
+        throw new Error(response.error || 'Failed to create task');
+      }
+
+      console.log("Task created successfully:", response.data);
+
+      // Replace optimistic task with real one
+      const realTask = response.data || response;
+      setTasks(prev => prev.map(t => 
+        t.id === optimisticTask.id ? { ...realTask, id: (realTask as any).id || `real-${Date.now()}` } : t
+      ));
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+
     } catch (err) {
+      // Revert optimistic update on error
+      setTasks(prev => prev.filter(t => !t.id.startsWith('temp-')));
       console.error("Error creating task:", err);
       setError(err instanceof Error ? err.message : 'Failed to create task');
     } finally {

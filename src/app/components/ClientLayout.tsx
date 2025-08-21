@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import ContextSidebar from "./ContextSidebar";
 import SnapLayoutManager from "./SnapLayoutManager";
 import GridLayoutManager from "./GridLayoutManager";
-import { Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen, CheckCircle, Users, Building, Calendar, ChevronDown, CheckSquare, Settings, MoreHorizontal, Home } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen, CheckCircle, Users, Building, Calendar, ChevronDown, CheckSquare, Settings, MoreHorizontal, Home, User, LogOut } from "lucide-react";
 
 interface Project {
   name: string;
@@ -45,6 +45,8 @@ import CreateSprintPage from "./CreateSprintPage";
 import CreateDepartmentPage from "./CreateDepartmentPage";
 import CreateStoryPage from "./CreateStoryPage";
 import GridDashboard from "./GridDashboard";
+import { logout } from '../utils/auth';
+import { useUser } from '../contexts/UserContext';
 
 
 
@@ -79,6 +81,7 @@ const SHEET_COMPONENTS: Record<string, React.ComponentType<any>> = {
 };
 
 export default function ClientLayout() {
+  const { currentUser } = useUser();
   // Set Dashboard as the default open tab
   const [openTabs, setOpenTabs] = useState<{ type: string; key: string; title: string; component: React.ComponentType<any>; project?: Project; context?: any }[]>([]);
   
@@ -469,6 +472,14 @@ export default function ClientLayout() {
             <Building size={16} />
             <span>Companies</span>
           </button>
+          <button 
+            onClick={logout}
+            className="mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs text-red-600"
+            aria-label="Sign Out"
+          >
+            <LogOut size={16} />
+            <span>Sign Out</span>
+          </button>
         </nav>
 
         {/* Mobile Tab Bar removed to mirror desktop layout (sidebars + content) */}
@@ -605,6 +616,41 @@ export default function ClientLayout() {
                 Drag to Grid
               </div>
             )}
+          </div>
+
+          {/* User Menu */}
+          <div className="flex items-center px-2 border-l border-neutral-200">
+            <div className="relative group">
+              <button
+                className="flex items-center space-x-2 p-1 rounded transition-colors text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100"
+                aria-label="User menu"
+              >
+                <User size={14} />
+                <span className="text-xs text-neutral-600 hidden md:block">
+                  {currentUser?.name?.split(' ')[0] || 'User'}
+                </span>
+                <ChevronDown size={12} />
+              </button>
+              
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-neutral-200 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <button 
+                  onClick={() => openTab('settings', undefined, {})}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 flex items-center space-x-2"
+                >
+                  <Settings size={14} />
+                  <span>Settings</span>
+                </button>
+                <hr className="my-2" />
+                <button 
+                  onClick={logout}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 flex items-center space-x-2 text-red-600"
+                >
+                  <LogOut size={14} />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

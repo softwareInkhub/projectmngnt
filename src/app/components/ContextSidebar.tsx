@@ -229,7 +229,7 @@ export default function ContextSidebar({
   };
 
     fetchData();
-  }, []);
+  }, [fallbackCompanies, fallbackProjects, fallbackTasks, fallbackTeams]);
 
   const toggleTask = (taskId: number) => {
     setExpandedTasks(prev => 

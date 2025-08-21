@@ -215,35 +215,71 @@ export default function ProjectsPage({ context }: { context?: { company: string 
   const handleCreateProject = async (projectData: ProjectData) => {
     try {
       console.log('Creating project with data:', projectData);
+      
+      // Optimistic update - add project to UI immediately
+      const optimisticProject: Project = {
+        id: `temp-${Date.now()}`, // Temporary ID
+        name: projectData.name,
+        description: projectData.description || '',
+        assignee: projectData.assignee,
+        progress: projectData.progress,
+        status: projectData.status,
+        priority: projectData.priority,
+        endDate: projectData.endDate,
+        team: projectData.team,
+        tasks: projectData.tasks,
+        budget: projectData.budget,
+        tags: typeof projectData.tags === 'string' ? JSON.parse(projectData.tags) : projectData.tags
+      };
+      
+      setProjects(prev => [optimisticProject, ...prev]);
+      setShowCreateForm(false);
+      setSuccessMessage('Project created successfully!');
+      
+      // Reset form data
+      setCreateFormData({
+        name: "",
+        description: "",
+        company: context?.company || "",
+        status: "Planning",
+        priority: "Medium",
+        startDate: "",
+        endDate: "",
+        budget: "",
+        team: "",
+        assignee: "",
+        progress: 0,
+        tasks: 0,
+        tags: [],
+        notes: ""
+      });
+      
+      // Make API call in background
       const response = await ProjectApiService.createProject(projectData);
       console.log('Project creation response:', response);
+      
       if (response.success) {
+        // Replace optimistic project with real one
+        const realProject = transformProjectToUI(response.data as ProjectData);
+        setProjects(prev => prev.map(p => 
+          p.id === optimisticProject.id ? {
+            ...realProject,
+            description: realProject.description || '',
+            id: realProject.id || response.data?.id || `real-${Date.now()}`
+          } as Project : p
+        ));
         setSuccessMessage('Project created successfully!');
-        fetchProjects(); // Refresh the list
-        setShowCreateForm(false);
-        // Reset form data
-        setCreateFormData({
-          name: "",
-          description: "",
-          company: context?.company || "",
-          status: "Planning",
-          priority: "Medium",
-          startDate: "",
-          endDate: "",
-          budget: "",
-          team: "",
-          assignee: "",
-          progress: 0,
-          tasks: 0,
-          tags: [],
-          notes: ""
-        });
-        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
+        // Revert optimistic update on failure
+        setProjects(prev => prev.filter(p => p.id !== optimisticProject.id));
         console.error('Failed to create project:', response.error);
         setError('Failed to create project');
       }
+      
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
+      // Revert optimistic update on error
+      setProjects(prev => prev.filter(p => !p.id.startsWith('temp-')));
       console.error('Error creating project:', error);
       setError('Failed to create project');
     }
@@ -252,17 +288,33 @@ export default function ProjectsPage({ context }: { context?: { company: string 
   // Delete project
   const handleDeleteProject = async (projectId: string) => {
     try {
+      // Optimistic update - remove project from UI immediately
+      const deletedProject = projects.find(p => p.id === projectId);
+      setProjects(prev => prev.filter(p => p.id !== projectId));
+      setOpenMenuId(null);
+      setSuccessMessage('Project deleted successfully!');
+      
+      // Make API call in background
       const response = await ProjectApiService.deleteProject(projectId);
+      
       if (response.success) {
         setSuccessMessage('Project deleted successfully!');
-        fetchProjects(); // Refresh the list
-        setOpenMenuId(null);
-        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
+        // Revert optimistic update on failure
+        if (deletedProject) {
+          setProjects(prev => [...prev, deletedProject]);
+        }
         console.error('Failed to delete project:', response.error);
         setError('Failed to delete project');
       }
+      
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
+      // Revert optimistic update on error
+      const deletedProject = projects.find(p => p.id === projectId);
+      if (deletedProject) {
+        setProjects(prev => [...prev, deletedProject]);
+      }
       console.error('Error deleting project:', error);
       setError('Failed to delete project');
     }
@@ -315,18 +367,55 @@ export default function ProjectsPage({ context }: { context?: { company: string 
         updatedAt: new Date().toISOString()
       };
 
+      // Optimistic update - update project in UI immediately
+      const originalProject = projects.find(p => p.id === editingProject.id);
+      const optimisticProject: Project = {
+        ...editingProject,
+        name: formData.name,
+        description: formData.description || '',
+        status: formData.status,
+        priority: formData.priority,
+        endDate: formData.endDate,
+        budget: formData.budget,
+        team: formData.team,
+        assignee: formData.assignee,
+        progress: formData.progress,
+        tasks: formData.tasks,
+        tags: formData.tags
+      };
+      
+      setProjects(prev => prev.map(p => 
+        p.id === editingProject.id ? optimisticProject : p
+      ));
+      setShowEditForm(false);
+      setEditingProject(null);
+      setSuccessMessage('Project updated successfully!');
+      
+      // Make API call in background
       const response = await ProjectApiService.updateProject(editingProject.id, updateFields);
+      
       if (response.success) {
         setSuccessMessage('Project updated successfully!');
-        fetchProjects(); // Refresh the list
-        setShowEditForm(false);
-        setEditingProject(null);
-        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
+        // Revert optimistic update on failure
+        if (originalProject) {
+          setProjects(prev => prev.map(p => 
+            p.id === editingProject.id ? originalProject : p
+          ));
+        }
         console.error('Failed to update project:', response.error);
         setError('Failed to update project');
       }
+      
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
+      // Revert optimistic update on error
+      const originalProject = projects.find(p => p.id === editingProject.id);
+      if (originalProject) {
+        setProjects(prev => prev.map(p => 
+          p.id === editingProject.id ? originalProject : p
+        ));
+      }
       console.error('Error updating project:', error);
       setError('Failed to update project');
     }
