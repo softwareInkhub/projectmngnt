@@ -3,7 +3,7 @@
 
 module.exports = {
   // API Configuration
-  NEXT_PUBLIC_API_URL: process.env. || 'http://localhost:5001',
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in',
   
   // AWS DynamoDB Configuration
   AWS_REGION: 'us-east-1',

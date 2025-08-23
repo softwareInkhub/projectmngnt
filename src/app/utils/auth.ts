@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
 
 export const logout = () => {
   // Clear all tokens from localStorage

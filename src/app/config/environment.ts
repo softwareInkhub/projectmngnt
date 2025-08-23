@@ -62,7 +62,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 
   return {
     // API Configuration
-    apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001',
+    apiBaseUrl: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in',
     
     // AWS DynamoDB Configuration
     awsRegion: process.env.AWS_REGION || 'us-east-1',

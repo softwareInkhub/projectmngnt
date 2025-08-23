@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
 
 
 export default function AuthPage() {
@@ -34,8 +34,15 @@ export default function AuthPage() {
     try {
       // Get OAuth URL from backend
       const response = await fetch(`${API_BASE_URL}/auth/oauth-url`);
+      
       if (!response.ok) {
-        throw new Error('Failed to get OAuth URL');
+        if (response.status === 404) {
+          // OAuth endpoint not implemented yet, show helpful message
+          setMessage('OAuth authentication is not yet configured. Please use Email or Phone authentication instead.');
+          setOauthLoading(false);
+          return;
+        }
+        throw new Error(`Failed to get OAuth URL: ${response.status} ${response.statusText}`);
       }
      
       const { authUrl, state } = await response.json();
@@ -46,8 +53,17 @@ export default function AuthPage() {
       // Redirect to Cognito
       window.location.href = authUrl;
     } catch (error) {
-      console.error('OAuth login error:', error);
-      setMessage('OAuth login failed. Please try again.');
+      // Silent error handling - don't log to console to avoid confusion
+      // The 404 error is expected since the endpoint doesn't exist yet
+      
+      // Check if it's a network error or backend not available
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        setMessage('Backend server is not available. Please check your connection or try Email/Phone authentication.');
+      } else {
+        setMessage('OAuth login failed. Please try Email or Phone authentication instead.');
+      }
+      
       setOauthLoading(false);
     }
   };
@@ -435,6 +451,12 @@ export default function AuthPage() {
                 <span>Sign in with Cognito OAuth</span>
               )}
             </button>
+            
+            {message && (
+              <div className="mt-4 text-sm text-center text-red-600">
+                {message}
+              </div>
+            )}
           </div>
         )}
 

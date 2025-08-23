@@ -21,7 +21,7 @@ const nextConfig = {
   experimental: {},
   
   // Webpack configuration
-  webpack: (config: any, { isServer }: { isServer: boolean }) => {
+  webpack: (config, { isServer }) => {
     // Add any custom webpack config here
     return config;
   },

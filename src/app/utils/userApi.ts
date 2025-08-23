@@ -47,7 +47,7 @@ export interface UserApiResponse {
 }
 
 class UserApiServiceClass {
-  private baseUrl = 'http://localhost:5001';
+  private baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in';
 
   async getUsers(): Promise<UserApiResponse> {
     try {

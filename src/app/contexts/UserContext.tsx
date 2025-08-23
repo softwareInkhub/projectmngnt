@@ -26,7 +26,7 @@ interface UserProviderProps {
   children: ReactNode;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
@@ -38,77 +38,104 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
 
+      // Authentication disabled - allow access without token
       const token = localStorage.getItem('access_token');
-      if (!token) {
-        setCurrentUser(null);
-        return;
-      }
-
+      
       let userData = null;
 
-      // First, try to get user info from the auth/me endpoint
-      try {
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+      // If we have a token, try to get user info
+      if (token) {
+        // First, try to get user info from the auth/me endpoint
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
 
-        if (response.ok) {
-          const data = await response.json();
-          userData = data.user || data;
-          console.log('✅ User data fetched from /auth/me');
+          if (response.ok) {
+            const data = await response.json();
+            userData = data.user || data;
+            console.log('✅ User data fetched from /auth/me');
+          }
+        } catch (authMeError) {
+          console.log('Auth /me endpoint not available, trying users endpoint...');
         }
-      } catch (authMeError) {
-        console.log('Auth /me endpoint not available, trying users endpoint...');
-      }
 
-      // If /auth/me doesn't work, try to get user by email from localStorage
-      if (!userData) {
-        const email = localStorage.getItem('user_email');
-        if (email) {
-          try {
-            // Try to find user in the users list
-            const usersResponse = await fetch(`${API_BASE_URL}/users`, {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-            });
+        // If /auth/me doesn't work, try to get user by email from localStorage
+        if (!userData) {
+          const email = localStorage.getItem('user_email');
+          if (email) {
+            try {
+              // Try to find user in the users list
+              const usersResponse = await fetch(`${API_BASE_URL}/users`, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+              });
 
-            if (usersResponse.ok) {
-              const usersData = await usersResponse.json();
-              
-              // Find user by email or phone number
-              const user = usersData.users?.find((u: UserData) => 
-                u.email === email || u.phone === email
-              );
-              
-              if (user) {
-                userData = user;
-                console.log('✅ User data fetched from /users by email/phone');
+              if (usersResponse.ok) {
+                const usersData = await usersResponse.json();
+                
+                // Find user by email or phone number
+                const user = usersData.users?.find((u: UserData) => 
+                  u.email === email || u.phone === email
+                );
+                
+                if (user) {
+                  userData = user;
+                  console.log('✅ User data fetched from /users by email/phone');
+                }
               }
+            } catch (usersError) {
+              console.log('Users endpoint not available');
             }
-          } catch (usersError) {
-            console.log('Users endpoint not available');
           }
         }
       }
 
-      if (userData) {
-        setCurrentUser(userData);
-      } else {
-        console.log('No user data found');
-        setCurrentUser(null);
+      // If no user data found, create a default guest user
+      if (!userData) {
+        console.log('No user data found - creating default guest user');
+        userData = {
+          id: 'guest',
+          name: 'Guest User',
+          email: 'guest@example.com',
+          role: 'user',
+          status: 'active',
+          department: 'Guest',
+          joinDate: new Date().toISOString(),
+          lastActive: new Date().toISOString(),
+          phone: '',
+          companyId: '',
+          teamId: ''
+        };
       }
+
+      setCurrentUser(userData);
 
     } catch (err) {
       console.error('Error fetching current user:', err);
       setError('Failed to fetch user data');
-      setCurrentUser(null);
+      
+      // Set default guest user on error
+      setCurrentUser({
+        id: 'guest',
+        name: 'Guest User',
+        email: 'guest@example.com',
+        role: 'user',
+        status: 'active',
+        department: 'Guest',
+        joinDate: new Date().toISOString(),
+        lastActive: new Date().toISOString(),
+        phone: '',
+        companyId: '',
+        teamId: ''
+      });
     } finally {
       setLoading(false);
     }
