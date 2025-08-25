@@ -69,11 +69,19 @@ export default function AuthPage() {
      
       const { authUrl, state } = await response.json();
      
+      // Check if the auth URL contains localhost and fix it
+      let correctedAuthUrl = authUrl;
+      if (authUrl && authUrl.includes('localhost:3000')) {
+        // Replace localhost with deployed URL
+        correctedAuthUrl = authUrl.replace('http://localhost:3000', 'https://projectmngnt-b6xs.vercel.app');
+        console.log('Fixed OAuth URL from localhost to deployed URL');
+      }
+     
       // Store state for verification
       sessionStorage.setItem('oauth_state', state);
      
       // Redirect to Cognito
-      window.location.href = authUrl;
+      window.location.href = correctedAuthUrl;
     } catch (error) {
       console.error('OAuth login error:', error);
       setMessage('OAuth login failed. Please try again.');
@@ -134,8 +142,14 @@ export default function AuthPage() {
         // Clear URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
        
-        // Redirect to main app
-        router.push('/');
+        // Redirect to main app - ensure we're on the deployed URL
+        if (window.location.hostname === 'localhost') {
+          // If we're on localhost, redirect to deployed URL
+          window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
+        } else {
+          // Otherwise use normal router push
+          router.push('/');
+        }
       })
       .catch(error => {
         console.error('Token exchange failed:', error);
