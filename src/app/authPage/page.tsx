@@ -77,7 +77,14 @@ export default function AuthPage() {
         // Replace localhost with deployed URL
         const deployedUrl = REDIRECT_URI.replace('/authPage', '');
         correctedAuthUrl = authUrl.replace('http://localhost:3000', deployedUrl);
-        console.log('Fixed OAuth URL from localhost to deployed URL');
+        console.log('Fixed OAuth URL from localhost to deployed URL:', correctedAuthUrl);
+      }
+      
+      // Also check for any other localhost references
+      if (correctedAuthUrl && correctedAuthUrl.includes('localhost')) {
+        const deployedUrl = REDIRECT_URI.replace('/authPage', '');
+        correctedAuthUrl = correctedAuthUrl.replace(/localhost:\d+/, deployedUrl.replace('https://', '').replace('http://', ''));
+        console.log('Fixed additional localhost references:', correctedAuthUrl);
       }
      
       // Store state for verification
@@ -95,6 +102,16 @@ export default function AuthPage() {
 
   // Handle OAuth callback
   useEffect(() => {
+    // Check if we're on localhost but should be on deployed URL
+    if (window.location.hostname === 'localhost' && window.location.search.includes('code=')) {
+      console.log('OAuth callback detected on localhost, redirecting to deployed URL');
+      const deployedUrl = REDIRECT_URI.replace('/authPage', '');
+      const currentUrl = new URL(window.location.href);
+      const newUrl = `${deployedUrl}/authPage${currentUrl.search}`;
+      window.location.href = newUrl;
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
