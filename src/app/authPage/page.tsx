@@ -35,10 +35,10 @@ export default function AuthPage() {
           'Content-Type': 'application/json'
         }
       })
-      .then(res => {
-        if (res.ok) {
-          router.push('/'); // Redirect to main app
-        } else {
+              .then(res => {
+          if (res.ok) {
+            window.location.href = 'https://projectmngnt-b6xs.vercel.app/'; // Redirect to deployed app
+          } else {
           // Token invalid, clear it
           localStorage.removeItem('access_token');
           localStorage.removeItem('id_token');
@@ -142,14 +142,8 @@ export default function AuthPage() {
         // Clear URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
        
-        // Redirect to main app - ensure we're on the deployed URL
-        if (window.location.hostname === 'localhost') {
-          // If we're on localhost, redirect to deployed URL
-          window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
-        } else {
-          // Otherwise use normal router push
-          router.push('/');
-        }
+        // Always redirect to deployed URL after OAuth login
+        window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
       })
       .catch(error => {
         console.error('Token exchange failed:', error);
@@ -193,7 +187,8 @@ export default function AuthPage() {
         }
         setMessage(isLogin ? 'Login successful!' : 'Signup successful! Please check your email.');
         setTimeout(() => {
-          router.push('/');
+          // Always redirect to deployed URL
+          window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
         }, 1000);
       } else {
         setMessage(data.error || 'Authentication failed');
@@ -277,7 +272,8 @@ export default function AuthPage() {
         localStorage.setItem('refresh_token', data.result.refreshToken.token);
         setMessage('Login successful!');
         setTimeout(() => {
-          router.push('/');
+          // Always redirect to deployed URL
+          window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
         }, 1000);
       } else {
         setMessage(data.error || 'Login failed');
@@ -318,7 +314,8 @@ export default function AuthPage() {
         setOtp('');
         // Optionally redirect to login or auto-login
         setTimeout(() => {
-          router.push('/');
+          // Always redirect to deployed URL
+          window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
         }, 1000);
       } else {
         setMessage(data.error || 'Verification failed');
