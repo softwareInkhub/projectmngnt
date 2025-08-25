@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 export default function TestPage() {
   const [envInfo, setEnvInfo] = useState<any>({});
@@ -91,7 +92,7 @@ export default function TestPage() {
       <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
         <h2>🔗 Quick Links</h2>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <a 
+          <Link 
             href="/" 
             style={{ 
               padding: '10px 15px', 
@@ -102,8 +103,8 @@ export default function TestPage() {
             }}
           >
             Go to Main App
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/authPage" 
             style={{ 
               padding: '10px 15px', 
@@ -114,7 +115,7 @@ export default function TestPage() {
             }}
           >
             Go to Auth Page
-          </a>
+          </Link>
         </div>
       </div>
     </div>
