@@ -1,4 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
 
 export const logout = () => {
   // Clear all tokens from localStorage
@@ -11,8 +12,8 @@ export const logout = () => {
   // Clear any other auth-related data
   sessionStorage.removeItem('oauth_state');
   
-  // Redirect to auth page
-  window.location.href = '/authPage';
+  // Redirect to auth page using dynamic URI
+  window.location.href = REDIRECT_URI;
 };
 
 export const isAuthenticated = (): boolean => {

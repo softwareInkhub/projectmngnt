@@ -21,7 +21,8 @@ export default function Home() {
         
         if (!token) {
           console.log('No access token found, redirecting to auth page');
-          router.push('/authPage');
+          const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
+          window.location.href = redirectUri;
           return;
         }
 

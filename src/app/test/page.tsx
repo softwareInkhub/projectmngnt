@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
+
 export default function TestPage() {
   const [envInfo, setEnvInfo] = useState<any>({});
   const [apiTest, setApiTest] = useState<any>(null);
@@ -105,7 +107,7 @@ export default function TestPage() {
             Go to Main App
           </Link>
           <Link 
-            href="/authPage" 
+            href={REDIRECT_URI.replace('http://localhost:3000', '')} 
             style={{ 
               padding: '10px 15px', 
               backgroundColor: '#28a745', 

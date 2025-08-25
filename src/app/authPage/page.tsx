@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
 
 
 export default function AuthPage() {
@@ -37,7 +38,8 @@ export default function AuthPage() {
       })
               .then(res => {
           if (res.ok) {
-            window.location.href = 'https://projectmngnt-b6xs.vercel.app/'; // Redirect to deployed app
+            const deployedUrl = REDIRECT_URI.replace('/authPage', '');
+            window.location.href = `${deployedUrl}/`; // Redirect to deployed app
           } else {
           // Token invalid, clear it
           localStorage.removeItem('access_token');
@@ -73,7 +75,8 @@ export default function AuthPage() {
       let correctedAuthUrl = authUrl;
       if (authUrl && authUrl.includes('localhost:3000')) {
         // Replace localhost with deployed URL
-        correctedAuthUrl = authUrl.replace('http://localhost:3000', 'https://projectmngnt-b6xs.vercel.app');
+        const deployedUrl = REDIRECT_URI.replace('/authPage', '');
+        correctedAuthUrl = authUrl.replace('http://localhost:3000', deployedUrl);
         console.log('Fixed OAuth URL from localhost to deployed URL');
       }
      
@@ -143,7 +146,8 @@ export default function AuthPage() {
         window.history.replaceState({}, document.title, window.location.pathname);
        
         // Always redirect to deployed URL after OAuth login
-        window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
+        const deployedUrl = REDIRECT_URI.replace('/authPage', '');
+        window.location.href = `${deployedUrl}/`;
       })
       .catch(error => {
         console.error('Token exchange failed:', error);
@@ -188,7 +192,8 @@ export default function AuthPage() {
         setMessage(isLogin ? 'Login successful!' : 'Signup successful! Please check your email.');
         setTimeout(() => {
           // Always redirect to deployed URL
-          window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
+          const deployedUrl = REDIRECT_URI.replace('/authPage', '');
+          window.location.href = `${deployedUrl}/`;
         }, 1000);
       } else {
         setMessage(data.error || 'Authentication failed');
@@ -273,7 +278,8 @@ export default function AuthPage() {
         setMessage('Login successful!');
         setTimeout(() => {
           // Always redirect to deployed URL
-          window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
+          const deployedUrl = REDIRECT_URI.replace('/authPage', '');
+          window.location.href = `${deployedUrl}/`;
         }, 1000);
       } else {
         setMessage(data.error || 'Login failed');
@@ -315,7 +321,8 @@ export default function AuthPage() {
         // Optionally redirect to login or auto-login
         setTimeout(() => {
           // Always redirect to deployed URL
-          window.location.href = 'https://projectmngnt-b6xs.vercel.app/';
+          const deployedUrl = REDIRECT_URI.replace('/authPage', '');
+          window.location.href = `${deployedUrl}/`;
         }, 1000);
       } else {
         setMessage(data.error || 'Verification failed');
