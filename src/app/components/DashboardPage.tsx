@@ -68,10 +68,13 @@ export default function DashboardPage({ open, onClose, onOpenTab }: { open: bool
   const [notifications, setNotifications] = useState<any[]>([]);
   const [quickStats, setQuickStats] = useState<any[]>([]);
 
+
+
   // Fetch real data
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
+      
       try {
         // Fetch all data in parallel
         const [companiesRes, tasksRes, projectsRes, teamsRes] = await Promise.all([

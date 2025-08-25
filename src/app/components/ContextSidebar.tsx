@@ -135,101 +135,71 @@ export default function ContextSidebar({
   const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
   const [expandedTeams, setExpandedTeams] = useState<number[]>([]);
 
-  // Fallback data
-  const fallbackCompanies = [
-    { id: "1", name: "TechCorp", industry: "Technology", status: "Active", employees: 150, location: "San Francisco", founded: "2018", website: "techcorp.com", description: "Leading technology solutions provider", size: "Medium" },
-    { id: "2", name: "InnovateLab", industry: "Research", status: "Active", employees: 75, location: "Boston", founded: "2020", website: "innovatelab.com", description: "Cutting-edge research and development", size: "Small" }
-  ];
-
-  const fallbackTasks = [
-    { id: "1", title: "Design System Implementation", status: "In Progress", priority: "High", assignee: "Sarah Johnson", project: "UI/UX Redesign", expanded: false },
-    { id: "2", title: "API Integration Testing", status: "To Do", priority: "Medium", assignee: "Mike Chen", project: "Backend Development", expanded: false },
-    { id: "3", title: "Database Optimization", status: "Done", priority: "Low", assignee: "Alex Rodriguez", project: "Performance Improvement", expanded: false }
-  ];
-
-  const fallbackProjects = [
-    { id: "1", name: "E-commerce Platform", status: "In Progress", description: "Modern e-commerce solution", startDate: "2024-01-15", endDate: "2024-06-30", budget: 50000, manager: "Sarah Johnson" },
-    { id: "2", name: "Mobile App Development", status: "Planning", description: "Cross-platform mobile application", startDate: "2024-03-01", endDate: "2024-08-31", budget: 75000, manager: "Mike Chen" }
-  ];
-
-  const fallbackTeams = [
-    { id: "1", name: "Frontend Team", members: ["Sarah Johnson", "Alex Rodriguez"], project: "E-commerce Platform", health: "excellent", budget: "On Track", performance: 95, startDate: "2024-01-15", tasksCompleted: 12, totalTasks: 15, description: "Responsible for user interface development" },
-    { id: "2", name: "Backend Team", members: ["Mike Chen", "David Kim"], project: "Mobile App", health: "good", budget: "Under Budget", performance: 88, startDate: "2024-02-01", tasksCompleted: 8, totalTasks: 12, description: "Handles server-side logic and APIs" }
-  ];
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch companies
-      setIsLoadingCompanies(true);
-      const response = await CompanyApiService.getCompanies();
-        if (response.success && response.data) {
-          setCompaniesList(response.data);
+        setIsLoadingCompanies(true);
+        const companiesResponse = await CompanyApiService.getCompanies();
+        if (companiesResponse.success && companiesResponse.data) {
+          setCompaniesList(companiesResponse.data);
         } else {
-          setCompaniesList(fallbackCompanies as any);
+          setCompaniesList([]);
+        }
+      } catch (error) {
+        setCompaniesList([]);
+      } finally {
+        setIsLoadingCompanies(false);
       }
-    } catch (error) {
-      console.error('Error fetching companies:', error);
-        setCompaniesError('Failed to load companies');
-        setCompaniesList(fallbackCompanies as any);
-    } finally {
-      setIsLoadingCompanies(false);
-    }
 
-    try {
+      try {
         // Fetch tasks
-      setIsLoadingTasks(true);
-      const response = await TaskApiService.getTasks();
-        if (response.success && response.data) {
-          setTasksList(response.data as any);
+        setIsLoadingTasks(true);
+        const tasksResponse = await TaskApiService.getTasks();
+        if (tasksResponse.success && tasksResponse.data) {
+          setTasksList(tasksResponse.data as any);
         } else {
-          setTasksList(fallbackTasks as any);
+          setTasksList([]);
+        }
+      } catch (error) {
+        setTasksList([]);
+      } finally {
+        setIsLoadingTasks(false);
       }
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-        setTasksError('Failed to load tasks');
-        setTasksList(fallbackTasks as any);
-    } finally {
-      setIsLoadingTasks(false);
-    }
 
-    try {
+      try {
         // Fetch projects
-      setIsLoadingProjects(true);
-      const response = await ProjectApiService.getProjects();
-        if (response.success && response.data) {
-          setProjectsList(response.data as any);
+        setIsLoadingProjects(true);
+        const projectsResponse = await ProjectApiService.getProjects();
+        if (projectsResponse.success && projectsResponse.data) {
+          setProjectsList(projectsResponse.data as any);
         } else {
-          setProjectsList(fallbackProjects as any);
+          setProjectsList([]);
+        }
+      } catch (error) {
+        setProjectsList([]);
+      } finally {
+        setIsLoadingProjects(false);
       }
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-        setProjectsError('Failed to load projects');
-        setProjectsList(fallbackProjects as any);
-    } finally {
-      setIsLoadingProjects(false);
-    }
 
-    try {
+      try {
         // Fetch teams
-      setIsLoadingTeams(true);
-      const response = await TeamApiService.getTeams();
-        if (response.success && response.data) {
-          setTeamsList(response.data as any);
+        setIsLoadingTeams(true);
+        const teamsResponse = await TeamApiService.getTeams();
+        if (teamsResponse.success && teamsResponse.data) {
+          setTeamsList(teamsResponse.data as any);
         } else {
-          setTeamsList(fallbackTeams as any);
+          setTeamsList([]);
+        }
+      } catch (error) {
+        setTeamsList([]);
+      } finally {
+        setIsLoadingTeams(false);
       }
-    } catch (error) {
-      console.error('Error fetching teams:', error);
-        setTeamsError('Failed to load teams');
-        setTeamsList(fallbackTeams as any);
-    } finally {
-      setIsLoadingTeams(false);
-    }
-  };
+    };
 
     fetchData();
-  }, [fallbackCompanies, fallbackProjects, fallbackTasks, fallbackTeams]);
+  }, []);
 
   const toggleTask = (taskId: number) => {
     setExpandedTasks(prev => 
@@ -306,7 +276,7 @@ export default function ContextSidebar({
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Companies</div>
-                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                      <div className="text-sm font-semibold">{companiesList.length}</div>
                     </div>
                   </div>
                 </div>
@@ -425,11 +395,11 @@ export default function ContextSidebar({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Total Companies</div>
-                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                      <div className="text-sm font-semibold">{companiesList.length}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Active</div>
-                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                      <div className="text-sm font-semibold">{companiesList.length}</div>
                     </div>
                   </div>
               </div>
@@ -437,7 +407,7 @@ export default function ContextSidebar({
                 <div className="bg-white rounded-lg border border-gray-200 p-3">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Companies</h3>
                   <div className="space-y-2">
-                    {(companiesList.length > 0 ? companiesList : fallbackCompanies).slice(0,3).map((company, idx) => (
+                    {companiesList.slice(0,3).map((company, idx) => (
                       <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
                         <Building2 size={12} className="text-blue-600" />
                         <div className="text-xs flex-1 truncate">{company.name}</div>
@@ -507,11 +477,11 @@ export default function ContextSidebar({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Total Projects</div>
-                      <div className="text-sm font-semibold">{(projectsList.length || fallbackProjects.length)}</div>
+                      <div className="text-sm font-semibold">{projectsList.length}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Active</div>
-                      <div className="text-sm font-semibold">{(projectsList.filter((p: any) => p.status === 'In Progress').length)}</div>
+                      <div className="text-sm font-semibold">{projectsList.filter((p: any) => p.status === 'In Progress').length}</div>
                     </div>
                   </div>
                 </div>
@@ -519,7 +489,7 @@ export default function ContextSidebar({
                 <div className="bg-white rounded-lg border border-gray-200 p-3">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Projects</h3>
                   <div className="space-y-2">
-                    {(projectsList.length > 0 ? projectsList : fallbackProjects).slice(0,3).map((project, idx) => (
+                    {projectsList.slice(0,3).map((project, idx) => (
                       <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
                         <FolderKanban size={12} className="text-blue-600" />
                         <div className="text-xs flex-1 truncate">{project.name}</div>
@@ -532,7 +502,7 @@ export default function ContextSidebar({
                         </span>
                       </div>
                     ))}
-                    {(projectsList.length === 0 && fallbackProjects.length === 0) && (
+                    {projectsList.length === 0 && (
                       <div className="text-xs text-gray-500">No recent projects</div>
                     )}
                   </div>
@@ -548,11 +518,11 @@ export default function ContextSidebar({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Total Tasks</div>
-                      <div className="text-sm font-semibold">{(tasksList.length || fallbackTasks.length)}</div>
+                      <div className="text-sm font-semibold">{tasksList.length}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Completed</div>
-                      <div className="text-sm font-semibold">{(tasksList.filter((t: any) => t.status === 'Done').length)}</div>
+                      <div className="text-sm font-semibold">{tasksList.filter((t: any) => t.status === 'Done').length}</div>
                     </div>
                   </div>
                 </div>
@@ -560,7 +530,7 @@ export default function ContextSidebar({
                 <div className="bg-white rounded-lg border border-gray-200 p-3">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Tasks</h3>
                   <div className="space-y-2">
-                    {(tasksList.length > 0 ? tasksList : fallbackTasks).slice(0,3).map((task, idx) => (
+                    {tasksList.slice(0,3).map((task, idx) => (
                       <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
                         <CheckSquare size={12} className="text-green-600" />
                         <div className="text-xs flex-1 truncate">{task.title}</div>
@@ -573,7 +543,7 @@ export default function ContextSidebar({
                         </span>
                       </div>
                     ))}
-                    {(tasksList.length === 0 && fallbackTasks.length === 0) && (
+                    {tasksList.length === 0 && (
                       <div className="text-xs text-gray-500">No recent tasks</div>
                     )}
                   </div>
@@ -589,11 +559,11 @@ export default function ContextSidebar({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Total Teams</div>
-                      <div className="text-sm font-semibold">{(teamsList.length || fallbackTeams.length)}</div>
+                      <div className="text-sm font-semibold">{teamsList.length}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Active</div>
-                      <div className="text-sm font-semibold">{(teamsList.length || fallbackTeams.length)}</div>
+                      <div className="text-sm font-semibold">{teamsList.length}</div>
                     </div>
                   </div>
                 </div>
@@ -601,7 +571,7 @@ export default function ContextSidebar({
                 <div className="bg-white rounded-lg border border-gray-200 p-3">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Teams</h3>
                   <div className="space-y-2">
-                    {(teamsList.length > 0 ? teamsList : fallbackTeams).slice(0,3).map((team, idx) => (
+                    {teamsList.slice(0,3).map((team, idx) => (
                       <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
                         <Users size={12} className="text-purple-600" />
                         <div className="text-xs flex-1 truncate">{team.name}</div>
@@ -614,7 +584,7 @@ export default function ContextSidebar({
                         </span>
                       </div>
                     ))}
-                    {(teamsList.length === 0 && fallbackTeams.length === 0) && (
+                    {teamsList.length === 0 && (
                       <div className="text-xs text-gray-500">No recent teams</div>
                     )}
                   </div>
@@ -630,11 +600,11 @@ export default function ContextSidebar({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Total Companies</div>
-                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                      <div className="text-sm font-semibold">{companiesList.length}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Active</div>
-                      <div className="text-sm font-semibold">{(companiesList.length || fallbackCompanies.length)}</div>
+                      <div className="text-sm font-semibold">{companiesList.length}</div>
                     </div>
                   </div>
                 </div>
@@ -642,7 +612,7 @@ export default function ContextSidebar({
                 <div className="bg-white rounded-lg border border-gray-200 p-3">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Companies</h3>
                   <div className="space-y-2">
-                    {(companiesList.length > 0 ? companiesList : fallbackCompanies).slice(0,3).map((company, idx) => (
+                    {companiesList.slice(0,3).map((company, idx) => (
                       <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
                         <Building2 size={12} className="text-blue-600" />
                         <div className="text-xs flex-1 truncate">{company.name}</div>
@@ -654,7 +624,7 @@ export default function ContextSidebar({
                         </span>
                       </div>
                     ))}
-                    {(companiesList.length === 0 && fallbackCompanies.length === 0) && (
+                    {companiesList.length === 0 && (
                       <div className="text-xs text-gray-500">No recent companies</div>
                     )}
                   </div>

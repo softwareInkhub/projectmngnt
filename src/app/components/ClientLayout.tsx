@@ -51,7 +51,6 @@ import { useUser } from '../contexts/UserContext';
 
 
 
-
 const SHEET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   project: ProjectsPage,
   departments: DepartmentsPage,
@@ -102,6 +101,8 @@ export default function ClientLayout() {
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isMobileContextSidebarOpen, setIsMobileContextSidebarOpen] = useState(false);
+  
+
 
   // Check if device is mobile - only on client side to avoid hydration mismatch
   useEffect(() => {
@@ -114,6 +115,8 @@ export default function ClientLayout() {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+
 
   // Close mobile sidebars when clicking outside
   useEffect(() => {
@@ -350,7 +353,7 @@ export default function ClientLayout() {
   // Mobile layout
   if (isMobile) {
     return (
-              <div className="mobile-page antialiased bg-background text-foreground">
+      <div className="mobile-page antialiased bg-background text-foreground">
         {/* Mobile Header */}
         <header className="mobile-header">
           <button 
@@ -489,7 +492,7 @@ export default function ClientLayout() {
 
   // Desktop layout (existing code)
   return (
-          <div className="flex h-screen w-screen overflow-hidden antialiased bg-background text-foreground">
+    <div className="flex h-screen w-screen overflow-hidden antialiased bg-background text-foreground">
       <Sidebar
         activeTab={sidebarActiveTab}
         onNavClick={onSidebarNavClick}

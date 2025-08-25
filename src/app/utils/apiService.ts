@@ -90,6 +90,8 @@ export class ApiService {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Always log errors to help with debugging
       this.logError('Request failed', errorMessage);
       
       return {
