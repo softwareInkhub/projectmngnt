@@ -501,152 +501,154 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
           </div>
         )}
 
-        {/* Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-slate-600">Loading tasks...</span>
-            </div>
-          ) : (
-            <>
-              {viewMode === "tree" && (
-                <TaskTreeView
-                  tasks={taskTree}
-                  onTaskSelect={handleTaskSelect}
-                  onAddSubtask={handleAddSubtask}
-                  onEditTask={handleEditTask}
-                  onDeleteTask={handleDeleteTask}
-                  selectedTaskId={selectedTaskId}
-                />
-              )}
+                 {/* Enhanced Task Form - Inline */}
+         {showEnhancedModal && (
+           <EnhancedTaskModal
+             isOpen={showEnhancedModal}
+             onClose={() => {
+               setShowEnhancedModal(false);
+               setEditingTask(null);
+               setParentTaskId(null);
+             }}
+             onSubmit={handleSubmitTask}
+             editingTask={editingTask}
+             parentTaskId={parentTaskId}
+             allTasks={taskTree}
+             isLoading={isSubmittingTask}
+           />
+         )}
 
-              {viewMode === "list" && (
-                <TaskListView
-                  tasks={taskTree}
-                  onTaskSelect={handleTaskSelect}
-                  onAddSubtask={handleAddSubtask}
-                  onEditTask={handleEditTask}
-                  onDeleteTask={handleDeleteTask}
-                  onToggleStatus={handleToggleStatus}
-                  selectedTaskId={selectedTaskId}
-                />
-              )}
+         {/* Content */}
+         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+           {isLoading ? (
+             <div className="flex items-center justify-center py-12">
+               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+               <span className="ml-3 text-slate-600">Loading tasks...</span>
+             </div>
+           ) : (
+             <>
+               {viewMode === "tree" && (
+                 <TaskTreeView
+                   tasks={taskTree}
+                   onTaskSelect={handleTaskSelect}
+                   onAddSubtask={handleAddSubtask}
+                   onEditTask={handleEditTask}
+                   onDeleteTask={handleDeleteTask}
+                   selectedTaskId={selectedTaskId}
+                 />
+               )}
 
-              {viewMode === "grid" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer"
-                      onClick={() => handleTaskSelect(task as any)}
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          {React.createElement(getStatusIcon(task.status), {
-                            className: 'w-5 h-5 text-slate-400',
-                          })}
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              statusColors[task.status as keyof typeof statusColors] ||
-                              'bg-slate-100 text-slate-700'
-                            }`}
-                          >
-                            {task.status}
-                          </span>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditTask(task as any);
-                          }}
-                          className="p-1 hover:bg-slate-100 rounded transition-colors"
-                        >
-                          <MoreHorizontal className="w-4 h-4 text-slate-400" />
-                        </button>
-                      </div>
+               {viewMode === "list" && (
+                 <TaskListView
+                   tasks={taskTree}
+                   onTaskSelect={handleTaskSelect}
+                   onAddSubtask={handleAddSubtask}
+                   onEditTask={handleEditTask}
+                   onDeleteTask={handleDeleteTask}
+                   onToggleStatus={handleToggleStatus}
+                   selectedTaskId={selectedTaskId}
+                 />
+               )}
 
-                      <h3 className="font-semibold text-slate-900 mb-2 line-clamp-2">
-                        {task.title}
-                      </h3>
-                      
-                      <p className="text-sm text-slate-600 mb-4 line-clamp-2">
-                        {task.description}
-                      </p>
+               {viewMode === "grid" && (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {filteredTasks.map((task) => (
+                     <div
+                       key={task.id}
+                       className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                       onClick={() => handleTaskSelect(task as any)}
+                     >
+                       <div className="flex items-start justify-between mb-4">
+                         <div className="flex items-center gap-2">
+                           {React.createElement(getStatusIcon(task.status), {
+                             className: 'w-5 h-5 text-slate-400',
+                           })}
+                           <span
+                             className={`px-2 py-1 rounded-full text-xs font-medium ${
+                               statusColors[task.status as keyof typeof statusColors] ||
+                               'bg-slate-100 text-slate-700'
+                             }`}
+                           >
+                             {task.status}
+                           </span>
+                         </div>
+                         <button
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             handleEditTask(task as any);
+                           }}
+                           className="p-1 hover:bg-slate-100 rounded transition-colors"
+                         >
+                           <MoreHorizontal className="w-4 h-4 text-slate-400" />
+                         </button>
+                       </div>
 
-                      <div className="space-y-2 text-sm text-slate-500">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          <span>{task.assignee}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          <span>{task.dueDate}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Target className="w-4 h-4" />
-                          <span>{task.project}</span>
-                        </div>
-                      </div>
+                       <h3 className="font-semibold text-slate-900 mb-2 line-clamp-2">
+                         {task.title}
+                       </h3>
+                       
+                       <p className="text-sm text-slate-600 mb-4 line-clamp-2">
+                         {task.description}
+                       </p>
 
-                      {/* Progress Bar */}
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
-                          <span>Progress</span>
-                          <span>{task.progress}%</span>
-                        </div>
-                        <div className="w-full bg-slate-200 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${task.progress}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                       <div className="space-y-2 text-sm text-slate-500">
+                         <div className="flex items-center gap-2">
+                           <User className="w-4 h-4" />
+                           <span>{task.assignee}</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <Calendar className="w-4 h-4" />
+                           <span>{task.dueDate}</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <Target className="w-4 h-4" />
+                           <span>{task.project}</span>
+                         </div>
+                       </div>
 
-              {/* Empty State */}
-              {!isLoading && filteredTasks.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckSquare className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No tasks found</h3>
-                  <p className="text-slate-600 mb-4">Try adjusting your search or create a new task.</p>
-                  <button
-                    onClick={() => {
-                      setEditingTask(null);
-                      setParentTaskId(null);
-                      setShowEnhancedModal(true);
-                    }}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center gap-2 mx-auto"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Create First Task
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+                       {/* Progress Bar */}
+                       <div className="mt-4">
+                         <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
+                           <span>Progress</span>
+                           <span>{task.progress}%</span>
+                         </div>
+                         <div className="w-full bg-slate-200 rounded-full h-2">
+                           <div
+                             className="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-300"
+                             style={{ width: `${task.progress}%` }}
+                           ></div>
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               )}
 
-      {/* Enhanced Task Modal */}
-      <EnhancedTaskModal
-        isOpen={showEnhancedModal}
-        onClose={() => {
-          setShowEnhancedModal(false);
-          setEditingTask(null);
-          setParentTaskId(null);
-        }}
-        onSubmit={handleSubmitTask}
-        editingTask={editingTask}
-        parentTaskId={parentTaskId}
-        allTasks={taskTree}
-        isLoading={isSubmittingTask}
-      />
+               {/* Empty State */}
+               {!isLoading && filteredTasks.length === 0 && (
+                 <div className="text-center py-12">
+                   <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                     <CheckSquare className="w-8 h-8 text-slate-400" />
+                   </div>
+                   <h3 className="text-lg font-semibold text-slate-900 mb-2">No tasks found</h3>
+                   <p className="text-slate-600 mb-4">Try adjusting your search or create a new task.</p>
+                   <button
+                     onClick={() => {
+                       setEditingTask(null);
+                       setParentTaskId(null);
+                       setShowEnhancedModal(true);
+                     }}
+                     className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center gap-2 mx-auto"
+                   >
+                     <Plus className="w-4 h-4" />
+                     Create First Task
+                   </button>
+                 </div>
+               )}
+             </>
+           )}
+         </div>
+       </div>
     </div>
   );
 }
