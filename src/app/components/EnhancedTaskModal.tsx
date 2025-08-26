@@ -65,8 +65,25 @@ export default function EnhancedTaskModal({
   // Initialize form data when editing or when parent task is provided
   useEffect(() => {
     if (editingTask) {
+      // Parse subtasks from JSON string to display as readable text
+      let subtasksText = "";
+      if (editingTask.subtasks) {
+        try {
+          const subtasksArray = JSON.parse(editingTask.subtasks);
+          if (Array.isArray(subtasksArray)) {
+            subtasksText = subtasksArray.map((subtask: any) => subtask.title || subtask).join('\n');
+          } else {
+            subtasksText = editingTask.subtasks;
+          }
+        } catch (error) {
+          // If parsing fails, use the raw string
+          subtasksText = editingTask.subtasks;
+        }
+      }
+
       setFormData({
         ...editingTask,
+        subtasks: subtasksText,
         parentId: editingTask.parentId || null
       });
       setSelectedParentId(editingTask.parentId || null);
@@ -148,20 +165,44 @@ export default function EnhancedTaskModal({
       return;
     }
 
+    // Convert subtasks text to JSON format
+    let subtasksJson = "";
+    if (formData.subtasks.trim()) {
+      const subtasksArray = formData.subtasks
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(title => ({ id: Date.now() + Math.random(), title, completed: false }));
+      subtasksJson = JSON.stringify(subtasksArray);
+    }
+
     const taskData: TaskData = {
       ...formData,
+      subtasks: subtasksJson,
       parentId: selectedParentId,
       id: editingTask?.id || undefined
     };
+
+    // Clear the subtasks field after submission since they'll be created as separate tasks
+    if (!editingTask) {
+      setFormData(prev => ({
+        ...prev,
+        subtasks: ""
+      }));
+    }
 
     onSubmit(taskData);
   };
 
   const getAvailableParentTasks = () => {
-    if (editingTask) {
-      return getAvailableParents(editingTask.id!, allTasks);
-    }
-    return allTasks;
+    const availableTasks = editingTask ? getAvailableParents(editingTask.id!, allTasks) : allTasks;
+    console.log('Available parent tasks:', {
+      total: allTasks.length,
+      available: availableTasks.length,
+      editingTask: editingTask?.title,
+      sampleTasks: availableTasks.slice(0, 3).map(t => ({ id: t.id, title: t.title, parentId: t.parentId }))
+    });
+    return availableTasks;
   };
 
   const getParentTaskTitle = (parentId: string | null) => {
@@ -439,10 +480,13 @@ export default function EnhancedTaskModal({
            <textarea
              value={formData.subtasks}
              onChange={(e) => handleInputChange('subtasks', e.target.value)}
-             rows={3}
+             rows={4}
              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-             placeholder="Enter subtasks (one per line or comma separated)"
+             placeholder="Enter subtask names, one per line:&#10;Subtask 1&#10;Subtask 2&#10;Subtask 3"
            />
+           <p className="text-xs text-slate-500">
+             Enter each subtask on a new line. These will be displayed as individual subtasks in the tree view.
+           </p>
          </div>
 
          {/* Comments */}

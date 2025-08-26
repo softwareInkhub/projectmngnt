@@ -159,6 +159,36 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
 
           // Build task tree for nested view
           const tree = buildTaskTree(tasksData);
+          console.log('Built task tree:', {
+            rootTasks: tree.length,
+            totalTasks: tasksData.length,
+            tasksWithChildren: tree.filter(t => t.children && t.children.length > 0).length,
+            sampleTask: tree[0] ? {
+              id: tree[0].id,
+              title: tree[0].title,
+              childrenCount: tree[0].children?.length || 0
+            } : null
+          });
+          
+          // Debug: Log all tasks with their parent relationships
+          console.log('All tasks with parent relationships:');
+          tasksData.forEach((task: TaskData) => {
+            console.log(`Task: ${task.title} (ID: ${task.id}, ParentID: ${task.parentId || 'none'})`);
+          });
+          
+          // Debug: Log tree structure
+          console.log('Tree structure:');
+          const logTree = (nodes: TaskTreeNode[], level: number = 0) => {
+            nodes.forEach(node => {
+              const indent = '  '.repeat(level);
+              console.log(`${indent}- ${node.title} (ID: ${node.id}, Children: ${node.children?.length || 0})`);
+              if (node.children && node.children.length > 0) {
+                logTree(node.children, level + 1);
+              }
+            });
+          };
+          logTree(tree);
+          
           setTaskTree(tree);
         } else {
           console.warn('Tasks data is not an array:', tasksData);
@@ -229,10 +259,18 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
 
   const handleToggleStatus = async (taskId: string, newStatus: string) => {
     try {
-      await TaskApiService.updateTask(taskId, { status: newStatus });
-      await fetchTasks();
+      console.log('Updating task status:', taskId, newStatus);
+      const result = await TaskApiService.updateTask(taskId, { status: newStatus });
+      console.log('Task update result:', result);
+      if (result.success) {
+        await fetchTasks();
+      } else {
+        console.error('Task update failed:', result.error);
+        setError('Failed to update task status: ' + (result.error || 'Unknown error'));
+      }
     } catch (error) {
-      setError('Failed to update task status');
+      console.error('Error in handleToggleStatus:', error);
+      setError('Failed to update task status: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -244,7 +282,48 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
         await TaskApiService.updateTask(editingTask.id!, taskData);
         setSuccessMessage('Task updated successfully');
       } else {
-        await TaskApiService.createTask(taskData);
+        const result = await TaskApiService.createTask(taskData);
+        if (result.success && result.data) {
+          // If this task has subtasks in the JSON field, create actual task records for them
+          if (taskData.subtasks) {
+            try {
+              const subtasksArray = JSON.parse(taskData.subtasks);
+              if (Array.isArray(subtasksArray)) {
+                console.log('Creating subtasks for task:', taskData.title, 'Subtasks:', subtasksArray);
+                console.log('Parent task ID:', result.data.id);
+                
+                for (const subtask of subtasksArray) {
+                  const subtaskData: TaskData = {
+                    title: subtask.title,
+                    description: `Subtask of: ${taskData.title}`,
+                    project: taskData.project,
+                    assignee: taskData.assignee,
+                    status: "To Do",
+                    priority: taskData.priority,
+                    dueDate: taskData.dueDate,
+                    startDate: taskData.startDate,
+                    estimatedHours: 0,
+                    tags: "",
+                    subtasks: "",
+                    comments: "",
+                    parentId: result.data.id // Link to the parent task
+                  };
+                  console.log('Creating subtask data:', subtaskData);
+                  const subtaskResult = await TaskApiService.createTask(subtaskData);
+                  console.log('Created subtask:', subtask.title, 'Result:', subtaskResult);
+                  
+                  if (subtaskResult.success) {
+                    console.log('Subtask created successfully with ID:', subtaskResult.data?.id);
+                  } else {
+                    console.error('Failed to create subtask:', subtaskResult.error);
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('Error creating subtasks:', error);
+            }
+          }
+        }
         setSuccessMessage('Task created successfully');
       }
       
@@ -515,7 +594,7 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
              onSubmit={handleSubmitTask}
              editingTask={editingTask}
              parentTaskId={parentTaskId}
-             allTasks={taskTree}
+             allTasks={tasks}
              isLoading={isSubmittingTask}
            />
          )}

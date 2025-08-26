@@ -182,11 +182,14 @@ export function buildTaskTree(tasks: TaskData[]): TaskTreeNode[] {
   
   // Create map of all tasks with children array
   tasks.forEach(task => {
+    // Preserve the original subtasks field for arrow detection
     taskMap.set(task.id!, {
       ...task,
       children: [],
       level: 0,
-      isExpanded: false
+      isExpanded: false,
+      // Ensure subtasks field is preserved
+      subtasks: task.subtasks || ""
     });
   });
   

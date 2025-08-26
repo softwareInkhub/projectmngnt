@@ -147,7 +147,7 @@ export default function TaskListView({
 
           {/* Task Title */}
           <div className="flex-1 min-w-0">
-            <h4 className={`font-medium text-sm truncate ${isCompleted ? 'line-through text-slate-500' : 'text-slate-900'}`}>
+            <h4 className={`font-medium text-sm break-words ${isCompleted ? 'line-through text-slate-500' : 'text-slate-900'}`}>
               {task.title}
             </h4>
             {task.description && (
