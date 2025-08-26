@@ -16,43 +16,21 @@ export default function Home() {
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
-        console.log('🔍 Checking authentication...');
+        console.log('🔍 Authentication disabled - bypassing login requirement');
         
-        // Check for access token
-        const token = localStorage.getItem('access_token');
-        console.log('🔍 Access token found:', !!token);
-        
-        if (!token) {
-          console.log('❌ No access token found, redirecting to auth page');
-          const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
-          // Use router.push instead of window.location to prevent flickering
-          router.push('/authPage');
-          return;
+        // Temporarily disable authentication check
+        // Set a mock token to bypass authentication
+        if (!localStorage.getItem('access_token')) {
+          localStorage.setItem('access_token', 'mock-token-disabled');
+          localStorage.setItem('id_token', 'mock-token-disabled');
+          localStorage.setItem('refresh_token', 'mock-token-disabled');
         }
-
-        console.log('🔍 Validating token with backend...');
-        // Validate token with backend (with fallback)
-        const isValid = await validateToken();
-        console.log('🔍 Token validation result:', isValid);
         
-        if (isValid) {
-          console.log('✅ Token is valid, user is authenticated');
-          setIsAuthenticated(true);
-        } else {
-          console.log('❌ Token is invalid, redirecting to auth page');
-          // Clear invalid tokens and redirect to auth
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('id_token');
-          localStorage.removeItem('refresh_token');
-          router.push('/authPage');
-          return;
-        }
+        console.log('✅ Authentication bypassed, showing main app');
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error('❌ Authentication check failed:', error);
-        // On error, redirect to auth page
-        console.log('❌ Authentication check failed, redirecting to auth page');
-        router.push('/authPage');
-        return;
+        console.error('❌ Error in authentication bypass:', error);
+        setIsAuthenticated(true); // Still show the app even on error
       } finally {
         setIsLoading(false);
       }
@@ -80,7 +58,25 @@ export default function Home() {
 
   return (
     <UserProvider>
-      <ClientLayout />
+      <div className="relative">
+        {/* Authentication Disabled Notice */}
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm">
+                <strong>Authentication Disabled:</strong> Login/signup functionality is temporarily disabled. You can now access the application directly.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <ClientLayout />
+      </div>
     </UserProvider>
   );
 }

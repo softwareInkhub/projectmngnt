@@ -26,44 +26,10 @@ export default function AuthPage() {
 
   // Check if user is already logged in
   useEffect(() => {
-    console.log('🔍 Auth page: Checking if user is already logged in...');
-    const token = localStorage.getItem('access_token');
-    console.log('🔍 Auth page: Access token found:', !!token);
+    console.log('🔍 Auth page: Authentication disabled - redirecting to main app');
     
-    if (token) {
-      console.log('🔍 Auth page: Validating existing token...');
-      // Validate token
-      fetch(`${API_BASE_URL}/auth/validate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-        .then(res => {
-          console.log('🔍 Auth page: Token validation response:', res.status);
-          if (res.ok) {
-            console.log('✅ Auth page: Token valid, redirecting to main app');
-            // Use router.push instead of window.location to prevent flickering
-            router.push('/');
-          } else {
-            console.log('❌ Auth page: Token invalid, clearing tokens');
-            // Token invalid, clear it
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('id_token');
-            localStorage.removeItem('refresh_token');
-          }
-        })
-        .catch((error) => {
-          console.log('❌ Auth page: Token validation failed:', error);
-          // Network error, clear tokens
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('id_token');
-          localStorage.removeItem('refresh_token');
-        });
-    } else {
-      console.log('🔍 Auth page: No token found, staying on auth page');
-    }
+    // Temporarily disable authentication - redirect directly to main app
+    router.push('/');
   }, [router]);
 
 
