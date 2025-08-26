@@ -521,24 +521,26 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
          )}
 
          {/* Content */}
-         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
            {isLoading ? (
-             <div className="flex items-center justify-center py-12">
-               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-               <span className="ml-3 text-slate-600">Loading tasks...</span>
+             <div className="flex items-center justify-center py-8 md:py-12">
+               <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-blue-600"></div>
+               <span className="ml-3 text-slate-600 text-sm md:text-base">Loading tasks...</span>
              </div>
            ) : (
              <>
                {viewMode === "tree" && (
-                         <TaskTreeView
-          tasks={taskTree}
-          onTaskSelect={handleTaskSelect}
-          onAddSubtask={handleAddSubtask}
-          onEditTask={handleEditTask}
-          onDeleteTask={handleDeleteTask}
-          onToggleStatus={handleToggleStatus}
-          selectedTaskId={selectedTaskId}
-        />
+                 <div className="h-[500px] md:h-[600px] lg:h-[700px]">
+                   <TaskTreeView
+                     tasks={taskTree}
+                     onTaskSelect={handleTaskSelect}
+                     onAddSubtask={handleAddSubtask}
+                     onEditTask={handleEditTask}
+                     onDeleteTask={handleDeleteTask}
+                     onToggleStatus={handleToggleStatus}
+                     selectedTaskId={selectedTaskId}
+                   />
+                 </div>
                )}
 
                {viewMode === "list" && (

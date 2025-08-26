@@ -65,19 +65,19 @@ export default function TaskTreeView({
     
     const calculatePositions = (taskList: TaskTreeNode[], level: number = 0, startY: number = 0) => {
       let currentY = startY;
-      // Responsive spacing - smaller on mobile
-      const levelWidth = window.innerWidth < 768 ? 120 : 160; // Reduced from 200
-      const nodeHeight = window.innerWidth < 768 ? 40 : 45; // Reduced from 50
-      const verticalSpacing = window.innerWidth < 768 ? 40 : 50; // Reduced from 60
+      // Ultra-compact spacing for professional look
+      const levelWidth = window.innerWidth < 768 ? 100 : 140; // Reduced from 120/160
+      const nodeHeight = window.innerWidth < 768 ? 32 : 36; // Reduced from 40/45
+      const verticalSpacing = window.innerWidth < 768 ? 24 : 32; // Reduced from 40/50
       
       taskList.forEach((task, index) => {
-        const x = level * levelWidth + (window.innerWidth < 768 ? 20 : 30);
+        const x = level * levelWidth + (window.innerWidth < 768 ? 15 : 20);
         const y = currentY;
         
         positions.set(task.id!, {
           x,
           y,
-          width: window.innerWidth < 768 ? 140 : 160, // Reduced from 180
+          width: window.innerWidth < 768 ? 110 : 130, // Reduced from 140/160
           height: nodeHeight
         });
         
@@ -132,10 +132,10 @@ export default function TaskTreeView({
   };
 
   const priorityColors = {
-    "High": "bg-red-100 text-red-700 border-red-200",
-    "Medium": "bg-yellow-100 text-yellow-700 border-yellow-200",
-    "Low": "bg-green-100 text-green-700 border-green-200",
-    "Critical": "bg-red-200 text-red-800 border-red-300"
+    "High": "bg-red-50 text-red-700 border-red-200",
+    "Medium": "bg-yellow-50 text-yellow-700 border-yellow-200",
+    "Low": "bg-green-50 text-green-700 border-green-200",
+    "Critical": "bg-red-100 text-red-800 border-red-300"
   };
 
   const renderTaskNode = (task: TaskTreeNode) => {
@@ -154,9 +154,9 @@ export default function TaskTreeView({
         ref={(el) => {
           if (el) nodeRefs.current.set(task.id!, el);
         }}
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.15 }}
         style={{
           position: 'absolute',
           left: position.x,
@@ -169,22 +169,22 @@ export default function TaskTreeView({
         {/* Task Card */}
         <motion.div
           className={`
-            relative w-full h-full bg-white border border-slate-200 rounded-lg shadow-sm
-            hover:shadow-md hover:border-slate-300 transition-all duration-200 cursor-pointer
+            relative w-full h-full bg-white border border-slate-200 rounded-md shadow-sm
+            hover:shadow-md hover:border-slate-300 transition-all duration-150 cursor-pointer
             ${isSelected ? 'ring-2 ring-blue-500 border-blue-300 shadow-lg' : ''}
-            ${task.status === 'Done' ? 'opacity-75' : ''}
+            ${task.status === 'Done' ? 'opacity-70' : ''}
           `}
           onClick={() => onTaskSelect(task)}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
         >
           {/* Card Content */}
-          <div className="p-2 h-full flex flex-col justify-between">
+          <div className="p-1.5 h-full flex flex-col justify-between">
             {/* Header */}
             <div className="flex items-start justify-between gap-1">
               <div className="flex items-center gap-1 flex-1 min-w-0">
-                <StatusIcon className={`w-3 h-3 ${task.status === 'Done' ? 'text-green-600' : 'text-slate-400'}`} />
-                <span className="text-xs font-medium text-slate-900 truncate">
+                <StatusIcon className={`w-2.5 h-2.5 ${task.status === 'Done' ? 'text-green-600' : 'text-slate-400'}`} />
+                <span className="text-xs font-medium text-slate-900 truncate leading-tight">
                   {task.title}
                 </span>
               </div>
@@ -192,8 +192,8 @@ export default function TaskTreeView({
               {/* Priority Badge */}
               {task.priority && (
                 <span className={`
-                  px-1.5 py-0.5 rounded text-xs font-medium border
-                  ${priorityColors[task.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700 border-slate-200'}
+                  px-1 py-0.5 rounded text-xs font-medium border
+                  ${priorityColors[task.priority as keyof typeof priorityColors] || 'bg-slate-50 text-slate-700 border-slate-200'}
                 `}>
                   {isMobile ? task.priority.charAt(0) : task.priority}
                 </span>
@@ -201,7 +201,7 @@ export default function TaskTreeView({
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between mt-1">
+            <div className="flex items-center justify-between mt-0.5">
               {/* Child count and expand button */}
               <div className="flex items-center gap-1">
                 {hasChildren && (
@@ -213,9 +213,9 @@ export default function TaskTreeView({
                     className="p-0.5 hover:bg-slate-100 rounded transition-colors"
                   >
                     {expanded ? (
-                      <ChevronDown className="w-3 h-3 text-slate-500" />
+                      <ChevronDown className="w-2.5 h-2.5 text-slate-500" />
                     ) : (
-                      <ChevronRight className="w-3 h-3 text-slate-500" />
+                      <ChevronRight className="w-2.5 h-2.5 text-slate-500" />
                     )}
                   </button>
                 )}
@@ -236,7 +236,7 @@ export default function TaskTreeView({
                   className="p-0.5 hover:bg-blue-100 rounded transition-colors"
                   title="Add subtask"
                 >
-                  <Plus className="w-3 h-3 text-blue-600" />
+                  <Plus className="w-2.5 h-2.5 text-blue-600" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -246,7 +246,7 @@ export default function TaskTreeView({
                   className="p-0.5 hover:bg-slate-100 rounded transition-colors"
                   title="Edit task"
                 >
-                  <Edit className="w-3 h-3 text-slate-600" />
+                  <Edit className="w-2.5 h-2.5 text-slate-600" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -256,7 +256,7 @@ export default function TaskTreeView({
                   className="p-0.5 hover:bg-red-100 rounded transition-colors"
                   title="Delete task"
                 >
-                  <Trash2 className="w-3 h-3 text-red-600" />
+                  <Trash2 className="w-2.5 h-2.5 text-red-600" />
                 </button>
               </div>
             </div>
@@ -270,7 +270,7 @@ export default function TaskTreeView({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.2 }}
             >
               {task.children!.map(child => renderTaskNode(child))}
             </motion.div>
@@ -281,14 +281,14 @@ export default function TaskTreeView({
   };
 
   return (
-    <div className="w-full h-full relative overflow-auto bg-slate-50">
-      {/* Container */}
+    <div className="w-full h-full relative bg-slate-50">
+      {/* Container - No scrollbars, fits in frame */}
       <div
         ref={containerRef}
-        className="relative w-full min-h-[500px] min-w-[600px] md:min-w-[800px] lg:min-w-[1000px]"
+        className="relative w-full h-full"
         style={{
-          minHeight: window.innerWidth < 768 ? '400px' : '500px',
-          minWidth: window.innerWidth < 768 ? '400px' : '600px'
+          minHeight: window.innerWidth < 768 ? '300px' : '400px',
+          minWidth: window.innerWidth < 768 ? '300px' : '500px'
         }}
       >
         {/* Connection Lines */}
@@ -301,12 +301,12 @@ export default function TaskTreeView({
               key={`${connection.from}-${connection.to}`}
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
               d={`M ${connection.fromPos.x} ${connection.fromPos.y} L ${connection.toPos.x} ${connection.toPos.y}`}
-              stroke="#cbd5e1"
-              strokeWidth="1"
+              stroke="#e2e8f0"
+              strokeWidth="1.5"
               fill="none"
-              strokeDasharray="3,3"
+              strokeDasharray="2,2"
             />
           ))}
         </svg>
@@ -317,20 +317,20 @@ export default function TaskTreeView({
         </AnimatePresence>
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-4 right-4 bg-white border border-slate-200 rounded-lg p-3 shadow-sm">
-        <div className="text-xs font-medium text-slate-700 mb-2">Legend</div>
-        <div className="space-y-1 text-xs">
-          <div className="flex items-center gap-2">
-            <Square className="w-3 h-3 text-slate-400" />
+      {/* Compact Legend */}
+      <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-md p-2 shadow-sm">
+        <div className="text-xs font-medium text-slate-700 mb-1">Legend</div>
+        <div className="space-y-0.5 text-xs">
+          <div className="flex items-center gap-1.5">
+            <Square className="w-2.5 h-2.5 text-slate-400" />
             <span className="text-slate-600">To Do</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Play className="w-3 h-3 text-blue-500" />
+          <div className="flex items-center gap-1.5">
+            <Play className="w-2.5 h-2.5 text-blue-500" />
             <span className="text-slate-600">In Progress</span>
           </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-3 h-3 text-green-600" />
+          <div className="flex items-center gap-1.5">
+            <CheckCircle className="w-2.5 h-2.5 text-green-600" />
             <span className="text-slate-600">Done</span>
           </div>
         </div>
