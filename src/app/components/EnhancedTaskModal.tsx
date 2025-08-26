@@ -51,7 +51,7 @@ export default function EnhancedTaskModal({
     priority: priorities[1],
     dueDate: "",
     startDate: "",
-    estimatedHours: "",
+    estimatedHours: 0,
     tags: "",
     subtasks: "",
     comments: "",
@@ -77,22 +77,22 @@ export default function EnhancedTaskModal({
       }));
       setSelectedParentId(parentTaskId);
     } else {
-      // Reset form for new task
-      setFormData({
-        title: "",
-        description: "",
-        project: "",
-        assignee: assignees[0],
-        status: statuses[0],
-        priority: priorities[1],
-        dueDate: "",
-        startDate: "",
-        estimatedHours: "",
-        tags: "",
-        subtasks: "",
-        comments: "",
-        parentId: null
-      });
+             // Reset form for new task
+       setFormData({
+         title: "",
+         description: "",
+         project: "",
+         assignee: assignees[0],
+         status: statuses[0],
+         priority: priorities[1],
+         dueDate: "",
+         startDate: "",
+         estimatedHours: 0,
+         tags: "",
+         subtasks: "",
+         comments: "",
+         parentId: null
+       });
       setSelectedParentId(null);
     }
     setErrors([]);
@@ -410,21 +410,21 @@ export default function EnhancedTaskModal({
               </div>
             </div>
 
-            {/* Estimated Hours */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-700">
-                Estimated Hours
-              </label>
-              <input
-                type="number"
-                value={formData.estimatedHours}
-                onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
-                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter estimated hours"
-                min="0"
-                step="0.5"
-              />
-            </div>
+                         {/* Estimated Hours */}
+             <div className="space-y-2">
+               <label className="block text-sm font-medium text-slate-700">
+                 Estimated Hours
+               </label>
+               <input
+                 type="number"
+                 value={formData.estimatedHours || ''}
+                 onChange={(e) => handleInputChange('estimatedHours', e.target.value ? parseFloat(e.target.value) : 0)}
+                 className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 placeholder="Enter estimated hours"
+                 min="0"
+                 step="0.5"
+               />
+             </div>
 
             {/* Tags */}
             <div className="space-y-2">
