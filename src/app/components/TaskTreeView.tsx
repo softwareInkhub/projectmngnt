@@ -1,200 +1,228 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ChevronRight, ChevronDown, Folder, FileText, Plus, Edit, Trash2, Calendar, User, Tag, Clock, Circle } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ChevronRight, 
+  ChevronDown, 
+  Plus, 
+  Circle, 
+  CheckCircle, 
+  Clock, 
+  AlertCircle,
+  User,
+  Calendar,
+  Flag,
+  MoreHorizontal,
+  Edit,
+  Trash2
+} from 'lucide-react';
 import { TaskTreeNode } from '../utils/taskApi';
 
 interface TaskTreeViewProps {
   tasks: TaskTreeNode[];
-  selectedTaskId?: string;
   onTaskSelect: (task: TaskTreeNode) => void;
   onAddSubtask: (parentId: string) => void;
   onEditTask: (task: TaskTreeNode) => void;
-  onDeleteTask: (task: TaskTreeNode) => void;
-  onToggleExpand: (taskId: string) => void;
+  onDeleteTask: (taskId: string) => void;
+  selectedTaskId?: string | null;
 }
 
-export function TaskTreeView({
+const statusIcons = {
+  "To Do": Circle,
+  "In Progress": Clock,
+  "Done": CheckCircle,
+  "On Hold": AlertCircle,
+  "Review": Clock,
+  "Blocked": AlertCircle
+};
+
+const priorityColors = {
+  "High": "text-red-500",
+  "Medium": "text-yellow-500", 
+  "Low": "text-green-500",
+  "Critical": "text-red-600"
+};
+
+export default function TaskTreeView({
   tasks,
-  selectedTaskId,
   onTaskSelect,
   onAddSubtask,
   onEditTask,
   onDeleteTask,
-  onToggleExpand
+  selectedTaskId
 }: TaskTreeViewProps) {
-  
-  const renderTaskNode = (task: TaskTreeNode, depth: number = 0) => {
-    const hasChildren = task.children.length > 0;
-    const isExpanded = task.isExpanded || false;
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [hoveredTask, setHoveredTask] = useState<string | null>(null);
+
+  const toggleNode = (taskId: string) => {
+    const newExpanded = new Set(expandedNodes);
+    if (newExpanded.has(taskId)) {
+      newExpanded.delete(taskId);
+    } else {
+      newExpanded.add(taskId);
+    }
+    setExpandedNodes(newExpanded);
+  };
+
+  const isExpanded = (taskId: string) => expandedNodes.has(taskId);
+  const hasChildren = (task: TaskTreeNode) => task.children && task.children.length > 0;
+
+  const renderTaskNode = (task: TaskTreeNode, level: number = 0) => {
+    const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Circle;
     const isSelected = selectedTaskId === task.id;
-    
+    const isHovered = hoveredTask === task.id;
+    const expanded = isExpanded(task.id!);
+    const children = task.children || [];
+
     return (
-      <div key={task.id} className="w-full">
-        {/* Task Node - Optimized spacing */}
-        <div
+      <motion.div
+        key={task.id}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.2 }}
+        className="w-full"
+      >
+        {/* Task Node */}
+        <motion.div
           className={`
-            group relative flex items-start p-2.5 sm:p-3 rounded-lg cursor-pointer transition-all duration-200
-            ${isSelected
-              ? 'bg-blue-50 border-l-4 border-l-blue-500'
-              : 'hover:bg-gray-50 border-l-4 border-l-transparent hover:border-l-gray-300'
+            group relative flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200
+            ${isSelected 
+              ? 'bg-blue-50 border border-blue-200 shadow-sm' 
+              : 'hover:bg-slate-50 border border-transparent'
             }
+            ${level > 0 ? 'ml-6' : ''}
           `}
-          style={{ marginLeft: `${Math.min(depth * 16, 64)}px` }}
+          onMouseEnter={() => setHoveredTask(task.id!)}
+          onMouseLeave={() => setHoveredTask(null)}
           onClick={() => onTaskSelect(task)}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
         >
-          {/* Bullet Point */}
-          <div className="flex-shrink-0 mr-2.5 mt-0.5">
-            {hasChildren ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleExpand(task.id!);
-                }}
-                className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-100 hover:bg-blue-200 transition-colors"
+          {/* Expand/Collapse Button */}
+          {hasChildren(task) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleNode(task.id!);
+              }}
+              className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <motion.div
+                animate={{ rotate: expanded ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
               >
-                {isExpanded ? (
-                  <ChevronDown size={10} className="text-blue-600" />
-                ) : (
-                  <ChevronRight size={10} className="text-blue-600" />
-                )}
-              </button>
-            ) : (
-              <div className="flex items-center justify-center w-4 h-4">
-                <Circle size={6} className="text-gray-400 fill-current" />
-              </div>
-            )}
+                <ChevronRight className="w-4 h-4" />
+              </motion.div>
+            </button>
+          )}
+
+          {/* Status Icon */}
+          <div className="flex-shrink-0">
+            <StatusIcon className={`w-4 h-4 ${task.status === 'Done' ? 'text-green-500' : 'text-slate-400'}`} />
           </div>
-          
-          {/* Task Content - Full width utilization */}
-          <div className="flex-1 min-w-0 w-full">
-            {/* Task Header */}
-            <div className="flex items-start justify-between mb-1.5">
-              <div className="flex items-center flex-1 min-w-0">
-                {/* Task Icon */}
-                <div className="flex-shrink-0 mr-2">
-                  {hasChildren ? (
-                    <Folder size={14} className="text-blue-500" />
-                  ) : (
-                    <FileText size={14} className="text-gray-500" />
-                  )}
+
+          {/* Task Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className={`font-medium text-sm truncate ${isSelected ? 'text-blue-700' : 'text-slate-900'}`}>
+                {task.title}
+              </h4>
+              {task.priority && (
+                <Flag className={`w-3 h-3 ${priorityColors[task.priority as keyof typeof priorityColors] || 'text-slate-400'}`} />
+              )}
+            </div>
+            
+            <div className="flex items-center gap-4 text-xs text-slate-500">
+              {task.assignee && (
+                <div className="flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  <span className="truncate">{task.assignee}</span>
                 </div>
-                
-                {/* Task Title */}
-                <h4 className="font-semibold text-sm text-gray-900 truncate leading-tight flex-1">
-                  {task.title || 'Untitled Task'}
-                </h4>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-0.5 flex-shrink-0 ml-2">
+              )}
+              {task.dueDate && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  <span>{task.dueDate}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <AnimatePresence>
+            {(isHovered || isSelected) && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-1"
+              >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onAddSubtask(task.id!);
                   }}
-                  className="p-1 hover:bg-blue-100 rounded text-blue-600 transition-colors"
-                  title="Add Subtask"
+                  className="p-1.5 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
+                  title="Add subtask"
                 >
-                  <Plus size={11} />
+                  <Plus className="w-3 h-3" />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onEditTask(task);
                   }}
-                  className="p-1 hover:bg-gray-100 rounded text-gray-600 transition-colors"
-                  title="Edit Task"
+                  className="p-1.5 rounded-md hover:bg-slate-100 text-slate-600 transition-colors"
+                  title="Edit task"
                 >
-                  <Edit size={11} />
+                  <Edit className="w-3 h-3" />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDeleteTask(task);
+                    onDeleteTask(task.id!);
                   }}
-                  className="p-1 hover:bg-red-100 rounded text-red-600 transition-colors"
-                  title="Delete Task"
+                  className="p-1.5 rounded-md hover:bg-red-100 text-red-600 transition-colors"
+                  title="Delete task"
                 >
-                  <Trash2 size={11} />
+                  <Trash2 className="w-3 h-3" />
                 </button>
-              </div>
-            </div>
-            
-            {/* Task Details - Compact point-wise layout */}
-            <div className="space-y-1 ml-4">
-              {/* Assignee */}
-              <div className="flex items-center text-xs text-gray-600">
-                <div className="w-1 h-1 bg-gray-300 rounded-full mr-1.5"></div>
-                <User size={10} className="mr-1 text-gray-400" />
-                <span className="truncate">{task.assignee || 'Unassigned'}</span>
-              </div>
-              
-              {/* Status */}
-              <div className="flex items-center text-xs text-gray-600">
-                <div className="w-1 h-1 bg-gray-300 rounded-full mr-1.5"></div>
-                <span className="font-medium text-gray-700">{task.status || 'To Do'}</span>
-              </div>
-              
-              {/* Priority */}
-              <div className="flex items-center text-xs text-gray-600">
-                <div className="w-1 h-1 bg-gray-300 rounded-full mr-1.5"></div>
-                <Tag size={10} className="mr-1 text-gray-400" />
-                <span className="truncate">{task.priority || 'Medium'}</span>
-              </div>
-              
-              {/* Project */}
-              <div className="flex items-center text-xs text-gray-600">
-                <div className="w-1 h-1 bg-gray-300 rounded-full mr-1.5"></div>
-                <span className="truncate">{task.project || 'No Project'}</span>
-              </div>
-              
-              {/* Due Date */}
-              <div className="flex items-center text-xs text-gray-600">
-                <div className="w-1 h-1 bg-gray-300 rounded-full mr-1.5"></div>
-                <Calendar size={10} className="mr-1 text-gray-400" />
-                <span>Due: {task.dueDate || 'No due date'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
         {/* Children */}
-        {hasChildren && isExpanded && (
-          <div className="mt-0.5">
-            {task.children.map(child => renderTaskNode(child, depth + 1))}
-          </div>
-        )}
-      </div>
+        <AnimatePresence>
+          {expanded && hasChildren(task) && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="border-l-2 border-slate-200 ml-6 mt-2">
+                {children.map(child => renderTaskNode(child, level + 1))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     );
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4">
-      {/* Header - Compact */}
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <div className="flex items-center">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Task Hierarchy</h3>
-          <div className="ml-2 px-2 py-0.5 bg-gray-100 rounded-full">
-            <span className="text-xs font-medium text-gray-600">
-              {tasks.length} root tasks
-            </span>
-          </div>
+    <div className="w-full space-y-2">
+      {tasks.length === 0 ? (
+        <div className="text-center py-8 text-slate-500">
+          <Circle className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+          <p className="text-sm">No tasks available</p>
         </div>
-      </div>
-      
-      {/* Task List - Optimized spacing */}
-      <div className="space-y-0.5">
-        {tasks.length === 0 ? (
-          <div className="text-center py-6 sm:py-8 text-gray-500">
-            <FileText size={32} className="mx-auto mb-2 text-gray-300" />
-            <p className="text-sm font-medium mb-1">No tasks found</p>
-            <p className="text-xs text-gray-400">Create your first task to get started</p>
-          </div>
-        ) : (
-          tasks.map(task => renderTaskNode(task))
-        )}
-      </div>
+      ) : (
+        tasks.map(task => renderTaskNode(task))
+      )}
     </div>
   );
 }
