@@ -2,7 +2,8 @@
   "env": {
     "AWS_REGION": "us-east-1",
     "NEXT_PUBLIC_BACKEND_URL": "https://brmh.in",
-    "NEXT_PUBLIC_REDIRECT_URI": "https://projectmngnt-b6xs.vercel.app/authPage",
+    "NEXT_PUBLIC_API_BASE_URL": "https://brmh.in",
+    "NEXT_PUBLIC_REDIRECT_URI": "https://projectmngnt.vercel.appp/authPage",
     "NEXT_PUBLIC_APP_NAME": "Project Management System",
     "NEXT_PUBLIC_APP_VERSION": "1.0.0",
     "NEXT_PUBLIC_DEBUG_MODE": "false",
@@ -13,7 +14,8 @@
   "build": {
     "env": {
       "NEXT_PUBLIC_BACKEND_URL": "https://brmh.in",
-      "NEXT_PUBLIC_REDIRECT_URI": "https://projectmngnt-b6xs.vercel.app/authPage"
+      "NEXT_PUBLIC_API_BASE_URL": "https://brmh.in",
+      "NEXT_PUBLIC_REDIRECT_URI": "https://projectmngnt.vercel.app/authPage"
     }
   }
 }

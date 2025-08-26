@@ -39,7 +39,7 @@ export interface EnvironmentConfig {
 // Environment validation
 function validateEnvironment(): void {
   const requiredVars = [
-    'NEXT_PUBLIC_API_BASE_URL',
+    'NEXT_PUBLIC_BACKEND_URL',
     'AWS_REGION',
     'AWS_ACCESS_KEY_ID',
     'AWS_SECRET_ACCESS_KEY'

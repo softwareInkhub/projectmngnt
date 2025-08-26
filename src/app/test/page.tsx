@@ -107,7 +107,7 @@ export default function TestPage() {
             Go to Main App
           </Link>
           <Link 
-            href={REDIRECT_URI.replace('http://localhost:3000', '')} 
+            href={REDIRECT_URI.replace('https://projectmngnt-b6xs.vercel.app/authPage', '')} 
             style={{ 
               padding: '10px 15px', 
               backgroundColor: '#28a745', 
