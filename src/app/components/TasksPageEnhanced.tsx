@@ -528,14 +528,15 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
            ) : (
              <>
                {viewMode === "tree" && (
-                 <TaskTreeView
-                   tasks={taskTree}
-                   onTaskSelect={handleTaskSelect}
-                   onAddSubtask={handleAddSubtask}
-                   onEditTask={handleEditTask}
-                   onDeleteTask={handleDeleteTask}
-                   selectedTaskId={selectedTaskId}
-                 />
+                         <TaskTreeView
+          tasks={taskTree}
+          onTaskSelect={handleTaskSelect}
+          onAddSubtask={handleAddSubtask}
+          onEditTask={handleEditTask}
+          onDeleteTask={handleDeleteTask}
+          onToggleStatus={handleToggleStatus}
+          selectedTaskId={selectedTaskId}
+        />
                )}
 
                {viewMode === "list" && (
