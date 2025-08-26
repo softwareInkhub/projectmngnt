@@ -530,7 +530,7 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
            ) : (
              <>
                {viewMode === "tree" && (
-                 <div className="h-[500px] md:h-[600px] lg:h-[700px]">
+                 <div className="h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden">
                    <TaskTreeView
                      tasks={taskTree}
                      onTaskSelect={handleTaskSelect}

@@ -65,19 +65,20 @@ export default function TaskTreeView({
     
     const calculatePositions = (taskList: TaskTreeNode[], level: number = 0, startY: number = 0) => {
       let currentY = startY;
-      // Ultra-compact spacing for professional look
-      const levelWidth = window.innerWidth < 768 ? 100 : 140; // Reduced from 120/160
-      const nodeHeight = window.innerWidth < 768 ? 32 : 36; // Reduced from 40/45
-      const verticalSpacing = window.innerWidth < 768 ? 24 : 32; // Reduced from 40/50
+      // Proper hierarchical spacing
+      const levelWidth = window.innerWidth < 768 ? 120 : 180; // Increased for proper spacing
+      const nodeHeight = window.innerWidth < 768 ? 32 : 36;
+      const verticalSpacing = window.innerWidth < 768 ? 24 : 32;
+      const baseX = window.innerWidth < 768 ? 20 : 30; // Base margin from left
       
       taskList.forEach((task, index) => {
-        const x = level * levelWidth + (window.innerWidth < 768 ? 15 : 20);
+        const x = level * levelWidth + baseX;
         const y = currentY;
         
         positions.set(task.id!, {
           x,
           y,
-          width: window.innerWidth < 768 ? 110 : 130, // Reduced from 140/160
+          width: window.innerWidth < 768 ? 110 : 130,
           height: nodeHeight
         });
         
@@ -282,32 +283,65 @@ export default function TaskTreeView({
 
   return (
     <div className="w-full h-full relative bg-slate-50">
-      {/* Container - No scrollbars, fits in frame */}
+      {/* Container - Proper spacing for hierarchy */}
       <div
         ref={containerRef}
         className="relative w-full h-full"
         style={{
           minHeight: window.innerWidth < 768 ? '300px' : '400px',
-          minWidth: window.innerWidth < 768 ? '300px' : '500px'
+          minWidth: window.innerWidth < 768 ? '400px' : '600px'
         }}
       >
-        {/* Connection Lines */}
+        {/* Connection Lines with Arrows */}
         <svg
           className="absolute inset-0 pointer-events-none"
           style={{ width: '100%', height: '100%' }}
         >
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="7"
+              refX="9"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon
+                points="0 0, 10 3.5, 0 7"
+                fill="#94a3b8"
+              />
+            </marker>
+          </defs>
           {connections.map((connection, index) => (
-            <motion.path
+            <motion.g
               key={`${connection.from}-${connection.to}`}
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              d={`M ${connection.fromPos.x} ${connection.fromPos.y} L ${connection.toPos.x} ${connection.toPos.y}`}
-              stroke="#e2e8f0"
-              strokeWidth="1.5"
-              fill="none"
-              strokeDasharray="2,2"
-            />
+            >
+              {/* Main connection line */}
+              <line
+                x1={connection.fromPos.x}
+                y1={connection.fromPos.y}
+                x2={connection.toPos.x}
+                y2={connection.toPos.y}
+                stroke="#94a3b8"
+                strokeWidth="2"
+                fill="none"
+                markerEnd="url(#arrowhead)"
+              />
+              {/* Subtle dashed line for visual depth */}
+              <line
+                x1={connection.fromPos.x}
+                y1={connection.fromPos.y}
+                x2={connection.toPos.x}
+                y2={connection.toPos.y}
+                stroke="#e2e8f0"
+                strokeWidth="1"
+                fill="none"
+                strokeDasharray="3,3"
+              />
+            </motion.g>
           ))}
         </svg>
 
