@@ -22,7 +22,8 @@ export default function Home() {
         if (!token) {
           console.log('No access token found, redirecting to auth page');
           const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
-          window.location.href = redirectUri;
+          // Use router.push instead of window.location to prevent flickering
+          router.push('/authPage');
           return;
         }
 
@@ -33,15 +34,20 @@ export default function Home() {
           console.log('Token is valid, user is authenticated');
           setIsAuthenticated(true);
         } else {
-          console.log('Token is invalid, but keeping user logged in for now');
-          // Don't clear tokens immediately - let user stay logged in
-          setIsAuthenticated(true);
+          console.log('Token is invalid, redirecting to auth page');
+          // Clear invalid tokens and redirect to auth
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('id_token');
+          localStorage.removeItem('refresh_token');
+          router.push('/authPage');
+          return;
         }
       } catch (error) {
         console.error('Authentication check failed:', error);
-        // Don't clear tokens on error - let user stay logged in
-        console.log('Authentication check failed, but keeping user logged in');
-        setIsAuthenticated(true);
+        // On error, redirect to auth page
+        console.log('Authentication check failed, redirecting to auth page');
+        router.push('/authPage');
+        return;
       } finally {
         setIsLoading(false);
       }

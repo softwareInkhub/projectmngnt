@@ -36,23 +36,23 @@ export default function AuthPage() {
           'Content-Type': 'application/json'
         }
       })
-              .then(res => {
+        .then(res => {
           if (res.ok) {
-            const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-            window.location.href = `${deployedUrl}/`; // Redirect to deployed app
+            // Use router.push instead of window.location to prevent flickering
+            router.push('/');
           } else {
-          // Token invalid, clear it
+            // Token invalid, clear it
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('id_token');
+            localStorage.removeItem('refresh_token');
+          }
+        })
+        .catch(() => {
+          // Network error, clear tokens
           localStorage.removeItem('access_token');
           localStorage.removeItem('id_token');
           localStorage.removeItem('refresh_token');
-        }
-      })
-      .catch(() => {
-        // Network error, clear tokens
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('id_token');
-        localStorage.removeItem('refresh_token');
-      });
+        });
     }
   }, [router]);
 
@@ -162,9 +162,8 @@ export default function AuthPage() {
         // Clear URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
        
-        // Always redirect to deployed URL after OAuth login
-        const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-        window.location.href = `${deployedUrl}/`;
+        // Always redirect to main app after OAuth login
+        router.push('/');
       })
       .catch(error => {
         console.error('Token exchange failed:', error);
@@ -208,9 +207,8 @@ export default function AuthPage() {
         }
         setMessage(isLogin ? 'Login successful!' : 'Signup successful! Please check your email.');
         setTimeout(() => {
-          // Always redirect to deployed URL
-          const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-          window.location.href = `${deployedUrl}/`;
+          // Always redirect to main app
+          router.push('/');
         }, 1000);
       } else {
         setMessage(data.error || 'Authentication failed');
@@ -294,9 +292,8 @@ export default function AuthPage() {
         localStorage.setItem('refresh_token', data.result.refreshToken.token);
         setMessage('Login successful!');
         setTimeout(() => {
-          // Always redirect to deployed URL
-          const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-          window.location.href = `${deployedUrl}/`;
+          // Always redirect to main app
+          router.push('/');
         }, 1000);
       } else {
         setMessage(data.error || 'Login failed');
