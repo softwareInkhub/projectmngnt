@@ -91,7 +91,7 @@ export default function TaskTreeView({
     const positions = new Map<string, NodePosition>();
     const connections: Connection[] = [];
     
-    const calculatePositions = (taskList: TaskTreeNode[], level: number = 0, startY: number = 0) => {
+    const calculatePositions = (taskList: TaskTreeNode[], level: number = 0, startY: number = 0, parentX: number = 0) => {
       let currentY = startY;
       // Optimized spacing for web view
       const levelWidth = isMobile ? 100 : 140;
@@ -100,7 +100,8 @@ export default function TaskTreeView({
       const baseX = isMobile ? 16 : 20;
       
       taskList.forEach((task, index) => {
-        const x = level * levelWidth + baseX;
+        // Calculate X position based on level and parent
+        const x = level === 0 ? baseX : parentX + levelWidth;
         const y = currentY;
         
         positions.set(task.id!, {
@@ -131,11 +132,13 @@ export default function TaskTreeView({
         
         currentY += nodeHeight + verticalSpacing;
         
-        // Calculate positions for children
+        // Calculate positions for children - pass the current task's X position
         if (expandedNodes.has(task.id!) && task.children && task.children.length > 0) {
           const childStartY = currentY;
-          calculatePositions(task.children, level + 1, childStartY);
-          currentY = childStartY + (task.children.length * (nodeHeight + verticalSpacing));
+          calculatePositions(task.children, level + 1, childStartY, x);
+          // Update currentY to account for all children
+          const totalChildHeight = task.children.length * (nodeHeight + verticalSpacing);
+          currentY = childStartY + totalChildHeight;
         }
       });
     };
@@ -235,6 +238,7 @@ export default function TaskTreeView({
             ${isSelected ? 'ring-2 ring-blue-500 border-blue-300 shadow-lg' : ''}
             ${task.status === 'Done' ? 'opacity-75' : ''}
             ${isHovered ? 'shadow-lg border-slate-400' : ''}
+            ${task.parentId ? 'border-l-4 border-l-blue-200' : ''}
           `}
           onClick={() => onTaskSelect(task)}
           whileHover={{ scale: isMobile ? 1 : 1.02 }}
@@ -261,6 +265,9 @@ export default function TaskTreeView({
                 >
                   {task.title}
                 </span>
+                {task.parentId && (
+                  <span className="text-xs text-slate-400 ml-1">→</span>
+                )}
               </div>
               
               {/* Priority Badge */}
@@ -476,9 +483,9 @@ export default function TaskTreeView({
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                {/* Curved connection line */}
+                {/* Hierarchical connection line */}
                 <path
-                  d={`M ${connection.fromPos.x} ${connection.fromPos.y} Q ${(connection.fromPos.x + connection.toPos.x) / 2} ${connection.fromPos.y} ${connection.toPos.x} ${connection.toPos.y}`}
+                  d={`M ${connection.fromPos.x} ${connection.fromPos.y} L ${connection.fromPos.x + 20} ${connection.fromPos.y} L ${connection.fromPos.x + 20} ${connection.toPos.y} L ${connection.toPos.x} ${connection.toPos.y}`}
                   stroke={connection.type === 'sequential' ? '#3b82f6' : '#94a3b8'}
                   strokeWidth={connection.type === 'sequential' ? '2' : '1.5'}
                   fill="none"
