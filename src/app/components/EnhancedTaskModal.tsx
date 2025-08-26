@@ -417,21 +417,49 @@ export default function EnhancedTaskModal({
           />
         </div>
 
-        {/* Tags */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700">
-            Tags
-          </label>
-          <input
-            type="text"
-            value={formData.tags}
-            onChange={(e) => handleInputChange('tags', e.target.value)}
-            className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter tags (comma separated)"
-          />
-        </div>
+                 {/* Tags */}
+         <div className="space-y-2">
+           <label className="block text-sm font-medium text-slate-700">
+             Tags
+           </label>
+           <input
+             type="text"
+             value={formData.tags}
+             onChange={(e) => handleInputChange('tags', e.target.value)}
+             className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+             placeholder="Enter tags (comma separated)"
+           />
+         </div>
 
-        {/* Actions */}
+         {/* Subtasks */}
+         <div className="space-y-2">
+           <label className="block text-sm font-medium text-slate-700">
+             Subtasks
+           </label>
+           <textarea
+             value={formData.subtasks}
+             onChange={(e) => handleInputChange('subtasks', e.target.value)}
+             rows={3}
+             className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+             placeholder="Enter subtasks (one per line or comma separated)"
+           />
+         </div>
+
+         {/* Comments */}
+         <div className="space-y-2">
+           <label className="block text-sm font-medium text-slate-700">
+             Comments
+           </label>
+           <textarea
+             value={formData.comments}
+             onChange={(e) => handleInputChange('comments', e.target.value)}
+             rows={3}
+             className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+             placeholder="Enter additional comments or notes"
+           />
+         </div>
+
+         {/* Actions */}
         <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-200">
           <button
             type="button"
