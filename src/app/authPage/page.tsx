@@ -26,8 +26,12 @@ export default function AuthPage() {
 
   // Check if user is already logged in
   useEffect(() => {
+    console.log('🔍 Auth page: Checking if user is already logged in...');
     const token = localStorage.getItem('access_token');
+    console.log('🔍 Auth page: Access token found:', !!token);
+    
     if (token) {
+      console.log('🔍 Auth page: Validating existing token...');
       // Validate token
       fetch(`${API_BASE_URL}/auth/validate`, {
         method: 'POST',
@@ -37,22 +41,28 @@ export default function AuthPage() {
         }
       })
         .then(res => {
+          console.log('🔍 Auth page: Token validation response:', res.status);
           if (res.ok) {
+            console.log('✅ Auth page: Token valid, redirecting to main app');
             // Use router.push instead of window.location to prevent flickering
             router.push('/');
           } else {
+            console.log('❌ Auth page: Token invalid, clearing tokens');
             // Token invalid, clear it
             localStorage.removeItem('access_token');
             localStorage.removeItem('id_token');
             localStorage.removeItem('refresh_token');
           }
         })
-        .catch(() => {
+        .catch((error) => {
+          console.log('❌ Auth page: Token validation failed:', error);
           // Network error, clear tokens
           localStorage.removeItem('access_token');
           localStorage.removeItem('id_token');
           localStorage.removeItem('refresh_token');
         });
+    } else {
+      console.log('🔍 Auth page: No token found, staying on auth page');
     }
   }, [router]);
 
@@ -150,11 +160,19 @@ export default function AuthPage() {
           throw new Error(tokens.error);
         }
        
+        console.log('✅ OAuth tokens received:', { 
+          hasIdToken: !!tokens.id_token, 
+          hasAccessToken: !!tokens.access_token,
+          hasRefreshToken: !!tokens.refresh_token 
+        });
+       
         // Store tokens
         localStorage.setItem('id_token', tokens.id_token);
         localStorage.setItem('access_token', tokens.access_token);
         localStorage.setItem('refresh_token', tokens.refresh_token);
         localStorage.setItem('token_expires', (Date.now() + (tokens.expires_in * 1000)).toString());
+       
+        console.log('✅ Tokens stored in localStorage');
        
         // Clean up
         sessionStorage.removeItem('oauth_state');
@@ -162,6 +180,7 @@ export default function AuthPage() {
         // Clear URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
        
+        console.log('✅ Redirecting to main app...');
         // Always redirect to main app after OAuth login
         router.push('/');
       })

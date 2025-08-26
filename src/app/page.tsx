@@ -16,25 +16,30 @@ export default function Home() {
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
+        console.log('🔍 Checking authentication...');
+        
         // Check for access token
         const token = localStorage.getItem('access_token');
+        console.log('🔍 Access token found:', !!token);
         
         if (!token) {
-          console.log('No access token found, redirecting to auth page');
+          console.log('❌ No access token found, redirecting to auth page');
           const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
           // Use router.push instead of window.location to prevent flickering
           router.push('/authPage');
           return;
         }
 
+        console.log('🔍 Validating token with backend...');
         // Validate token with backend (with fallback)
         const isValid = await validateToken();
+        console.log('🔍 Token validation result:', isValid);
         
         if (isValid) {
-          console.log('Token is valid, user is authenticated');
+          console.log('✅ Token is valid, user is authenticated');
           setIsAuthenticated(true);
         } else {
-          console.log('Token is invalid, redirecting to auth page');
+          console.log('❌ Token is invalid, redirecting to auth page');
           // Clear invalid tokens and redirect to auth
           localStorage.removeItem('access_token');
           localStorage.removeItem('id_token');
@@ -43,9 +48,9 @@ export default function Home() {
           return;
         }
       } catch (error) {
-        console.error('Authentication check failed:', error);
+        console.error('❌ Authentication check failed:', error);
         // On error, redirect to auth page
-        console.log('Authentication check failed, redirecting to auth page');
+        console.log('❌ Authentication check failed, redirecting to auth page');
         router.push('/authPage');
         return;
       } finally {
