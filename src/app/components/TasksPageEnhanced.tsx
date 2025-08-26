@@ -313,48 +313,48 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Tasks</h1>
-            <p className="text-slate-600 mt-1">Manage your project tasks and subtasks</p>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900">Tasks</h1>
+            <p className="text-slate-600 mt-1 text-sm md:text-base">Manage your project tasks and subtasks</p>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {/* View Mode Toggle */}
             <div className="flex items-center bg-slate-100 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("tree")}
-                className={`p-2 rounded-md transition-colors ${
+                className={`p-1.5 md:p-2 rounded-md transition-colors ${
                   viewMode === "tree" 
                     ? "bg-white text-blue-600 shadow-sm" 
                     : "text-slate-600 hover:text-slate-900"
                 }`}
                 title="Tree View"
               >
-                <GitBranch className="w-4 h-4" />
+                <GitBranch className="w-3 h-3 md:w-4 md:h-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded-md transition-colors ${
+                className={`p-1.5 md:p-2 rounded-md transition-colors ${
                   viewMode === "list" 
                     ? "bg-white text-blue-600 shadow-sm" 
                     : "text-slate-600 hover:text-slate-900"
                 }`}
                 title="List View"
               >
-                <List className="w-4 h-4" />
+                <List className="w-3 h-3 md:w-4 md:h-4" />
               </button>
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-md transition-colors ${
+                className={`p-1.5 md:p-2 rounded-md transition-colors ${
                   viewMode === "grid" 
                     ? "bg-white text-blue-600 shadow-sm" 
                     : "text-slate-600 hover:text-slate-900"
                 }`}
                 title="Grid View"
               >
-                <Grid3X3 className="w-4 h-4" />
+                <Grid3X3 className="w-3 h-3 md:w-4 md:h-4" />
               </button>
             </div>
 
@@ -365,70 +365,71 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
                 setParentTaskId(null);
                 setShowEnhancedModal(true);
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1 md:gap-2 text-sm md:text-base"
             >
-              <Plus className="w-4 h-4" />
-              Create Task
+              <Plus className="w-3 h-3 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">Create Task</span>
+              <span className="sm:hidden">Add</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Analytics Cards */}
-      <div className="px-6 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+      <div className="px-4 md:px-6 py-4 md:py-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-6">
+          <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Total Tasks</p>
-                <p className="text-3xl font-bold text-slate-900">{analytics.totalTasks}</p>
+                <p className="text-slate-600 text-xs md:text-sm font-medium">Total Tasks</p>
+                <p className="text-2xl md:text-3xl font-bold text-slate-900">{analytics.totalTasks}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <CheckSquare className="w-6 h-6 text-blue-600" />
+              <div className="w-8 h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <CheckSquare className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Completed</p>
-                <p className="text-3xl font-bold text-emerald-600">{analytics.completedTasks}</p>
+                <p className="text-slate-600 text-xs md:text-sm font-medium">Completed</p>
+                <p className="text-2xl md:text-3xl font-bold text-emerald-600">{analytics.completedTasks}</p>
               </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-emerald-600" />
+              <div className="w-8 h-8 md:w-12 md:h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-4 h-4 md:w-6 md:h-6 text-emerald-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">In Progress</p>
-                <p className="text-3xl font-bold text-blue-600">{analytics.inProgressTasks}</p>
+                <p className="text-slate-600 text-xs md:text-sm font-medium">In Progress</p>
+                <p className="text-2xl md:text-3xl font-bold text-blue-600">{analytics.inProgressTasks}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Play className="w-6 h-6 text-blue-600" />
+              <div className="w-8 h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Play className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Overdue</p>
-                <p className="text-3xl font-bold text-red-600">{analytics.overdueTasks}</p>
+                <p className="text-slate-600 text-xs md:text-sm font-medium">Overdue</p>
+                <p className="text-2xl md:text-3xl font-bold text-red-600">{analytics.overdueTasks}</p>
               </div>
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <AlertCircle className="w-6 h-6 text-red-600" />
+              <div className="w-8 h-8 md:w-12 md:h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <AlertCircle className="w-4 h-4 md:w-6 md:h-6 text-red-600" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 mb-4 md:mb-6">
+          <div className="flex flex-col gap-3 md:gap-4">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
@@ -438,17 +439,17 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
                   placeholder="Search tasks..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
                 />
               </div>
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
               >
                 <option value="All">All Status</option>
                 {statuses.map((status) => (
@@ -459,7 +460,7 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
               >
                 <option value="All">All Priority</option>
                 {priorities.map((priority) => (
@@ -473,10 +474,11 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
                   setStatusFilter("All");
                   setPriorityFilter("All");
                 }}
-                className="px-3 py-2 text-slate-600 hover:text-slate-900 transition-colors"
+                className="px-3 py-2 text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center gap-2"
                 title="Clear filters"
               >
                 <FilterX className="w-4 h-4" />
+                <span className="text-sm md:text-base">Clear</span>
               </button>
             </div>
           </div>
@@ -552,17 +554,17 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
                )}
 
                {viewMode === "grid" && (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                    {filteredTasks.map((task) => (
                      <div
                        key={task.id}
-                       className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                       className="bg-white border border-slate-200 rounded-xl p-4 md:p-6 hover:shadow-lg transition-shadow cursor-pointer"
                        onClick={() => handleTaskSelect(task as any)}
                      >
-                       <div className="flex items-start justify-between mb-4">
+                       <div className="flex items-start justify-between mb-3 md:mb-4">
                          <div className="flex items-center gap-2">
                            {React.createElement(getStatusIcon(task.status), {
-                             className: 'w-5 h-5 text-slate-400',
+                             className: 'w-4 h-4 md:w-5 md:h-5 text-slate-400',
                            })}
                            <span
                              className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -584,31 +586,31 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
                          </button>
                        </div>
 
-                       <h3 className="font-semibold text-slate-900 mb-2 line-clamp-2">
+                       <h3 className="font-semibold text-slate-900 mb-2 line-clamp-2 text-sm md:text-base">
                          {task.title}
                        </h3>
                        
-                       <p className="text-sm text-slate-600 mb-4 line-clamp-2">
+                       <p className="text-xs md:text-sm text-slate-600 mb-3 md:mb-4 line-clamp-2">
                          {task.description}
                        </p>
 
-                       <div className="space-y-2 text-sm text-slate-500">
+                       <div className="space-y-1 md:space-y-2 text-xs md:text-sm text-slate-500">
                          <div className="flex items-center gap-2">
-                           <User className="w-4 h-4" />
-                           <span>{task.assignee}</span>
+                           <User className="w-3 h-3 md:w-4 md:h-4" />
+                           <span className="truncate">{task.assignee}</span>
                          </div>
                          <div className="flex items-center gap-2">
-                           <Calendar className="w-4 h-4" />
-                           <span>{task.dueDate}</span>
+                           <Calendar className="w-3 h-3 md:w-4 md:h-4" />
+                           <span className="truncate">{task.dueDate}</span>
                          </div>
                          <div className="flex items-center gap-2">
-                           <Target className="w-4 h-4" />
-                           <span>{task.project}</span>
+                           <Target className="w-3 h-3 md:w-4 md:h-4" />
+                           <span className="truncate">{task.project}</span>
                          </div>
                        </div>
 
                        {/* Progress Bar */}
-                       <div className="mt-4">
+                       <div className="mt-3 md:mt-4">
                          <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
                            <span>Progress</span>
                            <span>{task.progress}%</span>
