@@ -26,7 +26,7 @@ interface TaskListViewProps {
   onAddSubtask: (parentId: string) => void;
   onEditTask: (task: TaskTreeNode) => void;
   onDeleteTask: (taskId: string) => void;
-  onToggleStatus: (taskId: string, newStatus: string) => void;
+  onToggleStatus: (taskId: string, newStatus: string) => Promise<void>;
   selectedTaskId?: string | null;
 }
 
