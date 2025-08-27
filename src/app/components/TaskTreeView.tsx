@@ -110,22 +110,6 @@ export default function TaskTreeView({
   
   // Add error boundary for this component
   const [hasError, setHasError] = useState(false);
-  
-  if (hasError) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-red-50 border border-red-200 rounded-lg">
-        <div className="text-center">
-          <div className="text-red-600 font-semibold mb-2">Something went wrong</div>
-          <button 
-            onClick={() => setHasError(false)}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            Try again
-          </button>
-        </div>
-      </div>
-    );
-  }
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [nodePositions, setNodePositions] = useState<Map<string, NodePosition>>(new Map());
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -733,6 +717,22 @@ export default function TaskTreeView({
       return null;
     }
   };
+
+  if (hasError) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-red-50 border border-red-200 rounded-lg">
+        <div className="text-center">
+          <div className="text-red-600 font-semibold mb-2">Something went wrong</div>
+          <button 
+            onClick={() => setHasError(false)}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full relative bg-gradient-to-br from-slate-50 to-slate-100">
