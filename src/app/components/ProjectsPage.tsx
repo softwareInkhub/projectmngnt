@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { 
   CheckCircle, 
   AlertCircle, 
@@ -72,6 +73,7 @@ interface Project {
 }
 
 export default function ProjectsPage({ context }: { context?: { company: string } }) {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +82,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
   // Form data for creating new project
   const [createFormData, setCreateFormData] = useState({
@@ -173,21 +176,38 @@ export default function ProjectsPage({ context }: { context?: { company: string 
             return true;
           });
           
-          const transformedProjects: Project[] = filteredProjects.map(project => ({
-            id: project.id || '',
-            name: project.name,
-            description: project.description || '',
-            assignee: project.assignee,
-            progress: project.progress,
-            status: project.status,
-            priority: project.priority,
-            endDate: project.endDate,
-            team: project.team,
-            tasks: project.tasks,
-            budget: project.budget,
-            tags: project.tags
-          }));
+          const transformedProjects: Project[] = filteredProjects.map(project => {
+            // Ensure we have a valid ID
+            const projectId = project.id || `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            console.log(`Processing project: ${project.name} with ID: ${projectId}`);
+            
+            return {
+              id: projectId,
+              name: project.name,
+              description: project.description || '',
+              assignee: project.assignee,
+              progress: project.progress,
+              status: project.status,
+              priority: project.priority,
+              endDate: project.endDate,
+              team: project.team,
+              tasks: project.tasks,
+              budget: project.budget,
+              tags: project.tags
+            };
+          });
           
+          console.log('Transformed projects with IDs:', transformedProjects.map(p => ({ id: p.id, name: p.name })));
+          console.log('=== FINAL PROJECTS DEBUG ===');
+          transformedProjects.forEach((project, index) => {
+            console.log(`Project ${index + 1}:`, {
+              id: project.id,
+              name: project.name,
+              idType: typeof project.id,
+              idLength: project.id?.length,
+              isEmpty: !project.id || project.id.trim() === ''
+            });
+          });
           setProjects(transformedProjects);
         } else {
           console.warn('Projects data is not an array:', projectsData);
@@ -421,6 +441,34 @@ export default function ProjectsPage({ context }: { context?: { company: string 
     }
   };
 
+  // Navigation function
+  const handleProjectClick = (projectId: string) => {
+    console.log('=== NAVIGATION DEBUG ===');
+    console.log('Project ID received:', projectId);
+    console.log('Project ID type:', typeof projectId);
+    console.log('Project ID length:', projectId?.length);
+    console.log('Is project ID empty?', !projectId || projectId.trim() === '');
+    
+    // Check if projectId is valid
+    if (!projectId || projectId.trim() === '') {
+      console.error('Invalid project ID - cannot navigate');
+      setError('Invalid project ID. Please try again.');
+      return;
+    }
+    
+    const navigationUrl = `/projects/${projectId}`;
+    console.log('Navigation URL:', navigationUrl);
+    console.log('About to navigate...');
+    
+    try {
+      router.push(navigationUrl);
+      console.log('Navigation initiated successfully');
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      setError('Navigation failed. Please try again.');
+    }
+  };
+
   // Menu toggle functions
   const toggleMenu = (projectId: string) => {
     setOpenMenuId(openMenuId === projectId ? null : projectId);
@@ -457,6 +505,66 @@ export default function ProjectsPage({ context }: { context?: { company: string 
         </div>
       )}
 
+      {/* Floating Test Button - Always Visible */}
+      <div className="fixed bottom-4 right-4 z-[9999]">
+        <button
+          onClick={() => {
+            console.log('Floating test button clicked!');
+            router.push('/projects/floating-test-123');
+          }}
+          className="bg-red-600 hover:bg-red-700 text-white px-6 py-4 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-200 font-bold text-xl border-4 border-white"
+        >
+          🧪 TEST
+        </button>
+      </div>
+      
+      {/* Top Right Test Button */}
+      <div className="fixed top-4 right-4 z-[9999]">
+        <button
+          onClick={() => {
+            console.log('Top right test button clicked!');
+            router.push('/projects/top-right-test-123');
+          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-2xl hover:shadow-3xl transition-all duration-200 font-bold border-2 border-white"
+        >
+          🧪 TOP TEST
+        </button>
+      </div>
+
+      {/* Super Visible Test Section */}
+      <div className="bg-yellow-400 border-b-4 border-yellow-600 p-4 text-center">
+        <h2 className="text-lg font-bold text-yellow-900 mb-2">🧪 NAVIGATION TEST SECTION</h2>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => {
+              console.log('Yellow test button 1 clicked!');
+              router.push('/projects/yellow-test-1');
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold"
+          >
+            Test 1
+          </button>
+          <button
+            onClick={() => {
+              console.log('Yellow test button 2 clicked!');
+              router.push('/projects/yellow-test-2');
+            }}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold"
+          >
+            Test 2
+          </button>
+          <button
+            onClick={() => {
+              console.log('Yellow test button 3 clicked!');
+              router.push('/test-navigation');
+            }}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-bold"
+          >
+            Test Page
+          </button>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
         <div className="flex items-center gap-3">
@@ -470,7 +578,32 @@ export default function ProjectsPage({ context }: { context?: { company: string 
             </div>
           )}
           </div>
+        
         <div className="flex items-center gap-3">
+          {/* View Toggle - Mobile Only */}
+          <div className="md:hidden flex items-center bg-slate-100 rounded-lg p-1 shadow-sm">
+            <button 
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${
+                viewMode === 'grid' 
+                  ? 'bg-blue-500 text-white shadow-sm' 
+                  : 'text-slate-600 hover:text-slate-800'
+              }`}
+            >
+              <Grid3X3 size={16} />
+            </button>
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${
+                viewMode === 'list' 
+                  ? 'bg-blue-500 text-white shadow-sm' 
+                  : 'text-slate-600 hover:text-slate-800'
+              }`}
+            >
+              <List size={16} />
+            </button>
+          </div>
+          
           <button className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring">
             <Download size={16} />
             Export
@@ -482,8 +615,71 @@ export default function ProjectsPage({ context }: { context?: { company: string 
             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
             New Project
           </button>
+          
+          {/* Test Navigation Button */}
+          <button 
+            onClick={() => {
+              console.log('Testing navigation to a sample project');
+              router.push('/projects/test-project-123');
+            }}
+            className="group flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+          >
+            Test Navigation
+          </button>
+          
+          {/* Test Page Link */}
+          <button 
+            onClick={() => router.push('/test-navigation')}
+            className="group flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+          >
+            Test Page
+          </button>
+          
+          {/* Simple Test Navigation */}
+          <button 
+            onClick={() => {
+              console.log('Testing simple navigation');
+              router.push('/projects/simple-test-123');
+            }}
+            className="group flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+          >
+            Simple Test
+          </button>
+
           </div>
         </div>
+
+      {/* Mobile Test Buttons - Only visible on mobile */}
+      <div className="md:hidden bg-white/60 backdrop-blur-sm border-b border-white/20 p-3">
+        <div className="flex flex-wrap gap-2">
+          <button 
+            onClick={() => {
+              console.log('Mobile: Testing navigation to a sample project');
+              router.push('/projects/test-project-123');
+            }}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-medium"
+          >
+            🧪 Test Nav
+          </button>
+          
+          <button 
+            onClick={() => router.push('/test-navigation')}
+            className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-medium"
+          >
+            🧪 Test Page
+          </button>
+          
+          <button 
+            onClick={() => {
+              console.log('Mobile: Testing simple navigation');
+              router.push('/projects/simple-test-123');
+            }}
+            className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-medium"
+          >
+            🧪 Simple Test
+          </button>
+        </div>
+      </div>
 
       <div className="p-6 space-y-6">
         {/* Stats Grid */}
@@ -502,15 +698,162 @@ export default function ProjectsPage({ context }: { context?: { company: string 
         </div>
 
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={`${
+          viewMode === 'grid' 
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+            : 'space-y-3'
+        }`}>
           {projects.map((project) => (
-            <div key={project.id} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-200 group">
-              <div className="flex items-start justify-between mb-4">
+            <div 
+              key={project.id} 
+              className={`bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 hover:shadow-xl transition-all duration-200 group cursor-pointer ${
+                viewMode === 'list' ? 'p-3' : 'p-6'
+              }`}
+              onClick={() => handleProjectClick(project.id)}
+            >
+              {viewMode === 'list' ? (
+                <>
+                  {/* List View Layout */}
+                  <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Folder size={16} className="text-blue-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                          {project.name}
+                        </h3>
+                        <p className="text-xs text-slate-600 truncate">
+                          {project.description || 'No description'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-xs text-slate-600">
+                      <div className="flex items-center gap-1">
+                        <User size={12} />
+                        <span>{project.assignee}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar size={12} />
+                        <span>{project.endDate}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Target size={12} />
+                        <span>{project.tasks} tasks</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <DollarSign size={12} />
+                        <span>{project.budget}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                        {project.status}
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
+                        {project.priority}
+                      </span>
+                    </div>
+                    
+                    <div className="w-20">
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-slate-600">Progress</span>
+                        <span className="font-medium">{project.progress}%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-1.5">
+                        <div 
+                          className={`h-1.5 rounded-full transition-all duration-300 ${getProgressColor(project.progress)}`}
+                          style={{ width: `${project.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="relative menu-container ml-4">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMenu(project.id);
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    >
+                      <MoreHorizontal size={14} />
+                    </button>
+                    
+                    {openMenuId === project.id && (
+                      <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
+                        <div className="py-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProjectClick(project.id);
+                            }}
+                            className="w-full px-3 py-2 text-left text-xs text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+                          >
+                            <Eye size={12} />
+                            View Details
+                          </button>
+                          <button
+                            onClick={() => handleEditProject(project)}
+                            className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                          >
+                            <Edit size={12} />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(JSON.stringify(project, null, 2));
+                              setSuccessMessage('Project copied to clipboard!');
+                              setTimeout(() => setSuccessMessage(null), 2000);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                          >
+                            <Copy size={12} />
+                            Copy
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSuccessMessage('Project archived!');
+                              setTimeout(() => setSuccessMessage(null), 2000);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                          >
+                            <Archive size={12} />
+                            Archive
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProject(project.id)}
+                            className="w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          >
+                            <Trash2 size={12} />
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                {/* Grid View Layout */}
+                <div className={`flex items-start justify-between ${
+                  viewMode === 'list' ? 'mb-3' : 'mb-4'
+                }`}>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
+                    <h3 className={`font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors ${
+                      viewMode === 'list' ? 'text-base' : 'text-lg'
+                    }`}>
                     {project.name}
                   </h3>
-                  <p className="text-sm text-slate-600 line-clamp-2">{project.description}</p>
+                    <p className={`text-slate-600 ${
+                      viewMode === 'list' ? 'text-xs line-clamp-1' : 'text-sm line-clamp-2'
+                    }`}>
+                      {project.description}
+                    </p>
                 </div>
                 <div className="relative menu-container">
                   <button 
@@ -523,6 +866,16 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                   {openMenuId === project.id && (
                     <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
                       <div className="py-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProjectClick(project.id);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+                          >
+                            <Eye size={14} />
+                            View Details
+                          </button>
                         <button
                           onClick={() => handleEditProject(project)}
                           className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
@@ -626,8 +979,165 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                   )}
                 </div>
                           </div>
+                </>
+              ) : (
+                <>
+                  {/* Grid View Layout */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
+                        {project.name}
+                      </h3>
+                      <p className="text-sm text-slate-600 line-clamp-2">
+                        {project.description}
+                      </p>
                         </div>
+                    <div className="relative menu-container">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMenu(project.id);
+                        }}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                      
+                      {openMenuId === project.id && (
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
+                          <div className="py-1">
+                            <button
+                              onClick={() => handleEditProject(project)}
+                              className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                            >
+                              <Edit size={14} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(JSON.stringify(project, null, 2));
+                                setSuccessMessage('Project copied to clipboard!');
+                                setTimeout(() => setSuccessMessage(null), 2000);
+                                setOpenMenuId(null);
+                              }}
+                              className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                            >
+                              <Copy size={14} />
+                              Copy
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSuccessMessage('Project archived!');
+                                setTimeout(() => setSuccessMessage(null), 2000);
+                                setOpenMenuId(null);
+                              }}
+                              className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                            >
+                              <Archive size={14} />
+                              Archive
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProject(project.id)}
+                              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            >
+                              <Trash2 size={14} />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Progress */}
+                    <div>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="text-slate-600">Progress</span>
+                        <span className="font-medium text-slate-900">{project.progress}%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(project.progress)}`}
+                          style={{ width: `${project.progress}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Project Details */}
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <User size={14} className="text-slate-400" />
+                        <span className="text-slate-600">{project.assignee}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar size={14} className="text-slate-400" />
+                        <span className="text-slate-600">{project.endDate}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Target size={14} className="text-slate-400" />
+                        <span className="text-slate-600">{project.tasks} tasks</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <DollarSign size={14} className="text-slate-400" />
+                        <span className="text-slate-600">{project.budget}</span>
+                      </div>
+                    </div>
+
+                    {/* Status and Priority */}
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                        {project.status}
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
+                        {project.priority}
+                      </span>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1">
+                      {project.tags.slice(0, 3).map((tag, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
+                          {tag}
+                        </span>
                       ))}
+                      {project.tags.length > 3 && (
+                        <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
+                          +{project.tags.length - 3}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* View Details Button */}
+                    <div className="pt-2 space-y-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleProjectClick(project.id);
+                        }}
+                        className="w-full text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Eye size={14} />
+                        View Details
+                      </button>
+                      
+                      {/* Test Button - Always visible for easy testing */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Testing from project card');
+                          router.push('/projects/test-from-card-123');
+                        }}
+                        className="w-full text-green-600 hover:text-green-700 font-medium text-sm transition-colors flex items-center justify-center gap-2 border-2 border-green-400 rounded-lg py-2 bg-green-50 font-bold"
+                      >
+                        🧪 Test Navigation
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
                     </div>
       </div>
 

@@ -1,19 +1,10 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
-const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
 
 export const logout = () => {
-  // Clear all tokens from localStorage
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('id_token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('token_expires');
-  localStorage.removeItem('user_email');
-  
-  // Clear any other auth-related data
-  sessionStorage.removeItem('oauth_state');
-  
-  // Redirect to auth page using dynamic URI
-  window.location.href = REDIRECT_URI;
+  // Logout disabled - do nothing
+  console.log('Logout functionality disabled');
+  // Show notification that logout is disabled
+  alert('Logout functionality is currently disabled.');
 };
 
 export const isAuthenticated = (): boolean => {

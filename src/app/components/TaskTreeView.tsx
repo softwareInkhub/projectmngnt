@@ -94,7 +94,7 @@ const TaskNode: React.FC<TaskNodeProps> = ({
   expandedTasks
 }) => {
   const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Square;
-  const isSelected = selectedTaskId === task.id;
+    const isSelected = selectedTaskId === task.id;
   const hasChildren = task.children && task.children.length > 0;
   const isCompleted = task.status === 'Done';
   const levelColor = levelColors[Math.min(level, levelColors.length - 1)];
@@ -109,8 +109,8 @@ const TaskNode: React.FC<TaskNodeProps> = ({
   };
 
   const handleToggleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleExpand(task.id!);
+                  e.stopPropagation();
+                  onToggleExpand(task.id!);
   };
 
   // Truncate text if too long
@@ -140,7 +140,7 @@ const TaskNode: React.FC<TaskNodeProps> = ({
               </div>
             )}
           </div>
-
+          
           {/* Task Card with Middle-Left Connecting Line */}
           <div className="relative">
             {/* Middle-Left Connecting Line - Removed for cleaner look */}
@@ -202,14 +202,14 @@ const TaskNode: React.FC<TaskNodeProps> = ({
                       </motion.div>
                     </motion.button>
                   )}
-
-                  {/* Action Buttons */}
+              
+              {/* Action Buttons */}
                   <div className="flex items-center gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
                     <motion.button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddSubtask(task.id!);
-                      }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddSubtask(task.id!);
+                  }}
                       className="p-0.5 sm:p-1 hover:bg-blue-100 rounded transition-colors"
                       title="Add subtask"
                       whileHover={{ scale: 1.1 }}
@@ -218,10 +218,10 @@ const TaskNode: React.FC<TaskNodeProps> = ({
                       <Plus className="w-2 h-2 sm:w-3 sm:h-3 text-blue-600" />
                     </motion.button>
                     <motion.button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditTask(task);
-                      }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditTask(task);
+                  }}
                       className="p-0.5 sm:p-1 hover:bg-slate-100 rounded transition-colors"
                       title="Edit task"
                       whileHover={{ scale: 1.1 }}
@@ -230,8 +230,8 @@ const TaskNode: React.FC<TaskNodeProps> = ({
                       <Edit className="w-2 h-2 sm:w-3 sm:h-3 text-slate-600" />
                     </motion.button>
                     <motion.button
-                      onClick={(e) => {
-                        e.stopPropagation();
+                  onClick={(e) => {
+                    e.stopPropagation();
                         onDeleteTask(task.id!);
                       }}
                       className="p-0.5 sm:p-1 hover:bg-red-100 rounded transition-colors"
@@ -241,10 +241,10 @@ const TaskNode: React.FC<TaskNodeProps> = ({
                     >
                       <Trash2 className="w-2 h-2 sm:w-3 sm:h-3 text-red-600" />
                     </motion.button>
-                  </div>
-                </div>
               </div>
-
+            </div>
+              </div>
+              
               {/* Middle Section - Task Title and Priority */}
               <div className="flex-1 flex flex-col justify-center mb-0.5 sm:mb-2">
                 <h4 
@@ -260,7 +260,7 @@ const TaskNode: React.FC<TaskNodeProps> = ({
                   </span>
                 )}
               </div>
-
+              
               {/* Bottom Section - Assignee, Due Date, and Subtask Count */}
               <div className="space-y-0.5 sm:space-y-1">
                 {task.assignee && (
@@ -490,7 +490,7 @@ export default function TaskTreeView({
             </div>
           </div>
         </div>
-
+        
         {/* Task Tree Container */}
         <div 
           ref={containerRef}
@@ -534,20 +534,20 @@ export default function TaskTreeView({
                 </div>
                 <h3 className="text-sm sm:text-lg font-semibold text-slate-700 mb-1 sm:mb-2">No tasks found</h3>
                 <p className="text-xs sm:text-base text-slate-500">Create your first task to get started</p>
-              </div>
-            )}
           </div>
+        )}
+      </div>
 
           {/* Mobile Bottom Scroll Indicator */}
           <div className="sm:hidden w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
             <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse"></div>
-          </div>
         </div>
-
+      </div>
+      
         {/* Mobile Horizontal Scroll Bar at Bottom */}
         <div className="sm:hidden w-full h-2 bg-slate-100 rounded-lg mt-2 overflow-hidden">
           <div className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-lg"></div>
-        </div>
+          </div>
       </div>
     </div>
   );

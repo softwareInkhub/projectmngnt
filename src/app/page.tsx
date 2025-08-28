@@ -18,8 +18,7 @@ export default function Home() {
       try {
         console.log('🔍 Authentication disabled - bypassing login requirement');
         
-        // Temporarily disable authentication check
-        // Set a mock token to bypass authentication
+        // Set mock tokens to bypass authentication
         if (!localStorage.getItem('access_token')) {
           localStorage.setItem('access_token', 'mock-token-disabled');
           localStorage.setItem('id_token', 'mock-token-disabled');

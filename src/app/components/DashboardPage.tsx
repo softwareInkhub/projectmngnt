@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import GridLayoutWrapper from "./GridLayoutWrapper";
-import { FolderKanban, ListChecks, Users, Calendar, BarChart2, Activity, Plus, TrendingUp, Clock, CheckCircle, UserPlus, FolderPlus, Bell, AlertCircle, Star, Target, Zap, Award, TrendingDown, Eye, MessageSquare, Download, Filter, Grid3X3 } from "lucide-react";
+import { FolderKanban, ListChecks, Users, Calendar, BarChart2, Activity, Plus, TrendingUp, Clock, CheckCircle, UserPlus, FolderPlus, Bell, AlertCircle, Star, Target, Zap, Award, TrendingDown, Eye, MessageSquare, Download, Filter, Grid3X3, User, FolderOpen } from "lucide-react";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
 import { TaskApiService, TaskData } from "../utils/taskApi";
 import { ProjectApiService, ProjectData } from "../utils/projectApi";
@@ -275,203 +275,126 @@ export default function DashboardPage({ open, onClose, onOpenTab }: { open: bool
 
   if (isMobile) {
     return (
-      <div className="mobile-page mobile-space-y-3 p-3">
-        {/* Mobile Header */}
-        <div className="mobile-card">
+      <div className="mobile-page mobile-space-y-4 p-4">
+        {/* Enhanced Mobile Header */}
+        <div className="mobile-card mobile-animate-fade-in">
           <h1 className="mobile-h2 mb-3">Dashboard</h1>
           <p className="mobile-text-sm mobile-text-secondary">
             {currentUser ? `Welcome back, ${currentUser.name?.split(' ')[0] || currentUser.email}!` : 'Welcome back!'} Here's what's happening today.
           </p>
         </div>
 
-        {/* Mobile Stats Grid */}
-        <div className="mobile-grid mobile-grid-cols-2 mobile-gap-3">
+        {/* Enhanced Mobile Stats Grid */}
+        <div className="mobile-grid mobile-grid-cols-2 mobile-gap-4">
           {stats.map((stat, idx) => (
-            <div key={idx} className="mobile-card">
-              <div className="mobile-flex mobile-items-center mobile-justify-between mb-2">
-                <div className={`w-6 h-6 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
-                  <stat.icon size={14} className="text-white" />
+            <div key={idx} className="mobile-card mobile-animate-bounce-in" style={{ animationDelay: `${idx * 0.1}s` }}>
+              <div className="mobile-flex mobile-items-center mobile-justify-between mb-3">
+                <div className={`w-8 h-8 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center shadow-sm`}>
+                  <stat.icon size={16} className="text-white" />
                 </div>
-                <span className={`mobile-text-xs font-medium ${
+                <span className={`mobile-text-xs font-semibold ${
                   stat.trendUp ? 'mobile-text-success' : 'mobile-text-secondary'
                 }`}>
                   {stat.trend}
                 </span>
               </div>
-              <div className="mobile-text-xl font-bold mb-1">{stat.value}</div>
-              <div className="mobile-text-xs mobile-text-secondary">{stat.label}</div>
-              <div className="mobile-text-xs mobile-text-secondary mt-1">{stat.description}</div>
+              <div className="mobile-text-2xl font-bold mb-2">{stat.value}</div>
+              <div className="mobile-text-sm font-medium mobile-text-secondary">{stat.label}</div>
+              <div className="mobile-text-xs mobile-text-muted mt-2">{stat.description}</div>
             </div>
           ))}
         </div>
 
-        {/* Mobile Quick Stats */}
-        <div className="mobile-card">
-          <h2 className="mobile-h3 mb-3">Quick Stats</h2>
+        {/* Enhanced Mobile Quick Stats */}
+        <div className="mobile-card mobile-animate-slide-in-up">
+          <h3 className="mobile-h4 mb-4">Quick Actions</h3>
           <div className="mobile-grid mobile-grid-cols-2 mobile-gap-3">
-            {quickStats.map((stat, idx) => (
-              <div key={idx} className="mobile-flex mobile-items-center mobile-gap-2 p-2 rounded-lg bg-neutral-50">
-                <div className={`w-6 h-6 rounded-lg ${stat.bg} flex items-center justify-center`}>
-                  <stat.icon size={14} className={stat.color} />
-                </div>
-                <div className="mobile-flex-1">
-                  <div className="mobile-text-xs mobile-text-secondary">{stat.label}</div>
-                  <div className="mobile-text-sm font-bold">{stat.value}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile Recent Activity */}
-        <div className="mobile-card">
-          <div className="mobile-flex mobile-items-center mobile-justify-between mb-3">
-            <h2 className="mobile-h3">Recent Activity</h2>
-            <button className="mobile-btn mobile-btn-secondary mobile-text-xs">
-              View All
-            </button>
-          </div>
-          <div className="mobile-space-y-2">
-            {recentActivity.slice(0, 3).map((activity, idx) => (
-              <div key={idx} className="mobile-flex mobile-items-start mobile-gap-2 p-2 rounded-lg bg-neutral-50">
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <span className="mobile-text-xs font-medium text-blue-600">{activity.avatar}</span>
-                </div>
-                <div className="mobile-flex-1">
-                  <div className="mobile-text-xs font-medium">{activity.user}</div>
-                  <div className="mobile-text-xs mobile-text-secondary">
-                    {activity.action} <span className="font-medium">{activity.target}</span>
-                  </div>
-                  <div className="mobile-text-xs mobile-text-secondary mt-1">{activity.time}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile Project Progress */}
-        <div className="mobile-card">
-          <div className="mobile-flex mobile-items-center mobile-justify-between mb-3">
-            <h2 className="mobile-h3">Project Progress</h2>
-            <button className="mobile-btn mobile-btn-secondary mobile-text-xs">
-              View All
-            </button>
-          </div>
-          <div className="mobile-space-y-3">
-            {projectProgress.slice(0, 2).map((project, idx) => (
-              <div key={idx} className="p-2 rounded-lg border border-neutral-200">
-                <div className="mobile-flex mobile-items-center mobile-justify-between mb-2">
-                  <h3 className="mobile-text-xs font-medium">{project.name}</h3>
-                  <span className={`mobile-text-xs px-2 py-1 rounded-full ${
-                    project.status === 'Almost Done' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                  }`}>
-                    {project.status}
-                  </span>
-                </div>
-                <div className="mobile-space-y-2">
-                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs mobile-text-secondary">
-                    <span>Progress</span>
-                    <span>{project.progress}%</span>
-                  </div>
-                  <div className="w-full bg-neutral-200 rounded-full h-1.5">
-                    <div 
-                      className={`h-1.5 rounded-full ${project.color}`}
-                      style={{ width: `${project.progress}%` }}
-                    />
-                  </div>
-                  <div className="mobile-flex mobile-items-center mobile-justify-between mobile-text-xs mobile-text-secondary">
-                    <span>{project.team}</span>
-                    <span>Due: {project.deadline}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile Notifications */}
-        <div className="mobile-card">
-          <h2 className="mobile-h3 mb-3">Notifications</h2>
-          <div className="mobile-space-y-2">
-            {notifications.slice(0, 3).map((notification, idx) => (
-              <div key={idx} className="mobile-flex mobile-items-start mobile-gap-2 p-2 rounded-lg bg-neutral-50">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                  notification.type === 'success' ? 'bg-emerald-100' :
-                  notification.type === 'warning' ? 'bg-yellow-100' :
-                  'bg-blue-100'
-                }`}>
-                  <notification.icon size={10} className={
-                    notification.type === 'success' ? 'text-emerald-600' :
-                    notification.type === 'warning' ? 'text-yellow-600' :
-                    'text-blue-600'
-                  } />
-                </div>
-                <div className="mobile-flex-1">
-                  <div className="mobile-text-xs mobile-text-secondary">{notification.message}</div>
-                  <div className="mobile-text-xs mobile-text-secondary mt-1">{notification.time}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile Team Members */}
-        <div className="mobile-card">
-          <div className="mobile-flex mobile-items-center mobile-justify-between mb-3">
-            <h2 className="mobile-h3">Team Members</h2>
-            <button className="mobile-btn mobile-btn-secondary mobile-text-xs">
-              View All
-            </button>
-          </div>
-          <div className="mobile-grid mobile-grid-cols-2 mobile-gap-3">
-            {teamMembers.slice(0, 4).map((member, idx) => (
-              <div key={idx} className="p-2 border border-neutral-200 rounded-lg text-center">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="mobile-text-xs font-medium text-blue-600">{member.avatar}</span>
-                </div>
-                <div className="mobile-text-xs font-medium mb-1">{member.name}</div>
-                <div className="mobile-text-xs mobile-text-secondary">{member.role}</div>
-                <div className="mobile-flex mobile-items-center mobile-justify-center mobile-gap-2 mobile-text-xs mobile-text-secondary mt-1">
-                  <span>{member.tasks} tasks</span>
-                  <span>{member.projects} projects</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile Quick Actions */}
-        <div className="mobile-card">
-          <h2 className="mobile-h3 mb-3">Quick Actions</h2>
-          <div className="mobile-grid mobile-grid-cols-2 mobile-gap-2">
             <button 
-              className="mobile-btn mobile-btn-primary mobile-text-xs"
+              className="mobile-btn mobile-btn-primary mobile-text-sm"
               onClick={() => onOpenTab("create-project", "Create Project")}
             >
-              <Plus size={12} />
+              <Plus size={14} />
               New Project
             </button>
             <button 
-              className="mobile-btn mobile-btn-secondary mobile-text-xs"
+              className="mobile-btn mobile-btn-secondary mobile-text-sm"
               onClick={() => onOpenTab("create-task", "Create Task")}
             >
-              <ListChecks size={12} />
+              <ListChecks size={14} />
               New Task
             </button>
             <button 
-              className="mobile-btn mobile-btn-secondary mobile-text-xs"
+              className="mobile-btn mobile-btn-secondary mobile-text-sm"
               onClick={() => onOpenTab("create-team", "Create Team")}
             >
-              <Users size={12} />
+              <Users size={14} />
               New Team
             </button>
             <button 
-              className="mobile-btn mobile-btn-secondary mobile-text-xs"
+              className="mobile-btn mobile-btn-secondary mobile-text-sm"
               onClick={() => onOpenTab("calendar", "Calendar")}
             >
-              <Calendar size={12} />
+              <Calendar size={14} />
               View Calendar
             </button>
+          </div>
+        </div>
+
+        {/* Enhanced Mobile Recent Activity */}
+        <div className="mobile-card mobile-animate-slide-in-up">
+          <h3 className="mobile-h4 mb-4">Recent Activity</h3>
+          <div className="mobile-space-y-3">
+            {recentActivity.length > 0 ? (
+              recentActivity.slice(0, 5).map((activity, idx) => (
+                <div key={idx} className="mobile-flex mobile-items-start mobile-gap-3 p-3 bg-gray-50 rounded-xl">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <User size={14} className="text-blue-600" />
+                  </div>
+                                     <div className="mobile-flex-1">
+                     <p className="mobile-text-sm font-medium text-gray-900">{activity.user}</p>
+                     <p className="mobile-text-xs mobile-text-muted">{activity.action} {activity.target}</p>
+                     <p className="mobile-text-xs mobile-text-muted">{activity.time}</p>
+                   </div>
+                </div>
+              ))
+            ) : (
+              <div className="mobile-text-center mobile-py-8">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Activity size={20} className="text-gray-400" />
+                </div>
+                <p className="mobile-text-sm mobile-text-muted">No recent activity</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Enhanced Mobile Project Progress */}
+        <div className="mobile-card mobile-animate-slide-in-up">
+          <h3 className="mobile-h4 mb-4">Project Progress</h3>
+          <div className="mobile-space-y-4">
+            {projectProgress.length > 0 ? (
+              projectProgress.slice(0, 3).map((project, idx) => (
+                <div key={idx} className="mobile-space-y-2">
+                  <div className="mobile-flex mobile-items-center mobile-justify-between">
+                    <span className="mobile-text-sm font-medium text-gray-900">{project.name}</span>
+                    <span className="mobile-text-xs mobile-text-muted">{project.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${project.progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="mobile-text-center mobile-py-6">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <FolderOpen size={16} className="text-gray-400" />
+                </div>
+                <p className="mobile-text-sm mobile-text-muted">No projects in progress</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

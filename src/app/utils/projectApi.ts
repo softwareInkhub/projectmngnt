@@ -58,6 +58,30 @@ export function validateProjectData(project: Partial<ProjectData>): boolean {
 
 // Transform project data for UI
 export function transformProjectToUI(project: ProjectData): ProjectWithUI {
+  // Add null/undefined check
+  if (!project) {
+    console.error('Project data is null or undefined');
+    return {
+      id: '',
+      name: 'Project Not Found',
+      description: 'This project could not be loaded.',
+      company: '',
+      status: 'Unknown',
+      priority: 'Medium',
+      startDate: '',
+      endDate: '',
+      budget: '',
+      team: '',
+      assignee: '',
+      progress: 0,
+      tasks: 0,
+      tags: [],
+      notes: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
+
   let tags: string[] = [];
   try {
     if (project.tags && typeof project.tags === 'string') {

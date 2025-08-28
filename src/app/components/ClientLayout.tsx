@@ -354,18 +354,19 @@ export default function ClientLayout() {
   if (isMobile) {
     return (
       <div className="mobile-page antialiased bg-background text-foreground">
-        {/* Mobile Header */}
+        {/* Enhanced Mobile Header */}
         <header className="mobile-header">
           <button 
             onClick={() => {
               console.log('Hamburger clicked, current state:', isMobileSidebarOpen);
               setIsMobileSidebarOpen(!isMobileSidebarOpen);
             }}
-            className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="p-3 text-gray-600 hover:text-gray-800 transition-colors mobile-haptic rounded-xl hover:bg-gray-100"
+            aria-label="Open navigation menu"
           >
-            <Menu size={16} />
+            <Menu size={18} />
           </button>
-          <h1 className="mobile-h3 mobile-flex-1 mobile-text-center">
+          <h1 className="mobile-h3 mobile-flex-1 mobile-text-center mobile-font-semibold">
             {sidebarActiveTab === 0 && "Dashboard"}
             {sidebarActiveTab === 1 && "All Projects"}
             {sidebarActiveTab === 2 && "Tasks"}
@@ -379,9 +380,10 @@ export default function ClientLayout() {
               console.log('Context button clicked, current state:', isMobileContextSidebarOpen);
               setIsMobileContextSidebarOpen(!isMobileContextSidebarOpen);
             }}
-            className="p-2 text-gray-600 hover:text-gray-800 transition-colors ml-auto"
+            className="p-3 text-gray-600 hover:text-gray-800 transition-colors ml-auto mobile-haptic rounded-xl hover:bg-gray-100"
+            aria-label="Open context menu"
           >
-            <MoreHorizontal size={16} />
+            <MoreHorizontal size={18} />
           </button>
         </header>
 
@@ -433,59 +435,7 @@ export default function ClientLayout() {
           })()}
         </main>
 
-        {/* Mobile Quick Actions Footer */}
-        <nav className="mobile-tab-bar">
-          <button 
-            onClick={() => onSidebarNavClick(0)}
-            className="mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs"
-            aria-label="Dashboard"
-          >
-            <Home size={16} />
-            <span>Home</span>
-          </button>
-          <button 
-            onClick={() => onSidebarNavClick(1)}
-            className="mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs"
-            aria-label="Create Project"
-          >
-            <Plus size={16} />
-            <span>Project</span>
-          </button>
-          <button 
-            onClick={() => onSidebarNavClick(2)}
-            className="mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs"
-            aria-label="Create Task"
-          >
-            <CheckSquare size={16} />
-            <span>Task</span>
-          </button>
-          <button 
-            onClick={() => onSidebarNavClick(3)}
-            className="mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs"
-            aria-label="Create Team"
-          >
-            <Users size={16} />
-            <span>Team</span>
-          </button>
-          <button 
-            onClick={() => onSidebarNavClick(4)}
-            className="mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs"
-            aria-label="Companies"
-          >
-            <Building size={16} />
-            <span>Companies</span>
-          </button>
-          <button 
-            onClick={logout}
-            className="mobile-flex mobile-flex-col mobile-items-center mobile-gap-1 mobile-text-xs text-red-600"
-            aria-label="Sign Out"
-          >
-            <LogOut size={16} />
-            <span>Sign Out</span>
-          </button>
-        </nav>
-
-        {/* Mobile Tab Bar removed to mirror desktop layout (sidebars + content) */}
+        {/* Mobile navigation removed - using sidebar navigation instead */}
       </div>
     );
   }

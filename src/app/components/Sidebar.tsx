@@ -13,8 +13,10 @@ import {
   Bell, 
   ChevronLeft, 
   ChevronRight,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
+import { logout } from '../utils/auth';
 
 interface SidebarProps {
   activeTab: number;
@@ -73,39 +75,40 @@ export default function Sidebar({
       <aside className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out ${
         isMobileOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        {/* Backdrop */}
+        {/* Enhanced Backdrop */}
         <div 
-          className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${
+          className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
             isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           onClick={onMobileClose}
           style={{ zIndex: 49 }}
         />
         
-        {/* Sidebar Content */}
-        <div className="relative h-full w-64 max-w-[75vw] bg-white shadow-2xl flex flex-col" style={{ zIndex: 50 }}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xs font-bold">N</span>
+        {/* Enhanced Sidebar Content */}
+        <div className="relative h-full w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col mobile-optimized" style={{ zIndex: 50 }}>
+          {/* Enhanced Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+                <span className="text-white text-sm font-bold">N</span>
               </div>
               <div>
-                <h2 className="text-xs font-semibold text-gray-900">Navigation</h2>
+                <h2 className="text-sm font-semibold text-gray-900">Navigation</h2>
                 <p className="text-xs text-gray-500">Menu</p>
               </div>
             </div>
             <button 
               onClick={onMobileClose}
-              className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700 relative z-10"
+              className="p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700 relative z-10 mobile-haptic"
               style={{ zIndex: 51 }}
+              aria-label="Close navigation"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
           </div>
           
-          {/* Navigation Items */}
-          <nav className="flex-1 overflow-y-auto p-2 space-y-1">
+          {/* Enhanced Navigation Items */}
+          <nav className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin">
             {navItems.map((item, index) => {
               const Icon = item.icon;
               const isGridLayoutItem = item.label === "Grid Layout";
@@ -126,23 +129,24 @@ export default function Sidebar({
                       onMobileClose();
                     }
                   }}
-                  className={`w-full flex items-center gap-2.5 p-2.5 rounded-lg transition-all duration-300 text-left font-medium group ${
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 text-left font-medium group mobile-haptic ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm shadow-blue-500/25"
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25"
                       : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 border border-transparent hover:border-gray-200"
                   }`}
                   draggable={isDraggable}
                   onDragStart={(e) => handleDragStart(e, item)}
+                  aria-label={item.label}
                 >
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
                     isActive 
                       ? "bg-white/20 backdrop-blur-sm" 
                       : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
                   }`}>
-                    <Icon size={14} className={isActive ? "text-white" : "text-gray-600"} />
+                    <Icon size={16} className={isActive ? "text-white" : "text-gray-600"} />
                   </div>
                   <div className="flex-1 text-left">
-                    <span className={`text-xs font-medium transition-colors duration-300 ${
+                    <span className={`text-sm font-medium transition-colors duration-300 ${
                       isActive ? "text-white" : "text-gray-700"
                     }`}>
                       {item.label}
@@ -150,7 +154,7 @@ export default function Sidebar({
                   </div>
                   {isDraggable && (
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronRight size={12} className="text-gray-400" />
+                      <ChevronRight size={14} className="text-gray-400" />
                     </div>
                   )}
                 </button>
@@ -158,20 +162,34 @@ export default function Sidebar({
             })}
           </nav>
           
-          {/* Footer */}
-          <div className="p-2 border-t border-gray-100 bg-gray-50">
-            <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
-                <span className="text-white text-xs font-bold">U</span>
+          {/* Enhanced Footer */}
+          <div className="p-3 border-t border-gray-100 bg-gray-50 space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
+                <span className="text-white text-sm font-bold">U</span>
               </div>
               <div className="flex-1">
-                <div className="text-xs font-medium text-gray-900">Profile</div>
+                <div className="text-sm font-medium text-gray-900">Profile</div>
                 <div className="text-xs text-gray-500">User</div>
               </div>
-              <button className="p-1 rounded-md hover:bg-gray-100 transition-colors">
-                <Settings size={12} className="text-gray-500" />
+              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors mobile-haptic">
+                <Settings size={14} className="text-gray-500" />
               </button>
             </div>
+            
+            {/* Enhanced Logout Button */}
+            <button 
+              onClick={logout}
+              className="w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 text-left font-medium bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 hover:border-red-300 mobile-haptic"
+              aria-label="Sign Out"
+            >
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-red-100 text-red-600">
+                <LogOut size={16} />
+              </div>
+              <div className="flex-1 text-left">
+                <span className="text-sm font-medium">Sign Out</span>
+              </div>
+            </button>
           </div>
         </div>
       </aside>
@@ -265,6 +283,30 @@ export default function Sidebar({
           <span className="text-xs text-neutral-500 mt-1">User</span>
         )}
       </div>
+
+      {/* Logout Button */}
+      <button
+        onClick={logout}
+        className={`group flex items-center w-full px-3 py-3 rounded-xl transition-all duration-300 hover:bg-red-50 hover:text-red-600 text-neutral-500 hover:shadow-md ${
+          isExpanded ? 'justify-start gap-3' : 'justify-center'
+        }`}
+        aria-label="Sign Out"
+      >
+        <div className="flex items-center justify-center rounded-lg transition-all duration-300 p-1">
+          <LogOut 
+            className={`transition-all duration-300 ${
+              isExpanded ? 'flex-shrink-0' : 'mx-auto'
+            }`} 
+            size={20} 
+            strokeWidth={1.5} 
+          />
+        </div>
+        {isExpanded && (
+          <span className="text-sm font-medium truncate transition-all duration-300">
+            Sign Out
+          </span>
+        )}
+      </button>
     </aside>
   );
 } 
