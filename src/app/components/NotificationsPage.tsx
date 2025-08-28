@@ -222,14 +222,14 @@ export default function NotificationsPage() {
     return matchesSearch && matchesCategory && matchesPriority && matchesStatus;
   });
 
-  return (
-    <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+     return (
+     <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
       {/* Enhanced Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold shadow-lg">
-            <Bell className="text-white mr-1" size={20} />
-            <span>Notifications</span>
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 rounded-lg md:rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold shadow-lg">
+            <Bell className="text-white mr-1" size={18} className="md:w-5 md:h-5" />
+            <span className="text-sm md:text-base">Notifications</span>
             {analytics.unreadNotifications > 0 && (
               <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-xs font-bold">
                 {analytics.unreadNotifications}
@@ -237,66 +237,68 @@ export default function NotificationsPage() {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <button 
-            className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
+            className="group flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 bg-white/80 backdrop-blur-sm rounded-lg md:rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring text-xs md:text-sm"
             onClick={markAllAsRead}
           >
-            <CheckCircle size={16} />
-            Mark All Read
+            <CheckCircle size={14} className="md:w-4 md:h-4" />
+            <span className="hidden md:inline">Mark All Read</span>
+            <span className="md:hidden">Read</span>
           </button>
           <button 
-            className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring"
+            className="group flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring text-sm md:text-base"
             onClick={clearAllNotifications}
           >
-            <Trash2 size={20} className="group-hover:rotate-12 transition-transform duration-200" />
-            Clear All
+            <Trash2 size={18} className="md:w-5 md:h-5 group-hover:rotate-12 transition-transform duration-200" />
+            <span className="hidden md:inline">Clear All</span>
+            <span className="md:hidden">Clear</span>
           </button>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+             <div className="p-3 md:p-6 space-y-4 md:space-y-6 pb-8">
         {/* Enhanced Analytics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-fade-in">
-          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
-                <Bell className="w-6 h-6" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 animate-fade-in">
+          <div className="group bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
+                <Bell className="w-5 h-5 md:w-6 md:h-6" />
               </div>
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
             </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.totalNotifications}</h3>
-            <p className="text-slate-600 text-sm font-medium">Total Notifications</p>
+            <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">{analytics.totalNotifications}</h3>
+            <p className="text-slate-600 text-xs md:text-sm font-medium">Total Notifications</p>
             <div className="mt-2 text-xs text-slate-500">+5 this week</div>
           </div>
 
-          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-lg">
-                <AlertCircle className="w-6 h-6" />
+          <div className="group bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-lg">
+                <AlertCircle className="w-5 h-5 md:w-6 md:h-6" />
               </div>
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
             </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.unreadNotifications}</h3>
-            <p className="text-slate-600 text-sm font-medium">Unread</p>
+            <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">{analytics.unreadNotifications}</h3>
+            <p className="text-slate-600 text-xs md:text-sm font-medium">Unread</p>
             <div className="mt-2 text-xs text-slate-500">Requires attention</div>
           </div>
 
-          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 text-white shadow-lg">
-                <Flag className="w-6 h-6" />
+          <div className="group bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 text-white shadow-lg">
+                <Flag className="w-5 h-5 md:w-6 md:h-6" />
               </div>
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
             </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">{analytics.highPriorityNotifications}</h3>
-            <p className="text-slate-600 text-sm font-medium">High Priority</p>
+            <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">{analytics.highPriorityNotifications}</h3>
+            <p className="text-slate-600 text-xs md:text-sm font-medium">High Priority</p>
             <div className="mt-2 text-xs text-slate-500">Urgent attention needed</div>
           </div>
 
-          <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+          <div className="group bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
                 <Clock className="w-6 h-6" />
               </div>
               <TrendingUp className="w-5 h-5 text-emerald-500" />
@@ -307,232 +309,234 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        {/* Enhanced Search and Filters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search notifications, senders, or projects..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
-              />
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <button 
-                className="group flex items-center gap-2 px-4 py-3 border border-white/20 rounded-xl hover:bg-white/50 transition-all duration-200 hover:scale-105 focus-ring"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === "list" 
-                      ? "bg-orange-100 text-orange-600" 
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  <List size={18} />
-                </button>
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === "grid" 
-                      ? "bg-orange-100 text-orange-600" 
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  <Grid3X3 size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
+                 {/* Enhanced Search and Filters */}
+         <div className="bg-white/80 backdrop-blur-sm rounded-lg md:rounded-2xl p-3 md:p-6 shadow-lg border border-white/20 animate-fade-in" style={{ animationDelay: '200ms' }}>
+           <div className="flex flex-col lg:flex-row gap-3 md:gap-4">
+             <div className="flex-1 relative">
+               <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-3 h-3 md:w-4 md:h-4" />
+               <input
+                 type="text"
+                 placeholder="Search notifications, senders, or projects..."
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 className="w-full pl-8 md:pl-10 pr-3 md:pr-4 py-2 md:py-3 border border-white/20 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white/50 backdrop-blur-sm text-sm md:text-base"
+               />
+             </div>
+             
+             <div className="flex items-center gap-2 md:gap-3">
+               <button 
+                 className="group flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 md:py-3 border border-white/20 rounded-lg md:rounded-xl hover:bg-white/50 transition-all duration-200 hover:scale-105 focus-ring text-xs md:text-sm"
+                 onClick={() => setShowFilters(!showFilters)}
+               >
+                 <Filter className="w-3 h-3 md:w-4 md:h-4" />
+                 <span className="hidden md:inline">Filters</span>
+                 <span className="md:hidden">Filter</span>
+               </button>
+               
+               <div className="flex items-center gap-1 md:gap-2">
+                 <button
+                   onClick={() => setViewMode("list")}
+                   className={`p-1.5 md:p-2 rounded-lg transition-all duration-200 ${
+                     viewMode === "list" 
+                       ? "bg-orange-100 text-orange-600" 
+                       : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                   }`}
+                 >
+                   <List size={16} className="md:w-[18px] md:h-[18px]" />
+                 </button>
+                 <button
+                   onClick={() => setViewMode("grid")}
+                   className={`p-1.5 md:p-2 rounded-lg transition-all duration-200 ${
+                     viewMode === "grid" 
+                       ? "bg-orange-100 text-orange-600" 
+                       : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                   }`}
+                 >
+                   <Grid3X3 size={16} className="md:w-[18px] md:h-[18px]" />
+                 </button>
+               </div>
+             </div>
+           </div>
 
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className="mt-4 pt-4 border-t border-white/20 animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <select
-                  value={priorityFilter}
-                  onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="px-3 py-2 border border-white/20 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="all">All Priorities</option>
-                  <option value="high">High Priority</option>
-                  <option value="medium">Medium Priority</option>
-                  <option value="low">Low Priority</option>
-                </select>
+                     {/* Advanced Filters */}
+           {showFilters && (
+             <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-white/20 animate-fade-in">
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                 <select
+                   value={priorityFilter}
+                   onChange={(e) => setPriorityFilter(e.target.value)}
+                   className="px-2 md:px-3 py-1.5 md:py-2 border border-white/20 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs md:text-sm"
+                 >
+                   <option value="all">All Priorities</option>
+                   <option value="high">High Priority</option>
+                   <option value="medium">Medium Priority</option>
+                   <option value="low">Low Priority</option>
+                 </select>
 
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-white/20 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="unread">Unread</option>
-                  <option value="read">Read</option>
-                </select>
+                 <select
+                   value={statusFilter}
+                   onChange={(e) => setStatusFilter(e.target.value)}
+                   className="px-2 md:px-3 py-1.5 md:py-2 border border-white/20 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs md:text-sm"
+                 >
+                   <option value="all">All Status</option>
+                   <option value="unread">Unread</option>
+                   <option value="read">Read</option>
+                 </select>
 
-                <select className="px-3 py-2 border border-white/20 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-                  <option>All Projects</option>
-                  <option>Whapi Project Management</option>
-                  <option>Client Portal</option>
-                  <option>Mobile App Development</option>
-                </select>
+                 <select className="px-2 md:px-3 py-1.5 md:py-2 border border-white/20 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs md:text-sm">
+                   <option>All Projects</option>
+                   <option>Whapi Project Management</option>
+                   <option>Client Portal</option>
+                   <option>Mobile App Development</option>
+                 </select>
 
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedCategory("all");
-                    setPriorityFilter("all");
-                    setStatusFilter("all");
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
-                >
-                  <FilterX size={16} />
-                  Clear All
-                </button>
-              </div>
-            </div>
-          )}
+                 <button
+                   onClick={() => {
+                     setSearchQuery("");
+                     setSelectedCategory("all");
+                     setPriorityFilter("all");
+                     setStatusFilter("all");
+                   }}
+                   className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 text-slate-600 hover:text-slate-800 transition-colors text-xs md:text-sm"
+                 >
+                   <FilterX size={14} className="md:w-4 md:h-4" />
+                   <span className="hidden md:inline">Clear All</span>
+                   <span className="md:hidden">Clear</span>
+                 </button>
+               </div>
+             </div>
+           )}
         </div>
 
-        {/* Category Filter */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 animate-fade-in" style={{ animationDelay: '400ms' }}>
-          <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <Tag className="w-5 h-5 text-orange-500" />
-            Categories
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`group p-4 rounded-xl text-left transition-all duration-200 hover:scale-105 ${
-                  selectedCategory === category.id
-                    ? "bg-orange-100 border-2 border-orange-500 shadow-lg"
-                    : "bg-slate-50/50 border-2 border-white/20 hover:bg-slate-100/50"
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
-                    <Bell className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-slate-900">{category.label}</div>
-                    <div className="text-xs text-slate-500">{category.count} items</div>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-600">{category.description}</p>
-              </button>
-            ))}
-          </div>
-        </div>
+                 {/* Category Filter */}
+         <div className="bg-white/80 backdrop-blur-sm rounded-lg md:rounded-2xl p-3 md:p-6 shadow-lg border border-white/20 animate-fade-in" style={{ animationDelay: '400ms' }}>
+           <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-3 md:mb-4 flex items-center gap-2">
+             <Tag className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
+             Categories
+           </h3>
+           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4">
+             {categories.map((category) => (
+               <button
+                 key={category.id}
+                 onClick={() => setSelectedCategory(category.id)}
+                 className={`group p-2 md:p-4 rounded-lg md:rounded-xl text-left transition-all duration-200 hover:scale-105 ${
+                   selectedCategory === category.id
+                     ? "bg-orange-100 border-2 border-orange-500 shadow-lg"
+                     : "bg-slate-50/50 border-2 border-white/20 hover:bg-slate-100/50"
+                 }`}
+               >
+                 <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                   <div className="p-1.5 md:p-2 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
+                     <Bell className="w-4 h-4 md:w-5 md:h-5" />
+                   </div>
+                   <div className="flex-1">
+                     <div className="font-semibold text-slate-900 text-xs md:text-sm">{category.label}</div>
+                     <div className="text-xs text-slate-500">{category.count} items</div>
+                   </div>
+                 </div>
+                 <p className="text-xs text-slate-600 hidden md:block">{category.description}</p>
+               </button>
+             ))}
+           </div>
+         </div>
 
-        {/* Notifications List */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 animate-fade-in" style={{ animationDelay: '600ms' }}>
-          <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <Bell className="w-5 h-5 text-orange-500" />
-            Notifications
-          </h3>
-          <div className="space-y-4">
+                 {/* Notifications List */}
+         <div className="bg-white/80 backdrop-blur-sm rounded-lg md:rounded-2xl p-3 md:p-6 shadow-lg border border-white/20 animate-fade-in" style={{ animationDelay: '600ms' }}>
+           <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-3 md:mb-4 flex items-center gap-2">
+             <Bell className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
+             Notifications
+           </h3>
+           <div className="space-y-3 md:space-y-4">
             {filteredNotifications.map((notification, index) => {
               const TypeIcon = notificationTypes[notification.type as keyof typeof notificationTypes].icon;
               return (
-                <div
-                  key={notification.id}
-                  className={`group bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in ${
-                    !notification.read ? "ring-2 ring-orange-200" : ""
-                  }`}
-                  style={{ animationDelay: `${800 + index * 100}ms` }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-3 rounded-xl ${notificationTypes[notification.type as keyof typeof notificationTypes].bg} ${notificationTypes[notification.type as keyof typeof notificationTypes].color} shadow-lg`}>
-                          <TypeIcon className="w-5 h-5" />
-                        </div>
-                        <div className="w-10 h-10 bg-gradient-to-br from-slate-500 to-gray-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                          {notification.avatar}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h4 className="text-lg font-bold text-slate-900 group-hover:text-orange-600 transition-colors">
-                            {notification.title}
-                          </h4>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(notification.priority)}`}>
-                            {notification.priority}
-                          </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getHealthColor(notification.health)}`}>
-                            {notification.health}
-                          </span>
-                          {!notification.read && (
-                            <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                          )}
-                        </div>
-                        <p className="text-sm text-slate-600 mb-3">{notification.message}</p>
-                        <div className="flex items-center gap-4 text-xs text-slate-500">
-                          <span className="flex items-center gap-1">
-                            <Clock size={12} />
-                            {notification.timestamp}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <User size={12} />
-                            {notification.sender}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Briefcase size={12} />
-                            {notification.project}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="px-3 py-1 text-orange-600 hover:text-orange-700 text-sm font-medium hover:bg-orange-50 rounded-lg transition-all duration-200">
-                        {notification.action}
-                      </button>
-                      <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
-                        <Heart size={16} />
-                      </button>
-                      <button className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
-                        <MoreHorizontal size={16} />
-                      </button>
-                    </div>
+                                 <div
+                   key={notification.id}
+                   className={`group bg-white/80 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-4 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in ${
+                     !notification.read ? "ring-2 ring-orange-200" : ""
+                   }`}
+                   style={{ animationDelay: `${800 + index * 100}ms` }}
+                 >
+                   <div className="flex items-start justify-between">
+                     <div className="flex items-start gap-2 md:gap-4">
+                       <div className="flex items-center gap-1.5 md:gap-3">
+                         <div className={`p-1.5 md:p-3 rounded-lg md:rounded-xl ${notificationTypes[notification.type as keyof typeof notificationTypes].bg} ${notificationTypes[notification.type as keyof typeof notificationTypes].color} shadow-lg`}>
+                           <TypeIcon className="w-3 h-3 md:w-5 md:h-5" />
+                         </div>
+                         <div className="w-6 h-6 md:w-10 md:h-10 bg-gradient-to-br from-slate-500 to-gray-600 rounded-full flex items-center justify-center text-white font-bold text-xs md:text-sm">
+                           {notification.avatar}
+                         </div>
+                       </div>
+                                             <div className="flex-1">
+                         <div className="flex items-center gap-1.5 md:gap-3 mb-1.5 md:mb-2">
+                           <h4 className="text-sm md:text-lg font-bold text-slate-900 group-hover:text-orange-600 transition-colors">
+                             {notification.title}
+                           </h4>
+                           <span className={`px-1 md:px-2 py-0.5 md:py-1 rounded-full text-xs font-medium ${getPriorityColor(notification.priority)}`}>
+                             {notification.priority}
+                           </span>
+                           <span className={`px-1 md:px-2 py-0.5 md:py-1 rounded-full text-xs font-medium ${getHealthColor(notification.health)}`}>
+                             {notification.health}
+                           </span>
+                           {!notification.read && (
+                             <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-orange-500 rounded-full"></span>
+                           )}
+                         </div>
+                         <p className="text-xs md:text-sm text-slate-600 mb-1.5 md:mb-3">{notification.message}</p>
+                         <div className="flex items-center gap-1.5 md:gap-4 text-xs text-slate-500">
+                           <span className="flex items-center gap-1">
+                             <Clock size={10} className="md:w-3 md:h-3" />
+                             {notification.timestamp}
+                           </span>
+                           <span className="flex items-center gap-1">
+                             <User size={10} className="md:w-3 md:h-3" />
+                             {notification.sender}
+                           </span>
+                           <span className="flex items-center gap-1">
+                             <Briefcase size={10} className="md:w-3 md:h-3" />
+                             {notification.project}
+                           </span>
+                         </div>
+                       </div>
+                     </div>
+                     <div className="flex items-center gap-1 md:gap-2">
+                       <button className="px-2 md:px-3 py-1 text-orange-600 hover:text-orange-700 text-xs md:text-sm font-medium hover:bg-orange-50 rounded-lg transition-all duration-200">
+                         {notification.action}
+                       </button>
+                       <button className="p-1.5 md:p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
+                         <Heart size={14} className="md:w-4 md:h-4" />
+                       </button>
+                       <button className="p-1.5 md:p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
+                         <MoreHorizontal size={14} className="md:w-4 md:h-4" />
+                       </button>
+                     </div>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Empty State */}
-          {filteredNotifications.length === 0 && (
-            <div className="text-center py-12 animate-fade-in">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                <Bell className="w-8 h-8 text-slate-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">No notifications found</h3>
-              <p className="text-slate-600 mb-4">Try adjusting your search or filters</p>
-              <button 
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("all");
-                  setPriorityFilter("all");
-                  setStatusFilter("all");
-                }}
-              >
-                Clear Filters
-              </button>
-            </div>
-          )}
+                     {/* Empty State */}
+           {filteredNotifications.length === 0 && (
+             <div className="text-center py-8 md:py-12 animate-fade-in">
+               <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                 <Bell className="w-6 h-6 md:w-8 md:h-8 text-slate-400" />
+               </div>
+               <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-2">No notifications found</h3>
+               <p className="text-slate-600 mb-3 md:mb-4 text-sm md:text-base">Try adjusting your search or filters</p>
+               <button 
+                 className="px-3 md:px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm md:text-base"
+                 onClick={() => {
+                   setSearchQuery("");
+                   setSelectedCategory("all");
+                   setPriorityFilter("all");
+                   setStatusFilter("all");
+                 }}
+               >
+                 Clear Filters
+               </button>
+             </div>
+           )}
         </div>
       </div>
     </div>

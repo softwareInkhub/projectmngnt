@@ -50,19 +50,19 @@ export default function SettingsPage() {
   const renderProfileTab = () => (
     <div className="space-y-6 animate-fade-in">
       {/* Profile Header */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg border border-white/20">
+        <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl">
             {loading ? '...' : currentUser ? (currentUser.name?.charAt(0) || currentUser.email?.charAt(0) || 'U') : 'U'}
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900">
+            <h3 className="text-lg md:text-xl font-bold text-slate-900">
               {loading ? 'Loading...' : currentUser ? currentUser.name : 'User Profile'}
             </h3>
-            <p className="text-slate-600">
+            <p className="text-sm md:text-base text-slate-600">
               {loading ? 'Loading user information...' : currentUser ? `${currentUser.role} • ${currentUser.department || 'No Department'}` : 'No user data'}
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-xs md:text-sm text-slate-500">
               {loading ? 'Member since loading...' : currentUser ? `Member since ${new Date(currentUser.joinDate).toLocaleDateString()}` : 'Member since unknown'}
             </p>
           </div>
@@ -70,19 +70,19 @@ export default function SettingsPage() {
       </div>
 
       {/* Personal Information */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-          <User className="w-5 h-5 text-blue-500" />
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg border border-white/20">
+        <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-3 md:mb-4 flex items-center gap-2">
+          <User className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
           Personal Information
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
+            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">First Name</label>
             <input
               type="text"
               defaultValue={currentUser?.name?.split(' ')[0] || ''}
               placeholder="Enter first name"
-              className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
+              className="w-full px-2 md:px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm text-sm md:text-base"
             />
           </div>
           <div>
@@ -571,52 +571,54 @@ export default function SettingsPage() {
   return (
     <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
       {/* Enhanced Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-slate-500 to-gray-600 text-white font-semibold shadow-lg">
-            <Settings className="text-white mr-1" size={20} />
-            <span>Settings</span>
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 rounded-lg md:rounded-xl bg-gradient-to-r from-slate-500 to-gray-600 text-white font-semibold shadow-lg">
+            <Settings className="text-white mr-1" size={18} className="md:w-5 md:h-5" />
+            <span className="text-sm md:text-base">Settings</span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <button 
-            className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
+            className="group flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 bg-white/80 backdrop-blur-sm rounded-lg md:rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring text-xs md:text-sm"
           >
-            <Download size={16} />
-            Export Settings
+            <Download size={14} className="md:w-4 md:h-4" />
+            <span className="hidden md:inline">Export Settings</span>
+            <span className="md:hidden">Export</span>
           </button>
           <button 
-            className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring"
+            className="group flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring text-sm md:text-base"
           >
-            <Save size={20} className="group-hover:rotate-12 transition-transform duration-200" />
-            Save All
+            <Save size={18} className="md:w-5 md:h-5 group-hover:rotate-12 transition-transform duration-200" />
+            <span className="hidden md:inline">Save All</span>
+            <span className="md:hidden">Save</span>
           </button>
         </div>
       </div>
 
-      <div className="p-6">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="p-3 md:p-6">
+        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
           {/* Settings Navigation */}
           <div className="lg:w-80">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Settings</h2>
-              <div className="space-y-2">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4 shadow-lg border border-white/20">
+              <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-3 md:mb-4">Settings</h2>
+              <div className="space-y-1 md:space-y-2">
                 {settingsTabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                      className={`w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl text-left transition-all duration-200 ${
                         activeTab === tab.id
                           ? "bg-blue-100 text-blue-600 shadow-sm"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                       }`}
                     >
-                      <Icon size={18} />
+                      <Icon size={16} className="md:w-[18px] md:h-[18px]" />
                       <div>
-                        <div className="font-medium">{tab.label}</div>
-                        <div className="text-xs text-slate-500">{tab.description}</div>
+                        <div className="font-medium text-sm md:text-base">{tab.label}</div>
+                        <div className="text-xs text-slate-500 hidden md:block">{tab.description}</div>
                       </div>
                     </button>
                   );

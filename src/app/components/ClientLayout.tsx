@@ -608,7 +608,7 @@ export default function ClientLayout() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-y-auto">
           {isGridMode ? (
             <GridLayoutManager 
               onOpenTab={openTab} 
@@ -620,7 +620,7 @@ export default function ClientLayout() {
               {openTabs[activeTabIdx] && (() => {
                 const TabComponent = openTabs[activeTabIdx].component;
                 return (
-                  <div className="h-full">
+                  <div className="min-h-full">
                     <TabComponent
                       open={true}
                       onClose={() => closeTab(activeTabIdx)}
