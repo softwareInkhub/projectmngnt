@@ -574,7 +574,7 @@ export default function SettingsPage() {
       <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 rounded-lg md:rounded-xl bg-gradient-to-r from-slate-500 to-gray-600 text-white font-semibold shadow-lg">
-            <Settings className="text-white mr-1" size={18} className="md:w-5 md:h-5" />
+                         <Settings className="text-white mr-1 md:w-5 md:h-5" size={18} />
             <span className="text-sm md:text-base">Settings</span>
           </div>
         </div>
