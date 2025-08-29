@@ -1,10 +1,22 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
 
 export const logout = () => {
-  // Logout disabled - do nothing
-  console.log('Logout functionality disabled');
-  // Show notification that logout is disabled
-  alert('Logout functionality is currently disabled.');
+  // Clear all authentication tokens
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('id_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('token_expires');
+  
+  // Clear any OAuth state
+  sessionStorage.removeItem('oauth_state');
+  sessionStorage.removeItem('phone_signup_username');
+  
+  console.log('✅ User logged out successfully');
+  
+  // Set mock tokens to keep user on main app
+  localStorage.setItem('access_token', 'mock-token-disabled');
+  localStorage.setItem('id_token', 'mock-token-disabled');
+  localStorage.setItem('refresh_token', 'mock-token-disabled');
 };
 
 export const isAuthenticated = (): boolean => {

@@ -126,6 +126,7 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"tree" | "list" | "grid">("tree");
   const [expandedTreeNodes, setExpandedTreeNodes] = useState<Set<string>>(new Set());
+  const [isLandscape, setIsLandscape] = useState(false);
   
   // Enhanced task modal state
   const [showEnhancedModal, setShowEnhancedModal] = useState(false);
@@ -390,125 +391,50 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
   }, [successMessage]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="bg-slate-50 mx-2 md:mx-0 overflow-y-auto">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-slate-900">Tasks</h1>
-            <p className="text-slate-600 mt-1 text-sm md:text-base">Manage your project tasks and subtasks</p>
-          </div>
-          
-          <div className="flex items-center gap-2 md:gap-3">
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-slate-100 rounded-lg p-1">
+        <div className="flex flex-col gap-4">
+          {/* Title and Actions Row */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-900">Tasks</h1>
+              <p className="text-slate-600 mt-1 text-sm md:text-base">Manage your project tasks and subtasks</p>
+            </div>
+            
+            <div className="flex items-center gap-2 md:gap-3">
+              {/* Create Task Button */}
               <button
-                onClick={() => setViewMode("tree")}
-                className={`p-1.5 md:p-2 rounded-md transition-colors ${
-                  viewMode === "tree" 
-                    ? "bg-white text-blue-600 shadow-sm" 
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-                title="Tree View"
+                onClick={() => {
+                  setEditingTask(null);
+                  setParentTaskId(null);
+                  setShowEnhancedModal(true);
+                }}
+                className="px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1 md:gap-2 text-sm md:text-base"
               >
-                <GitBranch className="w-3 h-3 md:w-4 md:h-4" />
+                <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">Create Task</span>
+                <span className="sm:hidden">Add</span>
               </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-1.5 md:p-2 rounded-md transition-colors ${
-                  viewMode === "list" 
-                    ? "bg-white text-blue-600 shadow-sm" 
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-                title="List View"
-              >
-                <List className="w-3 h-3 md:w-4 md:h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-1.5 md:p-2 rounded-md transition-colors ${
-                  viewMode === "grid" 
-                    ? "bg-white text-blue-600 shadow-sm" 
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-                title="Grid View"
-              >
-                <Grid3X3 className="w-3 h-3 md:w-4 md:h-4" />
-              </button>
-            </div>
 
-            {/* Create Task Button */}
-            <button
-              onClick={() => {
-                setEditingTask(null);
-                setParentTaskId(null);
-                setShowEnhancedModal(true);
-              }}
-              className="px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1 md:gap-2 text-sm md:text-base"
-            >
-              <Plus className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Create Task</span>
-              <span className="sm:hidden">Add</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Cards */}
-      <div className="px-4 md:px-6 py-4 md:py-6">
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-6">
-          <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-xs md:text-sm font-medium">Total Tasks</p>
-                <p className="text-2xl md:text-3xl font-bold text-slate-900">{analytics.totalTasks}</p>
-              </div>
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <CheckSquare className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
+              {/* Mobile Search - Only visible on mobile */}
+              <div className="md:hidden">
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-32 pl-8 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-xs md:text-sm font-medium">Completed</p>
-                <p className="text-2xl md:text-3xl font-bold text-emerald-600">{analytics.completedTasks}</p>
-              </div>
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 md:w-6 md:h-6 text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-xs md:text-sm font-medium">In Progress</p>
-                <p className="text-2xl md:text-3xl font-bold text-blue-600">{analytics.inProgressTasks}</p>
-              </div>
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Play className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-xs md:text-sm font-medium">Overdue</p>
-                <p className="text-2xl md:text-3xl font-bold text-red-600">{analytics.overdueTasks}</p>
-              </div>
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <AlertCircle className="w-4 h-4 md:w-6 md:h-6 text-red-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 mb-4 md:mb-6">
-          <div className="flex flex-col gap-3 md:gap-4">
+          {/* Search and Filters Row - Desktop Only */}
+          <div className="hidden md:flex flex-row items-center gap-3">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
@@ -524,7 +450,7 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -560,6 +486,152 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
                 <span className="text-sm md:text-base">Clear</span>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Analytics Cards */}
+      <div className="px-1 md:px-6 py-1 md:py-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-1 md:gap-6 mb-2 md:mb-6">
+          <div className="bg-white rounded-lg md:rounded-xl p-1.5 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-[9px] md:text-sm font-medium">Total Tasks</p>
+                <p className="text-base md:text-3xl font-bold text-slate-900">{analytics.totalTasks}</p>
+              </div>
+              <div className="w-5 h-5 md:w-12 md:h-12 bg-blue-100 rounded-md md:rounded-lg flex items-center justify-center">
+                <CheckSquare className="w-2.5 h-2.5 md:w-6 md:h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg md:rounded-xl p-1.5 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-[9px] md:text-sm font-medium">Completed</p>
+                <p className="text-base md:text-3xl font-bold text-emerald-600">{analytics.completedTasks}</p>
+              </div>
+              <div className="w-5 h-5 md:w-12 md:h-12 bg-emerald-100 rounded-md md:rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-2.5 h-2.5 md:w-6 md:h-6 text-emerald-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg md:rounded-xl p-1.5 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-[9px] md:text-sm font-medium">In Progress</p>
+                <p className="text-base md:text-3xl font-bold text-blue-600">{analytics.inProgressTasks}</p>
+              </div>
+              <div className="w-5 h-5 md:w-12 md:h-12 bg-blue-100 rounded-md md:rounded-lg flex items-center justify-center">
+                <Play className="w-2.5 h-2.5 md:w-6 md:h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg md:rounded-xl p-1.5 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-[9px] md:text-sm font-medium">Overdue</p>
+                <p className="text-base md:text-3xl font-bold text-red-600">{analytics.overdueTasks}</p>
+              </div>
+              <div className="w-5 h-5 md:w-12 md:h-12 bg-red-100 rounded-md md:rounded-lg flex items-center justify-center">
+                <AlertCircle className="w-2.5 h-2.5 md:w-6 md:h-6 text-red-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* View Mode Toggle and Filters - Below Analytics Cards */}
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <div className="flex items-center gap-3">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-slate-100 rounded-lg p-1.5">
+              <button
+                onClick={() => setViewMode("tree")}
+                className={`p-2 md:p-3 rounded-md transition-colors ${
+                  viewMode === "tree" 
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Tree View"
+              >
+                <GitBranch className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 md:p-3 rounded-md transition-colors ${
+                  viewMode === "list" 
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="List View"
+              >
+                <List className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 md:p-3 rounded-md transition-colors ${
+                  viewMode === "grid" 
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Grid View"
+              >
+                <Grid3X3 className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+            </div>
+
+            {/* Landscape Toggle - Mobile Only */}
+            <div className="md:hidden">
+              <div className="flex items-center bg-slate-100 rounded-lg p-1.5">
+                <button
+                  onClick={() => setIsLandscape(!isLandscape)}
+                  className={`p-2 rounded-md transition-colors ${
+                    isLandscape 
+                      ? "bg-white text-blue-600 shadow-sm" 
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                  title={isLandscape ? "Exit Landscape View" : "Enter Landscape View"}
+                >
+                  {isLandscape ? (
+                    <X className="w-4 h-4" />
+                  ) : (
+                    <RotateCcw className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Task Count */}
+            <span className="text-sm text-slate-600">
+              {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {/* Status and Priority Filters */}
+          <div className="flex items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-2 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs md:text-sm"
+            >
+              <option value="All">Status</option>
+              {statuses.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="px-2 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs md:text-sm"
+            >
+              <option value="All">Priority</option>
+              {priorities.map((priority) => (
+                <option key={priority} value={priority}>{priority}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -600,7 +672,7 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
          )}
 
          {/* Content */}
-         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 overflow-y-auto min-h-0">
            {isLoading ? (
              <div className="flex items-center justify-center py-8 md:py-12">
                <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-blue-600"></div>
@@ -609,16 +681,45 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
            ) : (
              <>
                {viewMode === "tree" && (
-                 <div className="h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden">
-                   <TaskTreeView
-                     tasks={taskTree}
-                     onTaskSelect={handleTaskSelect}
-                     onAddSubtask={handleAddSubtask}
-                     onEditTask={handleEditTask}
-                     onDeleteTask={handleDeleteTask}
-                     onToggleStatus={handleToggleStatus}
-                     selectedTaskId={selectedTaskId}
-                   />
+                 <div className={`${
+                   isLandscape 
+                     ? "h-[500px] sm:h-[600px] md:h-[700px] lg:h-[800px] overflow-auto bg-white border border-slate-200 rounded-xl shadow-lg" 
+                     : "h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] overflow-auto"
+                 }`}>
+                   {/* Landscape Header */}
+                   {isLandscape && (
+                     <div className="flex items-center justify-between p-2 border-b border-slate-200 bg-slate-50">
+                       <div className="flex items-center gap-2">
+                         <RotateCcw className="w-4 h-4 text-blue-600" />
+                         <span className="text-sm font-medium text-slate-700">Landscape Tree View</span>
+                       </div>
+                       <button
+                         onClick={() => setIsLandscape(false)}
+                         className="p-1.5 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-md transition-colors"
+                         title="Exit Landscape View"
+                       >
+                         <X className="w-4 h-4" />
+                       </button>
+                     </div>
+                   )}
+                   
+                   <div className={`${
+                     isLandscape 
+                       ? "h-[calc(100%-48px)] overflow-auto" 
+                       : "w-full h-full"
+                   }`}>
+                     <div className={isLandscape ? "transform rotate-90 origin-center w-full h-full" : "w-full h-full"}>
+                       <TaskTreeView
+                         tasks={taskTree}
+                         onTaskSelect={handleTaskSelect}
+                         onAddSubtask={handleAddSubtask}
+                         onEditTask={handleEditTask}
+                         onDeleteTask={handleDeleteTask}
+                         onToggleStatus={handleToggleStatus}
+                         selectedTaskId={selectedTaskId}
+                       />
+                     </div>
+                   </div>
                  </div>
                )}
 

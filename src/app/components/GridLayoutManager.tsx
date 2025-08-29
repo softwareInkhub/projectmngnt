@@ -28,7 +28,7 @@ import ResponsiveSheetContent from './ResponsiveSheetContent';
 
 // Import actual sheet components
 import DashboardPage from './DashboardPage';
-import ProjectsPage from './ProjectsPage';
+import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
 import TeamsPageSheet from './TeamsPageSheet';
 import DepartmentsPage from './DepartmentsPage';
 import SprintsPage from './SprintsPage';
@@ -38,7 +38,6 @@ import ReportsPage from './ReportsPage';
 import SettingsPage from './SettingsPage';
 import NotificationsPage from './NotificationsPage';
 import CompaniesPage from './CompaniesPage';
-import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
 import TasksPage from './TasksPage';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
@@ -87,7 +86,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
   // Available sheet types
   const availableSheets = useMemo(() => [
     { type: 'dashboard', title: 'Dashboard', component: DashboardPage },
-    { type: 'projects', title: 'Projects', component: ProjectsPage },
+    { type: 'projects', title: 'Projects Analytics', component: ProjectsAnalyticsPage },
     { type: 'tasks', title: 'Tasks', component: TasksPage },
     { type: 'teams', title: 'Teams', component: TeamsPageSheet },
     { type: 'departments', title: 'Departments', component: DepartmentsPage },
@@ -193,8 +192,8 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
       {
         id: 'projects',
         type: 'projects',
-        title: 'Projects',
-        component: ProjectsPage,
+        title: 'Projects Analytics',
+        component: ProjectsAnalyticsPage,
         layout: { x: 6, y: 0, w: 6, h: 4, minW: 4, minH: 3 }
       },
       {
@@ -355,8 +354,8 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
       {
         id: 'projects',
         type: 'projects',
-        title: 'Projects',
-        component: ProjectsPage,
+        title: 'Projects Analytics',
+        component: ProjectsAnalyticsPage,
         layout: { x: 6, y: 0, w: 6, h: 4, minW: 4, minH: 3 }
       },
       {

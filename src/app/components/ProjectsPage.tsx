@@ -176,38 +176,22 @@ export default function ProjectsPage({ context }: { context?: { company: string 
             return true;
           });
           
-          const transformedProjects: Project[] = filteredProjects.map(project => {
-            // Ensure we have a valid ID
-            const projectId = project.id || `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            console.log(`Processing project: ${project.name} with ID: ${projectId}`);
-            
-            return {
-              id: projectId,
-              name: project.name,
-              description: project.description || '',
-              assignee: project.assignee,
-              progress: project.progress,
-              status: project.status,
-              priority: project.priority,
-              endDate: project.endDate,
-              team: project.team,
-              tasks: project.tasks,
-              budget: project.budget,
-              tags: project.tags
-            };
-          });
+          const transformedProjects: Project[] = filteredProjects.map(project => ({
+            id: project.id || '',
+            name: project.name,
+            description: project.description || '',
+            assignee: project.assignee,
+            progress: project.progress,
+            status: project.status,
+            priority: project.priority,
+            endDate: project.endDate,
+            team: project.team,
+            tasks: project.tasks,
+            budget: project.budget,
+            tags: project.tags
+          }));
           
           console.log('Transformed projects with IDs:', transformedProjects.map(p => ({ id: p.id, name: p.name })));
-          console.log('=== FINAL PROJECTS DEBUG ===');
-          transformedProjects.forEach((project, index) => {
-            console.log(`Project ${index + 1}:`, {
-              id: project.id,
-              name: project.name,
-              idType: typeof project.id,
-              idLength: project.id?.length,
-              isEmpty: !project.id || project.id.trim() === ''
-            });
-          });
           setProjects(transformedProjects);
         } else {
           console.warn('Projects data is not an array:', projectsData);
@@ -443,30 +427,22 @@ export default function ProjectsPage({ context }: { context?: { company: string 
 
   // Navigation function
   const handleProjectClick = (projectId: string) => {
-    console.log('=== NAVIGATION DEBUG ===');
-    console.log('Project ID received:', projectId);
-    console.log('Project ID type:', typeof projectId);
+    console.log('=== PROJECT NAVIGATION DEBUG ===');
+    console.log('Navigating to project:', projectId);
+    console.log('Navigation URL:', `/projects/${projectId}`);
+    console.log('Project type:', typeof projectId);
     console.log('Project ID length:', projectId?.length);
     console.log('Is project ID empty?', !projectId || projectId.trim() === '');
+    console.log('Current projects:', projects.map(p => ({ id: p.id, name: p.name })));
     
-    // Check if projectId is valid
+    // Ensure we have a valid project ID
     if (!projectId || projectId.trim() === '') {
-      console.error('Invalid project ID - cannot navigate');
-      setError('Invalid project ID. Please try again.');
+      console.error('Invalid project ID:', projectId);
       return;
     }
     
-    const navigationUrl = `/projects/${projectId}`;
-    console.log('Navigation URL:', navigationUrl);
-    console.log('About to navigate...');
-    
-    try {
-      router.push(navigationUrl);
-      console.log('Navigation initiated successfully');
-    } catch (error) {
-      console.error('Navigation failed:', error);
-      setError('Navigation failed. Please try again.');
-    }
+    // Navigate to the project detail page
+    router.push(`/projects/${projectId}`);
   };
 
   // Menu toggle functions
@@ -504,66 +480,6 @@ export default function ProjectsPage({ context }: { context?: { company: string 
           {error}
         </div>
       )}
-
-      {/* Floating Test Button - Always Visible */}
-      <div className="fixed bottom-4 right-4 z-[9999]">
-        <button
-          onClick={() => {
-            console.log('Floating test button clicked!');
-            router.push('/projects/floating-test-123');
-          }}
-          className="bg-red-600 hover:bg-red-700 text-white px-6 py-4 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-200 font-bold text-xl border-4 border-white"
-        >
-          🧪 TEST
-        </button>
-      </div>
-      
-      {/* Top Right Test Button */}
-      <div className="fixed top-4 right-4 z-[9999]">
-        <button
-          onClick={() => {
-            console.log('Top right test button clicked!');
-            router.push('/projects/top-right-test-123');
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-2xl hover:shadow-3xl transition-all duration-200 font-bold border-2 border-white"
-        >
-          🧪 TOP TEST
-        </button>
-      </div>
-
-      {/* Super Visible Test Section */}
-      <div className="bg-yellow-400 border-b-4 border-yellow-600 p-4 text-center">
-        <h2 className="text-lg font-bold text-yellow-900 mb-2">🧪 NAVIGATION TEST SECTION</h2>
-        <div className="flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              console.log('Yellow test button 1 clicked!');
-              router.push('/projects/yellow-test-1');
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold"
-          >
-            Test 1
-          </button>
-          <button
-            onClick={() => {
-              console.log('Yellow test button 2 clicked!');
-              router.push('/projects/yellow-test-2');
-            }}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold"
-          >
-            Test 2
-          </button>
-          <button
-            onClick={() => {
-              console.log('Yellow test button 3 clicked!');
-              router.push('/test-navigation');
-            }}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-bold"
-          >
-            Test Page
-          </button>
-        </div>
-      </div>
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
@@ -615,71 +531,9 @@ export default function ProjectsPage({ context }: { context?: { company: string 
             <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
             New Project
           </button>
-          
-          {/* Test Navigation Button */}
-          <button 
-            onClick={() => {
-              console.log('Testing navigation to a sample project');
-              router.push('/projects/test-project-123');
-            }}
-            className="group flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
-          >
-            Test Navigation
-          </button>
-          
-          {/* Test Page Link */}
-          <button 
-            onClick={() => router.push('/test-navigation')}
-            className="group flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
-          >
-            Test Page
-          </button>
-          
-          {/* Simple Test Navigation */}
-          <button 
-            onClick={() => {
-              console.log('Testing simple navigation');
-              router.push('/projects/simple-test-123');
-            }}
-            className="group flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
-          >
-            Simple Test
-          </button>
 
           </div>
         </div>
-
-      {/* Mobile Test Buttons - Only visible on mobile */}
-      <div className="md:hidden bg-white/60 backdrop-blur-sm border-b border-white/20 p-3">
-        <div className="flex flex-wrap gap-2">
-          <button 
-            onClick={() => {
-              console.log('Mobile: Testing navigation to a sample project');
-              router.push('/projects/test-project-123');
-            }}
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-medium"
-          >
-            🧪 Test Nav
-          </button>
-          
-          <button 
-            onClick={() => router.push('/test-navigation')}
-            className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-medium"
-          >
-            🧪 Test Page
-          </button>
-          
-          <button 
-            onClick={() => {
-              console.log('Mobile: Testing simple navigation');
-              router.push('/projects/simple-test-123');
-            }}
-            className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-medium"
-          >
-            🧪 Simple Test
-          </button>
-        </div>
-      </div>
 
       <div className="p-6 space-y-6">
         {/* Stats Grid */}
@@ -1109,7 +963,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                     </div>
 
                     {/* View Details Button */}
-                    <div className="pt-2 space-y-2">
+                    <div className="pt-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1119,18 +973,6 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                       >
                         <Eye size={14} />
                         View Details
-                      </button>
-                      
-                      {/* Test Button - Always visible for easy testing */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log('Testing from project card');
-                          router.push('/projects/test-from-card-123');
-                        }}
-                        className="w-full text-green-600 hover:text-green-700 font-medium text-sm transition-colors flex items-center justify-center gap-2 border-2 border-green-400 rounded-lg py-2 bg-green-50 font-bold"
-                      >
-                        🧪 Test Navigation
                       </button>
                     </div>
                   </div>

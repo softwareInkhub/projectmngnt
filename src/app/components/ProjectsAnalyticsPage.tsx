@@ -175,6 +175,46 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Create test project if no projects exist
+  useEffect(() => {
+    const createTestProjectIfNeeded = async () => {
+      if (projects.length === 0 && !loading) {
+        console.log('No projects found, creating a test project...');
+        const testProject = {
+          name: 'Test Project for Navigation',
+          description: 'This is a test project to verify navigation to project details works correctly.',
+          company: 'Test Company',
+          status: 'In Progress',
+          priority: 'Medium',
+          startDate: '2024-01-01',
+          endDate: '2024-12-31',
+          budget: '$25,000',
+          team: 'John Doe, Jane Smith',
+          assignee: 'John Doe',
+          progress: 45,
+          tasks: 8,
+          tags: JSON.stringify(['test', 'demo', 'navigation']),
+          notes: 'This project was created automatically for testing navigation functionality.'
+        };
+        
+        try {
+          const response = await ProjectApiService.createProject(testProject);
+          if (response.success) {
+            console.log('Test project created successfully:', response.data);
+            console.log('Test project ID:', response.data?.id);
+            fetchProjects(); // Refresh the projects list
+          } else {
+            console.error('Failed to create test project:', response.error);
+          }
+        } catch (error) {
+          console.error('Error creating test project:', error);
+        }
+      }
+    };
+
+    createTestProjectIfNeeded();
+  }, [projects.length, loading]);
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -416,6 +456,26 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     a.click();
   };
 
+  // Navigation function
+  const handleProjectClick = (projectId: string) => {
+    console.log('=== PROJECT NAVIGATION DEBUG ===');
+    console.log('Navigating to project:', projectId);
+    console.log('Navigation URL:', `/projects/${projectId}`);
+    console.log('Project type:', typeof projectId);
+    console.log('Project ID length:', projectId?.length);
+    console.log('Is project ID empty?', !projectId || projectId.trim() === '');
+    console.log('Current projects:', projects.map(p => ({ id: p.id, name: p.name })));
+    
+    // Ensure we have a valid project ID
+    if (!projectId || projectId.trim() === '') {
+      console.error('Invalid project ID:', projectId);
+      return;
+    }
+    
+    // Navigate to the project detail page
+    router.push(`/projects/${projectId}`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -459,13 +519,118 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           </button>
             <button className="hidden md:flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold" onClick={() => setShowCreateForm(true)}>
               <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
-            New Project
+            Create Project
           </button>
           </div>
 
-          {/* Mobile compact actions - optimized for better fit */}
-          <div className="flex md:hidden items-center gap-1.5 w-full justify-end">
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white">
+                      {/* Mobile compact actions - optimized for better fit */}
+            <div className="flex md:hidden items-center gap-1.5 w-full justify-end">
+              {/* Mobile search - moved to header area */}
+              <div className="relative flex-1 max-w-32">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400" size={14} />
+                <input 
+                  type="text" 
+                  placeholder="Search..." 
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)} 
+                  className="pl-7 pr-2 py-1.5 border border-slate-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent w-full" 
+                />
+              </div>
+              <button onClick={() => setShowCreateForm(true)} className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md text-xs font-medium">Create</button>
+              <button onClick={handleExportAll} className="px-2 py-1.5 bg-white border border-slate-300 rounded-md text-xs">Export</button>
+            </div>
+        </div>
+      </div>
+
+
+
+
+      <div className="px-1 md:px-8 py-2 md:py-8 space-y-2 md:space-y-6">
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6 max-w-[95%] md:max-w-none mx-auto md:mx-0">
+          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Total Projects</p>
+                <p className="text-xs md:text-lg font-semibold text-slate-900">{projects.length}</p>
+              </div>
+              <div className="p-1.5 md:p-3 bg-blue-100 rounded-lg">
+                <FolderKanban className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Active Projects</p>
+                <p className="text-xs md:text-lg font-semibold text-slate-900">{projects.filter(p => p.status === "Active").length}</p>
+              </div>
+              <div className="p-1.5 md:p-3 bg-green-100 rounded-lg">
+                <Activity className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Completed</p>
+                <p className="text-xs md:text-lg font-semibold text-slate-900">{projects.filter(p => p.status === "Completed").length}</p>
+              </div>
+              <div className="p-1.5 md:p-3 bg-emerald-100 rounded-lg">
+                <CheckCircle className="w-4 h-4 md:w-6 md:h-6 text-emerald-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Avg Progress</p>
+                <p className="text-xs md:text-lg font-semibold text-slate-900">{projects.length > 0 ? Math.round(projects.reduce((sum, p) => sum + (p.progress || 0), 0) / projects.length) : 0}%</p>
+              </div>
+              <div className="p-1.5 md:p-3 bg-purple-100 rounded-lg">
+                <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* View Mode Toggle - Mobile optimized positioning */}
+        <div className="flex items-center justify-between mb-4 md:mb-6 mx-2 md:mx-0">
+          {/* Left side - Grid/List toggle and project count */}
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center bg-slate-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 md:p-2 rounded-md transition-colors ${
+                  viewMode === "grid" 
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Grid3X3 size={14} className="md:w-4 md:h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 md:p-2 rounded-md transition-colors ${
+                  viewMode === "list" 
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <List size={14} className="md:w-4 md:h-4" />
+              </button>
+            </div>
+            <span className="text-xs md:text-sm text-slate-600">
+              {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          
+          {/* Right side - Status and Priority filters (mobile only) */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
               <option value="All">Status</option>
               <option value="Planning">Planning</option>
               <option value="Active">Active</option>
@@ -473,103 +638,33 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>
-            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white">
+            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
               <option value="All">Priority</option>
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
               <option value="High">High</option>
               <option value="Critical">Critical</option>
             </select>
-            <button onClick={() => setShowCreateForm(true)} className="px-2 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md text-xs font-medium">New</button>
-            <button onClick={handleExportAll} className="px-2 py-1.5 bg-white border border-slate-300 rounded-md text-xs">Export</button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Search - placed below header for a cleaner look */}
-      <div className="md:hidden px-4 mt-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-          <input
-            type="text"
-            placeholder="Search projects..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          />
-        </div>
-      </div>
-
-
-      <div className="px-4 md:px-8 py-4 md:py-8 space-y-4 md:space-y-6">
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-          <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] md:text-xs text-slate-500">Total Projects</p>
-                <p className="text-sm md:text-lg font-semibold text-slate-900">{projects.length}</p>
-              </div>
-              <div className="p-2 md:p-3 bg-blue-100 rounded-lg">
-                <FolderKanban className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] md:text-xs text-slate-500">Active Projects</p>
-                <p className="text-sm md:text-lg font-semibold text-slate-900">{projects.filter(p => p.status === "Active").length}</p>
-              </div>
-              <div className="p-2 md:p-3 bg-green-100 rounded-lg">
-                <Activity className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] md:text-xs text-slate-500">Completed</p>
-                <p className="text-sm md:text-lg font-semibold text-slate-900">{projects.filter(p => p.status === "Completed").length}</p>
-              </div>
-              <div className="p-2 md:p-3 bg-emerald-100 rounded-lg">
-                <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] md:text-xs text-slate-500">Avg Progress</p>
-                <p className="text-sm md:text-lg font-semibold text-slate-900">{projects.length > 0 ? Math.round(projects.reduce((sum, p) => sum + (p.progress || 0), 0) / projects.length) : 0}%</p>
-              </div>
-              <div className="p-2 md:p-3 bg-purple-100 rounded-lg">
-                <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Professional Inline Create Project Form */}
       {showCreateForm && (
-          <div className="bg-white border border-slate-200 rounded-xl shadow-lg p-8 mb-8">
-            <div className="flex items-center justify-between mb-8">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-lg p-4 md:p-8 mb-4 md:mb-8">
+            <div className="flex items-center justify-between mb-4 md:mb-8">
               <div>
-                <h2 className="text-xl font-bold text-slate-900 mb-1">
+                <h2 className="text-lg md:text-xl font-bold text-slate-900 mb-0.5 md:mb-1">
                   {editingProject ? 'Edit Project' : 'Create New Project'}
                 </h2>
-                <p className="text-slate-500 text-sm">
+                <p className="text-slate-500 text-xs md:text-sm">
                   {editingProject ? 'Update the project details below' : 'Fill in the details below to create a new project'}
                 </p>
               </div>
             <button 
               onClick={cancelCreate}
-                className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
+                className="p-1.5 md:p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
             >
-              <X size={20} />
+              <X size={18} className="md:w-5 md:h-5" />
             </button>
           </div>
           
@@ -586,42 +681,42 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                 budget: budget,
                 teamMembers: selectedMembers
               });
-            }} className="space-y-8">
+            }} className="space-y-4 md:space-y-8">
               {/* Project Information Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Briefcase className="w-5 h-5 text-blue-600" />
+              <div className="space-y-3 md:space-y-6">
+                <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-6">
+                  <div className="p-1.5 md:p-2 bg-blue-100 rounded-lg">
+                    <Briefcase className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Project Information</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-slate-900">Project Information</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
               <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Project Name *</label>
+                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Project Name *</label>
                 <input 
                   value={projectName} 
                   onChange={e => setProjectName(e.target.value)} 
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
                   placeholder="Enter project name"
                   required
                 />
               </div>
               
               <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Company *</label>
+                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Company *</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
-                        className={`w-full px-4 py-3 border rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                        className={`w-full px-3 md:px-4 py-2 md:py-3 border rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base ${
                           selectedCompany ? "border-slate-300 text-slate-900" : "border-red-300 text-slate-500"
                         }`}
                   >
                         <span className={selectedCompany ? "text-slate-900" : "text-slate-500"}>
                           {selectedCompany || "Select a company (required)"}
                     </span>
-                        <ChevronDown size={16} className="text-slate-400" />
+                        <ChevronDown size={14} className="md:w-4 md:h-4 text-slate-400" />
                   </button>
                   
                   {showCompanyDropdown && (
@@ -675,37 +770,37 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               </div>
 
               <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Description</label>
+                  <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Description</label>
                   <textarea
                     value={projectDescription}
                     onChange={e => setProjectDescription(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                    rows={3}
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-sm md:text-base"
+                    rows={2}
                     placeholder="Describe the project goals, objectives, and key deliverables..."
                   />
                 </div>
               </div>
 
               {/* Project Details Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Settings className="w-5 h-5 text-green-600" />
+              <div className="space-y-3 md:space-y-6">
+                <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-6">
+                  <div className="p-1.5 md:p-2 bg-green-100 rounded-lg">
+                    <Settings className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Project Details</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-slate-900">Project Details</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Status</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
                   >
                         <span className="text-slate-900">{projectStatus}</span>
-                        <ChevronDown size={16} className="text-slate-400" />
+                        <ChevronDown size={14} className="md:w-4 md:h-4 text-slate-400" />
                   </button>
                   
                   {showStatusDropdown && (
@@ -729,15 +824,15 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
             </div>
 
               <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Priority</label>
+                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Priority</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowPriorityDropdown(!showPriorityDropdown)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
                   >
                         <span className="text-slate-900">{projectPriority}</span>
-                        <ChevronDown size={16} className="text-slate-400" />
+                        <ChevronDown size={14} className="md:w-4 md:h-4 text-slate-400" />
                   </button>
                   
                   {showPriorityDropdown && (
@@ -761,65 +856,65 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               </div>
 
               <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Budget</label>
+                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Budget</label>
                 <input 
                       type="text"
                   value={budget} 
                   onChange={e => setBudget(e.target.value)} 
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
                       placeholder="Enter budget amount"
                 />
               </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
               <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Start Date</label>
+                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Start Date</label>
                 <input 
                   type="date"
                   value={startDate} 
                   onChange={e => setStartDate(e.target.value)} 
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
                 />
               </div>
               <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">End Date</label>
+                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">End Date</label>
                 <input 
                   type="date"
                   value={endDate} 
                   onChange={e => setEndDate(e.target.value)} 
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
                 />
                   </div>
               </div>
             </div>
 
               {/* Team Members Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Users className="w-5 h-5 text-purple-600" />
+              <div className="space-y-3 md:space-y-6">
+                <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-6">
+                  <div className="p-1.5 md:p-2 bg-purple-100 rounded-lg">
+                    <Users className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Team Members</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-slate-900">Team Members</h3>
                 </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                   {availableMembers.map((member) => (
                   <button
                     key={member}
                     type="button"
                     onClick={() => toggleMember(member)}
-                        className={`p-3 rounded-lg border-2 transition-all ${
+                        className={`p-2 md:p-3 rounded-lg border-2 transition-all ${
                       selectedMembers.includes(member) 
                           ? "border-blue-500 bg-blue-50 text-blue-700"
                           : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                        <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${
                           selectedMembers.includes(member) ? "bg-blue-500" : "bg-slate-300"
                         }`}></div>
-                          <span className="text-sm font-medium">{member}</span>
+                          <span className="text-xs md:text-sm font-medium">{member}</span>
                         </div>
                   </button>
                 ))}
@@ -827,17 +922,17 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
             </div>
 
               {/* Form Actions */}
-              <div className="flex items-center justify-end gap-4 pt-6 border-t border-slate-200">
+              <div className="flex items-center justify-end gap-3 md:gap-4 pt-4 md:pt-6 border-t border-slate-200">
               <button 
                 type="button"
                 onClick={cancelCreate}
-                  className="px-6 py-3 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors font-medium"
+                  className="px-4 md:px-6 py-2.5 md:py-3 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors font-medium text-sm md:text-base"
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="px-4 md:px-6 py-2.5 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm md:text-base"
               >
                   {editingProject ? 'Update Project' : 'Create Project'}
               </button>
@@ -885,53 +980,29 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           </div>
           ) : (
             <>
-              {/* View Mode Toggle */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center bg-slate-100 rounded-lg p-1">
-                    <button
-                      onClick={() => setViewMode("grid")}
-                      className={`p-2 rounded-md transition-colors ${
-                        viewMode === "grid" 
-                          ? "bg-white text-blue-600 shadow-sm" 
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
-                    >
-                      <Grid3X3 size={16} />
-                    </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`p-2 rounded-md transition-colors ${
-                        viewMode === "list" 
-                          ? "bg-white text-blue-600 shadow-sm" 
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
-                    >
-                      <List size={16} />
-                    </button>
-            </div>
-                  <span className="text-sm text-slate-600">
-                    {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
-                  </span>
-            </div>
-          </div>
+
           
               {/* Projects Grid/List */}
-              <div className={`grid gap-3 md:gap-6 ${
+              <div className={`grid gap-3 md:gap-6 mx-2 md:mx-0 ${
                 viewMode === "grid" 
                   ? "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3" 
                   : "grid-cols-1"
               }`}>
                 {filteredProjects.map((project) => (
-                  <div key={project.id} className={`relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 flex flex-col h-full ${
-                    viewMode === "list" ? "p-4" : "p-2 md:p-3"
-                  }`}>
+                  <div 
+                    key={project.id} 
+                    className={`relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 flex flex-col h-full cursor-pointer ${
+                      viewMode === "list" ? "p-4" : "p-2 md:p-3"
+                    }`}
+                    onClick={() => handleProjectClick(project.id || '')}
+                  >
                     {viewMode === "list" ? (
                       <>
                         <div className="flex items-center gap-3 md:gap-4">
                           {/* Checkbox */}
                 <input
                             type="checkbox"
+                            onClick={(e) => e.stopPropagation()}
                             className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
                           />
                           
@@ -955,12 +1026,18 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                               
                               {/* Action Icons */}
                               <div className="flex items-center gap-1.5 md:gap-2 ml-2 md:ml-4">
-                                <button className="p-0.5 md:p-1 text-slate-400 hover:text-red-500 transition-colors">
+                                <button 
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="p-0.5 md:p-1 text-slate-400 hover:text-red-500 transition-colors"
+                                >
                                   <Heart className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                 </button>
                                 <div className="relative">
                 <button
-                                    onClick={() => toggleMenu(project.id || '')}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleMenu(project.id || '');
+                                    }}
                                     className="p-0.5 md:p-1 text-slate-400 hover:text-slate-600 transition-colors"
                                   >
                                     <MoreHorizontal className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -968,8 +1045,21 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                 
                                   {/* Dropdown Menu for List View */}
                                   {openMenuId === project.id && (
-                                    <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[160px] menu-container">
+                                    <div 
+                                      className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[160px] menu-container"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
                                       <div className="py-1">
+          <button 
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleProjectClick(project.id || '');
+                                          }}
+                                          className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+          >
+                                          <Eye className="w-4 h-4" />
+                                          View Details
+          </button>
           <button 
                                           onClick={() => handleEditProject(project)}
                                           className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
@@ -1038,28 +1128,44 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                     ) : (
                       <>
                         {/* Header - Title and Menu */}
-                        <div className="mb-1.5 md:mb-4">
-                          <div className="flex items-start justify-between mb-1 md:mb-2">
-                              <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
-                                <div className="p-1.5 md:p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                                  <FolderKanban className="w-4 h-4 text-blue-600" />
+                        <div className="mb-1 md:mb-4">
+                          <div className="flex items-start justify-between mb-0.5 md:mb-2">
+                              <div className="flex items-start gap-1.5 md:gap-3 flex-1 min-w-0">
+                                <div className="p-1 md:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                                  <FolderKanban className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                       </div>
                                 <div className="flex-1 min-w-0">
-                                  <h3 className="font-bold text-slate-900 text-xs md:text-lg mb-0.5 md:mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{project.name}</h3>
-                                  <p className="text-[10px] md:text-sm text-slate-500 break-words">{project.description || "No description provided"}</p>
+                                  <h3 className="font-bold text-slate-900 text-[10px] md:text-lg mb-0.5 md:mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{project.name}</h3>
+                                  <p className="text-[8px] md:text-sm text-slate-500 break-words">{project.description || "No description provided"}</p>
                     </div>
                     </div>
                               <div className="relative flex-shrink-0 ml-2">
                         <button 
-                                  onClick={() => toggleMenu(project.id || '')}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleMenu(project.id || '');
+                                  }}
                                   className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
                                   aria-label="Open menu"
                                 >
                                   <MoreHorizontal size={14} className="text-slate-400" />
                         </button>
                                 {openMenuId === project.id && (
-                                  <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-[160px] menu-container">
+                                  <div 
+                                    className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-[160px] menu-container"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     <div className="py-1">
+                        <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleProjectClick(project.id || '');
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+                        >
+                                        <Eye className="w-4 h-4" />
+                                        View Details
+                        </button>
                         <button 
                                         onClick={() => handleEditProject(project)}
                                         className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
@@ -1103,19 +1209,19 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                     </div>
                           </div>
                           {/* Project Stats */}
-                        <div className="grid grid-cols-2 gap-2 md:gap-3 mb-1 md:mb-3">
+                        <div className="grid grid-cols-2 gap-1.5 md:gap-3 mb-1 md:mb-3">
                           <div className="text-center">
-                            <div className="text-base md:text-2xl font-bold text-slate-900">{project.progress || 0}%</div>
-                            <div className="text-[10px] text-slate-500 font-medium">Progress</div>
+                            <div className="text-sm md:text-2xl font-bold text-slate-900">{project.progress || 0}%</div>
+                            <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Progress</div>
                     </div>
                           <div className="text-center">
-                            <div className="text-base md:text-2xl font-bold text-slate-900">{project.tasks || 0}</div>
-                            <div className="text-[10px] text-slate-500 font-medium">Tasks</div>
+                            <div className="text-sm md:text-2xl font-bold text-slate-900">{project.tasks || 0}</div>
+                            <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Tasks</div>
           </div>
         </div>
 
                         {/* Progress Bar */}
-                        <div className="w-full bg-slate-200 rounded-full h-1 md:h-2 mb-1 md:mb-3">
+                        <div className="w-full bg-slate-200 rounded-full h-1 md:h-2 mb-0.5 md:mb-3">
                           <div 
                             className="bg-gradient-to-r from-blue-500 to-indigo-600 h-1 md:h-2 rounded-full transition-all duration-300"
                             style={{ width: `${project.progress || 0}%` }}
@@ -1123,17 +1229,17 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                         </div>
 
                         {/* Status and Priority Tags */}
-                        <div className="flex items-center justify-center gap-2 md:gap-3 mb-1 md:mb-3">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${statusColors[project.status as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'}`}>
+                        <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-0.5 md:mb-3">
+                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${statusColors[project.status as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'}`}>
                             {project.status}
                           </span>
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${priorityColors[project.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700'}`}>
+                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${priorityColors[project.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700'}`}>
                             {project.priority}
                           </span>
                         </div>
 
-                        {/* Details grid: desktop 2x2 (Company, Members | Start, End), mobile stacked */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-6 gap-y-1 md:gap-y-1.5 mb-1 md:mb-3">
+                        {/* Details grid: desktop 2x2 (Company, Members | Start, End), mobile hidden */}
+                        <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-1.5 md:mb-3">
                           <div className="flex items-center gap-2">
                             <Building className="w-4 h-4 text-slate-500 flex-shrink-0" />
                             <span className="text-[10px] text-slate-700 font-medium break-words">{project.company}</span>
@@ -1154,9 +1260,15 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
 
                                                 {/* Action Link */}
                         <div className="mt-auto md:pt-4">
-                          <button className="text-blue-600 hover:text-blue-700 text-[10px] md:text-xs font-medium transition-colors">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProjectClick(project.id || '');
+                            }}
+                            className="text-blue-600 hover:text-blue-700 text-[8px] md:text-xs font-medium transition-colors"
+                          >
                             View Details
-            </button>
+                          </button>
                         </div>
                       </>
                     )}
@@ -1165,8 +1277,19 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           </div>
             </>
         )}
+                  </div>
         </div>
+
+                     {/* Floating Action Button (FAB) */}
+             {!showCreateForm && (
+               <button
+                 onClick={() => setShowCreateForm(true)}
+                 className="fixed bottom-20 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center z-50"
+                 aria-label="Create Project"
+               >
+                 <Plus size={20} className="text-white" />
+               </button>
+             )}
       </div>
-    </div>
-  );
+    );
 } 

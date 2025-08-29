@@ -26,10 +26,20 @@ export default function AuthPage() {
 
   // Check if user is already logged in
   useEffect(() => {
-    console.log('🔍 Auth page: Authentication disabled - redirecting to main app');
-    
-    // Temporarily disable authentication - redirect directly to main app
-    router.push('/');
+    const checkAuthStatus = () => {
+      const accessToken = localStorage.getItem('access_token');
+      const idToken = localStorage.getItem('id_token');
+      
+      // If user has valid tokens (not mock tokens), redirect to main app
+      if (accessToken && idToken && accessToken !== 'mock-token-disabled') {
+        console.log('🔍 User already authenticated, redirecting to main app');
+        router.push('/');
+      } else {
+        console.log('🔍 User not authenticated, staying on auth page');
+      }
+    };
+
+    checkAuthStatus();
   }, [router]);
 
 

@@ -62,7 +62,7 @@ export default function NewTabPage() {
   const categories = [
     { id: "all", label: "All", icon: Star, count: 12, description: "View all recent items" },
     { id: "companies", label: "Companies", icon: Building, count: 3, description: "Manage organizations" },
-    { id: "projects", label: "Projects", icon: Tag, count: 4, description: "Track project progress" },
+    { id: "projects", label: "Projects Analytics", icon: Tag, count: 4, description: "Track project progress and analytics" },
     { id: "teams", label: "Teams", icon: User, count: 2, description: "Team collaboration" },
     { id: "sprints", label: "Sprints", icon: Calendar, count: 3, description: "Agile development" }
   ];

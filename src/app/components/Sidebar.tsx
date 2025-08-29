@@ -16,7 +16,7 @@ import {
   X,
   LogOut
 } from 'lucide-react';
-import { logout } from '../utils/auth';
+import { logout, isAuthenticated } from '../utils/auth';
 
 interface SidebarProps {
   activeTab: number;
@@ -52,7 +52,7 @@ export default function Sidebar({
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, type: "dashboard" },
-    { label: "Projects", icon: FolderOpen, type: "projects" },
+    { label: "Projects Analytics", icon: FolderOpen, type: "projects" },
     { label: "Tasks", icon: CheckSquare, type: "tasks" },
     { label: "Teams", icon: Users, type: "teams" },
     { label: "Companies", icon: Building, type: "companies" },
@@ -284,13 +284,13 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* Logout Button */}
+      {/* Auth Button */}
       <button
-        onClick={logout}
-        className={`group flex items-center w-full px-3 py-3 rounded-xl transition-all duration-300 hover:bg-red-50 hover:text-red-600 text-neutral-500 hover:shadow-md ${
+        onClick={() => window.location.href = '/authPage'}
+        className={`group flex items-center w-full px-3 py-3 rounded-xl transition-all duration-300 hover:bg-blue-50 hover:text-blue-600 text-neutral-500 hover:shadow-md ${
           isExpanded ? 'justify-start gap-3' : 'justify-center'
         }`}
-        aria-label="Sign Out"
+        aria-label="Sign In"
       >
         <div className="flex items-center justify-center rounded-lg transition-all duration-300 p-1">
           <LogOut 
@@ -303,7 +303,7 @@ export default function Sidebar({
         </div>
         {isExpanded && (
           <span className="text-sm font-medium truncate transition-all duration-300">
-            Sign Out
+            Sign In
           </span>
         )}
       </button>

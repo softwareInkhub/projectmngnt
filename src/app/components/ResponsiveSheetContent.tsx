@@ -2,7 +2,7 @@
 
 import React from 'react';
 import DashboardPage from './DashboardPage';
-import ProjectsPage from './ProjectsPage';
+import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
 import TeamsPageSheet from './TeamsPageSheet';
 import TasksPage from './TasksPage';
 import CalendarPage from './CalendarPage';
@@ -10,7 +10,6 @@ import ReportsPage from './ReportsPage';
 import NotificationsPage from './NotificationsPage';
 import SettingsPage from './SettingsPage';
 import CompaniesPage from './CompaniesPage';
-import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
 import DepartmentsPage from './DepartmentsPage';
 import SprintsPage from './SprintsPage';
 import StoriesPage from './StoriesPage';
@@ -71,8 +70,10 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-                        <ProjectsPage
-              context={context as { company: string } | undefined}
+                        <ProjectsAnalyticsPage
+              onOpenTab={onOpenTab ? (tabType: string, context?: Record<string, unknown>) => {
+                onOpenTab(tabType, undefined, context);
+              } : undefined}
             />
           </div>
         );

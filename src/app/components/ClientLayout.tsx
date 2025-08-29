@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import ContextSidebar from "./ContextSidebar";
 import SnapLayoutManager from "./SnapLayoutManager";
 import GridLayoutManager from "./GridLayoutManager";
-import { Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen, CheckCircle, Users, Building, Calendar, ChevronDown, CheckSquare, Settings, MoreHorizontal, Home, User, LogOut } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen, CheckCircle, Users, Building, Calendar, ChevronDown, CheckSquare, Settings, MoreHorizontal, Home, User, LogOut, FolderKanban, Building2, LayoutDashboard, Kanban, ListTodo, Landmark } from "lucide-react";
 
 interface Project {
   name: string;
@@ -21,7 +21,7 @@ interface Project {
 
 
 
-import ProjectsPage from "./ProjectsPage";
+import ProjectsAnalyticsPage from "./ProjectsAnalyticsPage";
 import DepartmentsPage from "./DepartmentsPage";
 import TeamsPageSheet from "./TeamsPageSheet";
 import SprintsPage from "./SprintsPage";
@@ -36,7 +36,6 @@ import NotificationsPage from "./NotificationsPage";
 import CompaniesPage from "./CompaniesPage";
 import DashboardPage from "./DashboardPage";
 import { X, Pin, Plus } from "lucide-react";
-import ProjectsAnalyticsPage from "./ProjectsAnalyticsPage";
 import NewTabPage from "./NewTabPage";
 import CreateProjectPage from "./CreateProjectPage";
 import CreateTaskPage from "./CreateTaskPage";
@@ -52,7 +51,7 @@ import { useUser } from '../contexts/UserContext';
 
 
 const SHEET_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  project: ProjectsPage,
+  project: ProjectsAnalyticsPage,
   departments: DepartmentsPage,
   teams: TeamsPageSheet,
   sprints: SprintsPage,
@@ -60,7 +59,7 @@ const SHEET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   tasks: TasksPageSheet,
   "company-teams": TeamsPageSheet,
   "company-tasks": TasksPage,
-  "company-projects": ProjectsPage,
+  "company-projects": ProjectsAnalyticsPage,
   "create-project": CreateProjectPage,
   "create-task": CreateTaskPage,
   "create-team": CreateTeamPage,
@@ -71,7 +70,7 @@ const SHEET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "edit-task": CreateTaskPage,
   "edit-team": CreateTeamPage,
   "edit-sprint": CreateSprintPage,
-  "view-project": ProjectsPage,
+  "view-project": ProjectsAnalyticsPage,
   "view-task": TasksPageSheet,
   "view-team": TeamsPageSheet,
   "view-sprint": SprintsPage,
@@ -276,7 +275,7 @@ export default function ClientLayout() {
           type: "company-projects",
           key: tabKey,
           title: `${companyName} Projects`,
-          component: ProjectsPage,
+          component: ProjectsAnalyticsPage,
         },
       ];
       setActiveTabIdx(newTabs.length - 1);
@@ -342,7 +341,7 @@ export default function ClientLayout() {
   // Mobile navigation items
   const mobileNavItems = [
     { label: "Dashboard", icon: "📊", type: "dashboard" },
-    { label: "Projects", icon: "📁", type: "projects" },
+    { label: "Projects Analytics", icon: "📁", type: "projects" },
     { label: "Tasks", icon: "✅", type: "tasks" },
     { label: "Teams", icon: "👥", type: "teams" },
     { label: "Companies", icon: "🏢", type: "companies" },
@@ -418,7 +417,7 @@ export default function ClientLayout() {
         />
 
         {/* Mobile Content */}
-        <main className="mobile-content">
+        <main className="mobile-content pb-20">
           {openTabs[activeTabIdx] && (() => {
             const TabComponent = openTabs[activeTabIdx].component;
             return (
@@ -435,7 +434,54 @@ export default function ClientLayout() {
           })()}
         </main>
 
-        {/* Mobile navigation removed - using sidebar navigation instead */}
+        {/* Mobile Footer Navigation */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-40">
+          <div className="flex items-center justify-around py-1.5">
+            {/* Home */}
+            <button 
+              onClick={() => onSidebarNavClick(0)}
+              className={`flex flex-col items-center gap-0 p-1 rounded-lg transition-colors hover:bg-slate-50 ${
+                sidebarActiveTab === 0 ? 'text-blue-600' : 'text-slate-600'
+              }`}
+            >
+              <LayoutDashboard size={16} className={sidebarActiveTab === 0 ? 'text-blue-600' : 'text-slate-600'} />
+              <span className={`text-[9px] font-medium ${sidebarActiveTab === 0 ? 'text-blue-600' : 'text-slate-600'}`}>Home</span>
+            </button>
+
+            {/* Projects */}
+            <button 
+              onClick={() => onSidebarNavClick(1)}
+              className={`flex flex-col items-center gap-0 p-1 rounded-lg transition-colors hover:bg-slate-50 ${
+                sidebarActiveTab === 1 ? 'text-blue-600' : 'text-slate-600'
+              }`}
+            >
+              <Kanban size={16} className={sidebarActiveTab === 1 ? 'text-blue-600' : 'text-slate-600'} />
+              <span className={`text-[9px] font-medium ${sidebarActiveTab === 1 ? 'text-blue-600' : 'text-slate-600'}`}>Projects</span>
+            </button>
+
+            {/* Tasks */}
+            <button 
+              onClick={() => onSidebarNavClick(2)}
+              className={`flex flex-col items-center gap-0 p-1 rounded-lg transition-colors hover:bg-slate-50 ${
+                sidebarActiveTab === 2 ? 'text-blue-600' : 'text-slate-600'
+              }`}
+            >
+              <ListTodo size={16} className={sidebarActiveTab === 2 ? 'text-blue-600' : 'text-slate-600'} />
+              <span className={`text-[9px] font-medium ${sidebarActiveTab === 2 ? 'text-blue-600' : 'text-slate-600'}`}>Tasks</span>
+            </button>
+
+            {/* Companies */}
+            <button 
+              onClick={() => onSidebarNavClick(4)}
+              className={`flex flex-col items-center gap-0 p-1 rounded-lg transition-colors hover:bg-slate-50 ${
+                sidebarActiveTab === 4 ? 'text-blue-600' : 'text-slate-600'
+              }`}
+            >
+              <Landmark size={16} className={sidebarActiveTab === 4 ? 'text-blue-600' : 'text-slate-600'} />
+              <span className={`text-[9px] font-medium ${sidebarActiveTab === 4 ? 'text-blue-600' : 'text-slate-600'}`}>Companies</span>
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -608,7 +654,7 @@ export default function ClientLayout() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-auto">
           {isGridMode ? (
             <GridLayoutManager 
               onOpenTab={openTab} 
@@ -620,7 +666,7 @@ export default function ClientLayout() {
               {openTabs[activeTabIdx] && (() => {
                 const TabComponent = openTabs[activeTabIdx].component;
                 return (
-                  <div className="min-h-full">
+                  <div className="h-full">
                     <TabComponent
                       open={true}
                       onClose={() => closeTab(activeTabIdx)}
