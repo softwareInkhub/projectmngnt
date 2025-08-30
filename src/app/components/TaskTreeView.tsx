@@ -23,7 +23,8 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  FolderOpen
+  FolderOpen,
+  X
 } from 'lucide-react';
 import { TaskTreeNode } from '../utils/taskApi';
 
@@ -35,6 +36,8 @@ interface TaskTreeViewProps {
   onDeleteTask: (taskId: string) => void;
   onToggleStatus: (taskId: string, newStatus: string) => Promise<void>;
   selectedTaskId?: string | null;
+  isLandscape?: boolean;
+  onToggleLandscape?: () => void;
 }
 
 interface TaskNodeProps {
@@ -364,7 +367,9 @@ export default function TaskTreeView({
   onEditTask,
   onDeleteTask,
   onToggleStatus,
-  selectedTaskId
+  selectedTaskId,
+  isLandscape = false,
+  onToggleLandscape
 }: TaskTreeViewProps) {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
@@ -391,7 +396,7 @@ export default function TaskTreeView({
   };
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-1.5 flex flex-col">
+    <div className="w-full h-full flex flex-col min-h-0">
       <div className="w-full h-full flex flex-col">
         {/* Compact Enhanced Header */}
         <div className="mb-2 flex-shrink-0">
@@ -401,6 +406,26 @@ export default function TaskTreeView({
               <p className="text-xs sm:text-sm text-slate-600">Vertical tree view with indentation</p>
             </div>
             <div className="flex items-center gap-1">
+              {/* Landscape Toggle Button - Mobile Only */}
+              {onToggleLandscape && (
+                <motion.button
+                  onClick={onToggleLandscape}
+                  className={`p-1 rounded-md transition-colors shadow-sm ${
+                    isLandscape 
+                      ? "bg-blue-100 text-blue-600" 
+                      : "hover:bg-white text-slate-600"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title={isLandscape ? "Exit Landscape View" : "Enter Landscape View"}
+                >
+                  {isLandscape ? (
+                    <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                  ) : (
+                    <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4" />
+                  )}
+                </motion.button>
+              )}
               <motion.button
                 className="p-1 hover:bg-white rounded-md transition-colors shadow-sm"
                 whileHover={{ scale: 1.05 }}
@@ -417,14 +442,7 @@ export default function TaskTreeView({
               >
                 <ZoomOut className="w-3 h-3 sm:w-4 sm:h-4 text-slate-600" />
               </motion.button>
-              <motion.button
-                className="p-1 hover:bg-white rounded-md transition-colors shadow-sm"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                title="Reset View"
-              >
-                <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 text-slate-600" />
-              </motion.button>
+
             </div>
           </div>
 
@@ -494,18 +512,12 @@ export default function TaskTreeView({
         {/* Task Tree Container */}
         <div 
           ref={containerRef}
-          className="flex-1 bg-white rounded-xl shadow-lg border border-slate-200 p-2 sm:p-4 overflow-auto overflow-x-auto sm:overflow-x-visible min-h-0"
-          style={{
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'
-          }}
+          className="flex-1 p-2 sm:p-4 min-h-0 h-full overflow-x-auto"
         >
-          {/* Mobile Horizontal Scroll Bar */}
-          <div className="sm:hidden w-full h-1 bg-slate-100 rounded-full mb-2 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full animate-pulse"></div>
-          </div>
+
 
           {/* Tree Structure */}
-          <div className="space-y-4 min-w-full" style={{ minWidth: 'max-content' }}>
+          <div className="space-y-4 min-w-full flex flex-col items-start overflow-x-auto" style={{ minWidth: 'max-content' }}>
             {tasks.length > 0 ? (
               <AnimatePresence>
                 {tasks.map((task, index) => (
@@ -536,18 +548,8 @@ export default function TaskTreeView({
                 <p className="text-xs sm:text-base text-slate-500">Create your first task to get started</p>
           </div>
         )}
-      </div>
-
-          {/* Mobile Bottom Scroll Indicator */}
-          <div className="sm:hidden w-full h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse"></div>
-        </div>
-      </div>
-      
-        {/* Mobile Horizontal Scroll Bar at Bottom */}
-        <div className="sm:hidden w-full h-2 bg-slate-100 rounded-lg mt-2 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-lg"></div>
           </div>
+        </div>
       </div>
     </div>
   );

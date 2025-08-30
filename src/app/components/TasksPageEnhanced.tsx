@@ -417,6 +417,8 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
                 <span className="sm:hidden">Add</span>
               </button>
 
+
+
               {/* Mobile Search - Only visible on mobile */}
               <div className="md:hidden">
                 <div className="relative">
@@ -582,26 +584,7 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
               </button>
             </div>
 
-            {/* Landscape Toggle - Mobile Only */}
-            <div className="md:hidden">
-              <div className="flex items-center bg-slate-100 rounded-lg p-1.5">
-                <button
-                  onClick={() => setIsLandscape(!isLandscape)}
-                  className={`p-2 rounded-md transition-colors ${
-                    isLandscape 
-                      ? "bg-white text-blue-600 shadow-sm" 
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                  title={isLandscape ? "Exit Landscape View" : "Enter Landscape View"}
-                >
-                  {isLandscape ? (
-                    <X className="w-4 h-4" />
-                  ) : (
-                    <RotateCcw className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
+
 
             {/* Task Count */}
             <span className="text-sm text-slate-600">
@@ -681,14 +664,15 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
            ) : (
              <>
                {viewMode === "tree" && (
-                 <div className={`${
+                 <div className={`relative ${
                    isLandscape 
-                     ? "h-[500px] sm:h-[600px] md:h-[700px] lg:h-[800px] overflow-auto bg-white border border-slate-200 rounded-xl shadow-lg" 
-                     : "h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] overflow-auto"
+                     ? "h-[500px] sm:h-[600px] md:h-[700px] lg:h-[800px] w-[calc(100%+8px)] -mx-1 -mt-5 overflow-auto md:bg-white md:border md:border-slate-200 md:rounded-xl md:shadow-lg" 
+                     : "h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] overflow-auto md:bg-white md:border md:border-slate-200 md:rounded-xl md:shadow-sm"
                  }`}>
-                   {/* Landscape Header */}
+
+                   {/* Landscape Header - Fixed */}
                    {isLandscape && (
-                     <div className="flex items-center justify-between p-2 border-b border-slate-200 bg-slate-50">
+                     <div className="flex items-center justify-between p-2 border-b border-slate-200 bg-slate-50 flex-shrink-0">
                        <div className="flex items-center gap-2">
                          <RotateCcw className="w-4 h-4 text-blue-600" />
                          <span className="text-sm font-medium text-slate-700">Landscape Tree View</span>
@@ -703,12 +687,12 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
                      </div>
                    )}
                    
-                   <div className={`${
-                     isLandscape 
-                       ? "h-[calc(100%-48px)] overflow-auto" 
-                       : "w-full h-full"
-                   }`}>
-                     <div className={isLandscape ? "transform rotate-90 origin-center w-full h-full" : "w-full h-full"}>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 <div className={`${
+                       isLandscape 
+                         ? "h-[calc(100vh-80px)] -mt-28 flex-1 overflow-auto overflow-x-auto" 
+                         : "w-full h-full flex-1"
+                     }`}>
+                     <div className={isLandscape ? "transform rotate-90 origin-center w-full h-full flex items-start" : "w-full h-full"}>
                        <TaskTreeView
                          tasks={taskTree}
                          onTaskSelect={handleTaskSelect}
@@ -717,6 +701,8 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
                          onDeleteTask={handleDeleteTask}
                          onToggleStatus={handleToggleStatus}
                          selectedTaskId={selectedTaskId}
+                         isLandscape={isLandscape}
+                         onToggleLandscape={() => setIsLandscape(!isLandscape)}
                        />
                      </div>
                    </div>

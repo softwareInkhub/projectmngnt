@@ -170,17 +170,17 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-8 py-6 rounded-t-xl">
+        <div className="sticky top-0 bg-white border-b border-slate-200 px-4 py-4 rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckSquare className="w-5 h-5 text-green-600" />
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <CheckSquare className="w-4 h-4 text-green-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Create New Task</h2>
-                <p className="text-slate-600">Fill in the details below to create a new task.</p>
+                <h2 className="text-lg font-bold text-slate-900">Create New Task</h2>
+                <p className="text-sm text-slate-600">Fill in the details below to create a new task.</p>
               </div>
             </div>
             <button 
@@ -192,20 +192,19 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+        <form onSubmit={handleSubmit} className="p-4 space-y-6">
           {/* Task Information */}
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <CheckSquare className="w-4 h-4 text-blue-600" />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
+                <CheckSquare className="w-3 h-3 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900">Task Information</h3>
+              <h3 className="text-base font-semibold text-slate-900">Task Information</h3>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-4">
+            <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Task Title *
                   </label>
                   <input
@@ -213,20 +212,20 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="Enter task title"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Project *
                   </label>
                   <div className="relative">
                     <select
                       value={formData.project}
                       onChange={(e) => setFormData(prev => ({ ...prev, project: e.target.value }))}
-                      className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none text-sm"
                       required
                     >
                       {projects.map(project => (
@@ -256,18 +255,17 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     {showNewProject ? "Cancel" : "+ Add New Project"}
                   </button>
                 </div>
-              </div>
 
-              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Assignee *
                   </label>
                   <div className="relative">
                     <select
                       value={formData.assignee}
                       onChange={(e) => setFormData(prev => ({ ...prev, assignee: e.target.value }))}
-                      className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none text-sm"
                       required
                     >
                       {assignees.map(assignee => (
@@ -281,15 +279,15 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Describe the task goals, requirements, and key deliverables..."
-                    rows={4}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={2}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
                   />
                 </div>
               </div>
@@ -297,24 +295,24 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
           </div>
 
           {/* Task Details */}
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
                 {/* Target icon removed as per new_code */}
               </div>
-              <h3 className="text-lg font-semibold text-slate-900">Task Details</h3>
+              <h3 className="text-base font-semibold text-slate-900">Task Details</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Status *
                 </label>
                 <div className="relative">
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none text-sm"
                     required
                   >
                     {statuses.map(status => (
@@ -328,14 +326,14 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Priority *
                 </label>
                 <div className="relative">
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none text-sm"
                     required
                   >
                     {priorities.map(priority => (
@@ -349,7 +347,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Estimated Hours
                 </label>
                 <div className="relative">
@@ -358,7 +356,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     value={formData.estimatedHours}
                     onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: e.target.value }))}
                     placeholder="e.g., 8"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <Clock className="w-4 h-4 text-slate-400" />
@@ -369,17 +367,17 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
           </div>
 
           {/* Timeline */}
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-orange-600" />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-3 h-3 text-orange-600" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900">Timeline</h3>
+              <h3 className="text-base font-semibold text-slate-900">Timeline</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Start Date *
                 </label>
                 <div className="relative">
@@ -387,7 +385,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     required
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -397,7 +395,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Due Date *
                 </label>
                 <div className="relative">
@@ -405,7 +403,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     type="date"
                     value={formData.dueDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     required
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -417,12 +415,12 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
           </div>
 
           {/* Tags */}
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <Tag className="w-4 h-4 text-indigo-600" />
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <Tag className="w-3 h-3 text-indigo-600" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900">Tags</h3>
+              <h3 className="text-base font-semibold text-slate-900">Tags</h3>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -431,7 +429,7 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                   key={tag}
                   type="button"
                   onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-2 py-1 rounded-full text-sm font-medium transition-colors ${
                     formData.tags.includes(tag)
                       ? "bg-blue-100 text-blue-700 border border-blue-200"
                       : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200"
@@ -444,20 +442,20 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
           </div>
 
           {/* Subtasks */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">
                   <CheckSquare className="w-4 h-4 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">Subtasks</h3>
+                <h3 className="text-base font-semibold text-slate-900">Subtasks</h3>
               </div>
               <button
                 type="button"
                 onClick={addSubtask}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 text-sm"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Add Subtask</span>
               </button>
             </div>
@@ -469,21 +467,21 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                     type="checkbox"
                     checked={subtask.completed}
                     onChange={(e) => updateSubtask(subtask.id, "completed", e.target.checked)}
-                    className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                    className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 rounded focus:ring-green-500"
                   />
                   <input
                     type="text"
                     value={subtask.title}
                     onChange={(e) => updateSubtask(subtask.id, "title", e.target.value)}
                     placeholder={`Subtask ${index + 1}`}
-                    className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                   />
                   <button
                     type="button"
                     onClick={() => removeSubtask(subtask.id)}
                     className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                 </div>
               ))}
@@ -491,12 +489,12 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
           </div>
 
           {/* Comments */}
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center">
                 {/* MessageSquare icon removed as per new_code */}
               </div>
-              <h3 className="text-lg font-semibold text-slate-900">Initial Comments</h3>
+              <h3 className="text-base font-semibold text-slate-900">Initial Comments</h3>
             </div>
 
             <div>
@@ -504,8 +502,8 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                 value={formData.comments}
                 onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
                 placeholder="Add any initial comments or notes about this task..."
-                rows={3}
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                rows={2}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
               />
             </div>
           </div>

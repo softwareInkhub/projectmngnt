@@ -275,60 +275,60 @@ export default function CompaniesPage({ context }: { context?: { company: string
     return (
       <div className="space-y-4 md:space-y-6">
         {/* Enhanced Analytics Cards - 2x2 Format */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 animate-fade-in">
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-blue-50 rounded-md flex items-center justify-center mr-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-0.5 animate-fade-in">
+          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center shadow-sm">
+            <div className="w-5 h-5 bg-blue-50 rounded-lg flex items-center justify-center mr-1">
               <Building2 className="w-3 h-3 text-blue-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalCompanies}</h3>
-              <p className="text-xs text-slate-500">Total Companies</p>
+              <h3 className="text-[10px] font-bold text-slate-900">{analytics.totalCompanies}</h3>
+              <p className="text-[8px] font-medium text-slate-600">Total Companies</p>
           </div>
-            <div className="flex items-center gap-1 ml-2">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span className="text-xs text-slate-400">+2</span>
+            <div className="flex items-center gap-0.5 ml-0.5">
+              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
+              <span className="text-[8px] font-medium text-slate-500">+2</span>
             </div>
         </div>
 
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-emerald-50 rounded-md flex items-center justify-center mr-3">
+          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center shadow-sm">
+            <div className="w-5 h-5 bg-emerald-50 rounded-lg flex items-center justify-center mr-1">
               <FolderKanban className="w-3 h-3 text-emerald-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalProjects}</h3>
-              <p className="text-xs text-slate-500">Total Projects</p>
+              <h3 className="text-[10px] font-bold text-slate-900">{analytics.totalProjects}</h3>
+              <p className="text-[8px] font-medium text-slate-600">Total Projects</p>
           </div>
-            <div className="flex items-center gap-1 ml-2">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span className="text-xs text-slate-400">+8</span>
+            <div className="flex items-center gap-0.5 ml-0.5">
+              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
+              <span className="text-[8px] font-medium text-slate-500">+8</span>
             </div>
         </div>
 
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-purple-50 rounded-md flex items-center justify-center mr-3">
+          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center shadow-sm">
+            <div className="w-5 h-5 bg-purple-50 rounded-lg flex items-center justify-center mr-1">
               <Users className="w-3 h-3 text-purple-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalMembers}</h3>
-              <p className="text-xs text-slate-500">Total Members</p>
+              <h3 className="text-[10px] font-bold text-slate-900">{analytics.totalMembers}</h3>
+              <p className="text-[8px] font-medium text-slate-600">Total Members</p>
           </div>
-            <div className="flex items-center gap-1 ml-2">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span className="text-xs text-slate-400">+12</span>
+            <div className="flex items-center gap-0.5 ml-0.5">
+              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
+              <span className="text-[8px] font-medium text-slate-500">+12</span>
             </div>
         </div>
 
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-orange-50 rounded-md flex items-center justify-center mr-3">
+          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center shadow-sm">
+            <div className="w-5 h-5 bg-orange-50 rounded-lg flex items-center justify-center mr-1">
               <Target className="w-3 h-3 text-orange-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.avgSatisfaction}%</h3>
-              <p className="text-xs text-slate-500">Avg Satisfaction</p>
+              <h3 className="text-[10px] font-bold text-slate-900">{analytics.avgSatisfaction}%</h3>
+              <p className="text-[8px] font-medium text-slate-600">Avg Satisfaction</p>
           </div>
-            <div className="flex items-center gap-1 ml-2">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span className="text-xs text-slate-400">+3%</span>
+            <div className="flex items-center gap-0.5 ml-0.5">
+              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
+              <span className="text-[8px] font-medium text-slate-500">+3%</span>
             </div>
         </div>
       </div>
@@ -343,14 +343,14 @@ export default function CompaniesPage({ context }: { context?: { company: string
                 key={company.id}
                   className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group relative"
               >
-                  <div className="p-4 sm:p-6">
+                  <div className="p-3 sm:p-4">
                 {/* Company Header */}
-                    <div className="flex items-start justify-between mb-3 sm:mb-4">
+                    <div className="flex items-start justify-between mb-2 sm:mb-3">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 group-hover:text-blue-600 transition-colors truncate">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors truncate">
                         {company.name}
                       </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                        <p className="text-xs text-gray-600 line-clamp-2">
                           {company.industry || "No industry specified"}
                       </p>
                     </div>
@@ -407,10 +407,10 @@ export default function CompaniesPage({ context }: { context?: { company: string
                   </div>
 
                     {/* Company Description */}
-                    <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 line-clamp-2">{company.description || "No description provided"}</p>
+                    <p className="text-xs text-gray-600 mb-2 sm:mb-3 line-clamp-2">{company.description || "No description provided"}</p>
                     
                     {/* Pill Badges */}
-                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         company.status === "Active" ? "bg-green-100 text-green-700" :
                         company.status === "Inactive" ? "bg-red-100 text-red-700" :
@@ -422,33 +422,6 @@ export default function CompaniesPage({ context }: { context?: { company: string
                         {company.size || "Small"}
                       </span>
                   </div>
-
-                    {/* Company Details - Compact */}
-                    <div className="space-y-2 mb-3 sm:mb-4">
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                        <span className="truncate">{company.location || "Location not specified"}</span>
-                    </div>
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <Users className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                        <span>{company.employees || 0} employees</span>
-                    </div>
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                        <span>Founded {company.founded || "N/A"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                        <span className="truncate">{company.website || "No website"}</span>
-                  </div>
-                </div>
-
-                    {/* Action Button */}
-                    <div className="flex items-center justify-between">
-                      <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                  View Details
-                    </button>
-                        </div>
                       </div>
                                     </div>
               ))}
@@ -564,7 +537,8 @@ export default function CompaniesPage({ context }: { context?: { company: string
             <span className="text-sm sm:text-base">Companies</span>
             </div>
           </div>
-                <div className="flex items-center gap-2 sm:gap-3">
+                
+        <div className="flex items-center gap-2 sm:gap-3">
           <button 
             className="hidden sm:flex group items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
           >
@@ -634,22 +608,10 @@ export default function CompaniesPage({ context }: { context?: { company: string
 
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
 
-        {/* Compact Search and Filters - Mobile Optimized */}
+        {/* Compact Filters, Search, and View Toggle - Mobile Optimized */}
         <div className="space-y-3">
-          {/* Search Bar - Compact */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                      <input
-                        type="text"
-              placeholder="Search companies, industries, or descriptions"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                      />
-                    </div>
-
-          {/* Filters and View Toggle - Compact */}
-          <div className="flex items-center justify-between">
+          {/* Filters, Search, and View Toggle - Compact */}
+          <div className="flex items-center gap-3">
             {/* Filters Button */}
             <button 
               className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
@@ -658,6 +620,18 @@ export default function CompaniesPage({ context }: { context?: { company: string
               <Filter className="w-4 h-4" />
               <span>Filters</span>
             </button>
+            
+            {/* Search Bar - Compact */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search companies, industries, or descriptions"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
             
             {/* View Toggle - Compact */}
             <div className="flex items-center bg-gray-100 rounded-lg p-1">
@@ -737,27 +711,27 @@ export default function CompaniesPage({ context }: { context?: { company: string
 
         {/* Inline Create Company Form */}
         {showCreateForm && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-            <h2 className="text-xl font-semibold mb-4">Create New Company</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
+            <h2 className="text-lg font-semibold mb-3">Create New Company</h2>
+            <form onSubmit={handleSubmit} className="space-y-3">
               {/* Row: Name, Industry */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Company Name</label>
                       <input
                         type="text"
                         value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                         required
                       />
                       </div>
                     <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Industry</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Industry</label>
                         <select
                           value={formData.industry}
                     onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                   >
                     {industries.map((industry) => (
                       <option key={industry} value={industry}>
@@ -769,13 +743,13 @@ export default function CompaniesPage({ context }: { context?: { company: string
                   </div>
 
               {/* Row: Size, Status */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Size</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Size</label>
                   <select
                     value={(formData as any).size || "Small"}
                     onChange={(e) => setFormData({ ...formData, size: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                   >
                     {companySizes.map((s) => (
                       <option key={s} value={s}>
@@ -785,11 +759,11 @@ export default function CompaniesPage({ context }: { context?: { company: string
                   </select>
                       </div>
                     <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Status</label>
                         <select
                     value={formData.status || "Active"}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                   >
                     {companyStatuses.map((s) => (
                       <option key={s} value={s}>
@@ -801,71 +775,71 @@ export default function CompaniesPage({ context }: { context?: { company: string
                   </div>
 
               {/* Row: Founded, Employees */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Founded</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Founded</label>
                       <input
                         type="text"
                     value={formData.founded || ""}
                     onChange={(e) => setFormData({ ...formData, founded: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                     placeholder="e.g., 2024"
                   />
                       </div>
                   <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Employees</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Employees</label>
                                              <input
                          type="number"
                     value={formData.employees ?? 0}
                     onChange={(e) => setFormData({ ...formData, employees: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                     min={0}
                   />
                 </div>
               </div>
 
               {/* Row: Location, Website */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Location</label>
                       <input
                         type="text"
                     value={formData.location || ""}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                   />
                       </div>
                   <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Website</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Website</label>
                       <input
                         type="url"
                     value={formData.website || ""}
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                     placeholder="https://example.com"
                   />
                     </div>
                   </div>
 
               {/* Row: Email, Phone */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Email</label>
                       <input
                         type="email"
                     value={formData.email || ""}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                     placeholder="name@company.com"
                   />
                       </div>
                   <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Phone</label>
                       <input
                     type="text"
                     value={formData.phone || ""}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                     placeholder="+1-555-0123"
                   />
                     </div>
@@ -873,28 +847,28 @@ export default function CompaniesPage({ context }: { context?: { company: string
 
               {/* Row: Revenue */}
                   <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Revenue</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Revenue</label>
                       <input
                   type="text"
                   value={formData.revenue || ""}
                   onChange={(e) => setFormData({ ...formData, revenue: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                   placeholder="$1M"
                 />
               </div>
 
               {/* Actions */}
-              <div className="flex gap-4">
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
-                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+                  className="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 text-sm"
                 >
                   Cancel
                   </button>
                   <button
                     type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
                   >
                   Create
                   </button>
