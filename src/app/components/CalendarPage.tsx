@@ -248,6 +248,7 @@ export default function CalendarPage({
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('calendar');
 
   const [formData, setFormData] = useState({
     title: "",
@@ -351,43 +352,92 @@ export default function CalendarPage({
   return (
     <div className="h-full bg-white">
       {/* Header */}
-      <div className="p-6 border-b border-slate-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold">Calendar</h1>
-            <div className="flex items-center space-x-2">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm sticky top-0 z-40">
+        <div className="px-3 md:px-6 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-2 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+              <div className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow-lg flex-shrink-0">
+                <Calendar className="text-white mr-1 md:w-5 md:h-5" size={16} />
+                <span className="text-xs md:text-base whitespace-nowrap">Calendar</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+              {/* Mobile View Toggle */}
+              <div className="md:hidden flex items-center bg-slate-100 rounded-lg p-1 shadow-sm">
+                <button 
+                  onClick={() => setActiveTab('calendar')}
+                  className={`flex items-center justify-center w-6 h-6 rounded-md transition-colors ${
+                    activeTab === 'calendar' 
+                      ? 'bg-blue-500 text-white shadow-sm' 
+                      : 'text-slate-600 hover:text-slate-800'
+                  }`}
+                >
+                  <Calendar size={12} />
+                </button>
+                <button 
+                  onClick={() => setActiveTab('events')}
+                  className={`flex items-center justify-center w-6 h-6 rounded-md transition-colors ${
+                    activeTab === 'events' 
+                      ? 'bg-blue-500 text-white shadow-sm' 
+                      : 'text-slate-600 hover:text-slate-800'
+                  }`}
+                >
+                  <List size={12} />
+                </button>
+                <button 
+                  onClick={() => setActiveTab('analytics')}
+                  className={`flex items-center justify-center w-6 h-6 rounded-md transition-colors ${
+                    activeTab === 'analytics' 
+                      ? 'bg-blue-500 text-white shadow-sm' 
+                      : 'text-slate-600 hover:text-slate-800'
+                  }`}
+                >
+                  <BarChart3 size={12} />
+                </button>
+              </div>
+              
+              <button 
+                className="group flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 bg-white/80 backdrop-blur-sm rounded-lg md:rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring text-xs md:text-sm whitespace-nowrap"
+              >
+                <Download size={12} className="md:w-4 md:h-4" />
+                <span className="hidden md:inline">Export</span>
+                <span className="md:hidden">Export</span>
+              </button>
+              <button
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                className="group flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring text-xs md:text-sm whitespace-nowrap"
+              >
+                <Plus size={12} className="md:w-4 md:h-5" />
+                <span className="hidden md:inline">{showCreateForm ? 'Cancel' : 'Add Event'}</span>
+                <span className="md:hidden">{showCreateForm ? 'Cancel' : 'Add'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Date Navigation Section */}
+      <div className="bg-white/60 backdrop-blur-sm border-b border-white/20 shadow-sm">
+        <div className="px-3 md:px-6 py-3 md:py-4">
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-1 md:gap-2">
               <button
                 onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-                className="p-1 rounded hover:bg-slate-100"
+                className="p-1.5 md:p-2 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={16} className="md:w-5 md:h-5" />
               </button>
-              <span className="text-sm font-medium">
+              <span className="text-sm md:text-base font-medium text-slate-700">
                 {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </span>
               <button
                 onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-                className="p-1 rounded hover:bg-slate-100"
+                className="p-1.5 md:p-2 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={16} className="md:w-5 md:h-5" />
               </button>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button 
-              className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
-            >
-              <Download size={16} />
-              Export
-            </button>
-            <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-            >
-              <Plus size={16} />
-              <span>{showCreateForm ? 'Cancel' : 'Add Event'}</span>
-            </button>
           </div>
         </div>
       </div>
@@ -723,60 +773,194 @@ export default function CalendarPage({
         </div>
       )}
 
-      {/* Calendar Grid */}
-      <div className="p-6">
-        {/* Day Headers */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="text-center text-xs font-medium text-slate-500 py-2">
-              {day}
-            </div>
-          ))}
+      <div className="p-3 md:p-6 space-y-4 md:space-y-6">
+        {/* Desktop Tabs */}
+        <div className="hidden md:block">
+          <div className="flex space-x-1 bg-white/80 backdrop-blur-sm rounded-xl p-1 shadow-lg border border-white/20">
+            {[
+              { id: 'calendar', label: 'Calendar', icon: Calendar },
+              { id: 'events', label: 'Events', icon: List },
+              { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? 'bg-blue-500 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                }`}
+              >
+                <tab.icon size={16} />
+                <span className="font-medium">{tab.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Calendar Days */}
-        <div className="grid grid-cols-7 gap-1">
-          {/* Empty days at start */}
-          {emptyDays.map((_, index) => (
-            <div key={`empty-${index}`} className="h-24 bg-slate-50 rounded-lg" />
-          ))}
-          
-          {/* Actual days */}
-          {days.map(day => {
-            const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const events = getEventsForDate(dateString);
-            const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
-            
-            return (
-              <div 
-                key={day}
-                className={`h-24 border border-slate-200 rounded-lg p-1 cursor-pointer hover:bg-slate-50 transition-colors ${
-                  isToday ? 'bg-blue-50 border-blue-300' : ''
-                }`}
-                onClick={() => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
-              >
-                <div className="text-xs font-medium mb-1">
-                  {day}
-                </div>
-                <div className="space-y-1">
-                  {events.slice(0, 2).map(event => (
-                    <div
-                      key={event.id}
-                      className={`text-xs px-1 py-0.5 rounded border ${getEventTypeColor(event.type)} flex items-center space-x-1`}
-                    >
-                      {getEventTypeIcon(event.type)}
-                      <span className="truncate">{event.title}</span>
+        {/* Content Area */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-4 md:p-6">
+          {activeTab === 'calendar' && (
+            <div className="space-y-4 md:space-y-6">
+              {/* Calendar Grid */}
+              <div>
+                {/* Day Headers */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div key={day} className="text-center text-xs font-medium text-slate-500 py-2">
+                      {day}
                     </div>
                   ))}
-                  {events.length > 2 && (
-                    <div className="text-xs text-slate-500 px-1">
-                      +{events.length - 2} more
-                    </div>
-                  )}
+                </div>
+
+                {/* Calendar Days */}
+                <div className="grid grid-cols-7 gap-1">
+                  {/* Empty days at start */}
+                  {emptyDays.map((_, index) => (
+                    <div key={`empty-${index}`} className="h-16 bg-slate-50 rounded-lg" />
+                  ))}
+                  
+                  {/* Actual days */}
+                  {days.map(day => {
+                    const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const events = getEventsForDate(dateString);
+                    const isToday = new Date().toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
+                    
+                    return (
+                      <div 
+                        key={day}
+                        className={`h-16 border border-slate-200 rounded-lg p-1 cursor-pointer hover:bg-slate-50 transition-colors ${
+                          isToday ? 'bg-blue-50 border-blue-300' : ''
+                        }`}
+                        onClick={() => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
+                      >
+                        <div className="text-xs font-medium mb-1">
+                          {day}
+                        </div>
+                        <div className="space-y-1">
+                          {events.slice(0, 2).map(event => (
+                            <div
+                              key={event.id}
+                              className={`text-xs px-1 py-0.5 rounded border ${getEventTypeColor(event.type)} flex items-center space-x-1`}
+                            >
+                              {getEventTypeIcon(event.type)}
+                              <span className="truncate">{event.title}</span>
+                            </div>
+                          ))}
+                          {events.length > 2 && (
+                            <div className="text-xs text-slate-500 px-1">
+                              +{events.length - 2} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            );
-          })}
+            </div>
+          )}
+
+          {activeTab === 'events' && (
+            <div className="space-y-4 md:space-y-6">
+              <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <List className="w-5 h-5 text-blue-500" />
+                All Events
+              </h3>
+              <div className="space-y-3">
+                {mockEvents.map((event, index) => (
+                  <div
+                    key={event.id}
+                    className="group bg-white/80 backdrop-blur-sm rounded-xl p-3 md:p-4 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105 animate-fade-in"
+                    style={{ animationDelay: `${800 + index * 100}ms` }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-slate-900">{event.title}</h4>
+                        <p className="text-sm text-slate-600 mt-1">{event.date} at {event.time}</p>
+                        {event.description && (
+                          <p className="text-sm text-slate-500 mt-2">{event.description}</p>
+                        )}
+                        {event.attendees && event.attendees.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs text-slate-500 mb-1">Attendees:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {event.attendees.map((attendee, index) => (
+                                <span key={index} className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded">
+                                  {attendee}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(event.type)}`}>
+                        {event.type}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="space-y-4 md:space-y-6">
+              <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-blue-500" />
+                Calendar Analytics
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+                <div className="group bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+                  <div className="flex items-center justify-between mb-3 md:mb-4">
+                    <div className="p-2 md:p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                      <Calendar className="w-4 h-4 md:w-5 md:h-5" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900">{mockEvents.length}</h3>
+                    <p className="text-sm text-slate-600">Total Events</p>
+                  </div>
+                </div>
+                
+                <div className="group bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+                  <div className="flex items-center justify-between mb-3 md:mb-4">
+                    <div className="p-2 md:p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+                      <Users className="w-4 h-4 md:w-5 md:h-5" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900">{mockEvents.filter(e => e.type === 'meeting').length}</h3>
+                    <p className="text-sm text-slate-600">Meetings</p>
+                  </div>
+                </div>
+                
+                <div className="group bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+                  <div className="flex items-center justify-between mb-3 md:mb-4">
+                    <div className="p-2 md:p-3 rounded-xl bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-lg">
+                      <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900">{mockEvents.filter(e => e.type === 'deadline').length}</h3>
+                    <p className="text-sm text-slate-600">Deadlines</p>
+                  </div>
+                </div>
+                
+                <div className="group bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-6 shadow-lg hover:shadow-xl border border-white/20 transition-all duration-300 hover:scale-105">
+                  <div className="flex items-center justify-between mb-3 md:mb-4">
+                    <div className="p-2 md:p-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 text-white shadow-lg">
+                      <Bell className="w-4 h-4 md:w-5 md:h-5" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900">{mockEvents.filter(e => e.type === 'reminder').length}</h3>
+                    <p className="text-sm text-slate-600">Reminders</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
