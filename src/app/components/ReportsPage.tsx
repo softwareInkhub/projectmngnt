@@ -14,7 +14,12 @@ import {
   Activity,
   Target,
   Users,
-  DollarSign
+  DollarSign,
+  Search,
+  MoreHorizontal,
+  Edit,
+  Copy,
+  Trash2
 } from 'lucide-react';
 
 interface Report {
@@ -84,6 +89,7 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const analytics = {
     totalReports: reports.length,
@@ -108,113 +114,123 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
     setReports(reports.filter(r => r.id !== reportId));
   };
 
+  const toggleMenu = (reportId: string) => {
+    setOpenMenuId(openMenuId === reportId ? null : reportId);
+  };
+
   return (
-    <div className="h-full bg-white">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="p-6 border-b border-slate-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">Reports</h1>
-            <p className="text-sm text-slate-500 mt-1">Generate and manage project reports</p>
+      <div className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-6">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="p-1.5 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-md md:shadow-lg">
+              <FileText className="w-4 h-4 md:w-6 md:h-6" />
+            </div>
+            <div>
+              <h1 className="text-base md:text-xl font-bold text-slate-900 leading-tight">Reports Analytics</h1>
+              <p className="text-slate-600 mt-0.5 md:mt-1 text-xs md:text-base">Generate and manage project reports</p>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <button className="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center space-x-2">
-              <Filter size={16} />
-              <span>Filter</span>
-            </button>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-              <FileText size={16} />
-              <span>New Report</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Cards */}
-      <div className="p-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-blue-50 rounded-md flex items-center justify-center mr-3">
-              <FileText className="w-3 h-3 text-blue-600" />
+          {/* Actions (responsive) */}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Desktop search/filters */}
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
+              <input type="text" placeholder="Search reports..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64" />
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalReports}</h3>
-              <p className="text-xs text-slate-500">Total Reports</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-green-50 rounded-md flex items-center justify-center mr-3">
-              <TrendingUp className="w-3 h-3 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.completedReports}</h3>
-              <p className="text-xs text-slate-500">Completed</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-yellow-50 rounded-md flex items-center justify-center mr-3">
-              <Activity className="w-3 h-3 text-yellow-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.inProgressReports}</h3>
-              <p className="text-xs text-slate-500">In Progress</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-slate-50 rounded-md flex items-center justify-center mr-3">
-              <Calendar className="w-3 h-3 text-slate-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.scheduledReports}</h3>
-              <p className="text-xs text-slate-500">Scheduled</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-slate-50 rounded-lg p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search reports..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+            <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="all">All Types</option>
               <option value="analytics">Analytics</option>
               <option value="performance">Performance</option>
               <option value="financial">Financial</option>
               <option value="team">Team</option>
             </select>
-            
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+            <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="all">All Status</option>
               <option value="completed">Completed</option>
               <option value="in-progress">In Progress</option>
               <option value="scheduled">Scheduled</option>
             </select>
+            <button className="hidden md:flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold">
+              <FileText size={20} className="group-hover:rotate-90 transition-transform duration-200" />
+              New Report
+            </button>
+          </div>
+
+          {/* Mobile compact actions - optimized for better fit */}
+          <div className="flex md:hidden items-center gap-1.5 w-full justify-end">
+            {/* Mobile search - moved to header area */}
+            <div className="relative flex-1 max-w-32">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400" size={14} />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                className="pl-7 pr-2 py-1.5 border border-slate-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent w-full" 
+              />
+            </div>
+            <button className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md text-xs font-medium">Create</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-1 md:px-8 py-2 md:py-8 space-y-2 md:space-y-6">
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6 max-w-[95%] md:max-w-none mx-auto md:mx-0">
+          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Total Reports</p>
+                <p className="text-xs md:text-lg font-semibold text-slate-900">{analytics.totalReports}</p>
+              </div>
+              <div className="p-1.5 md:p-3 bg-blue-100 rounded-lg">
+                <FileText className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Completed</p>
+                <p className="text-xs md:text-lg font-semibold text-slate-900">{analytics.completedReports}</p>
+              </div>
+              <div className="p-1.5 md:p-3 bg-green-100 rounded-lg">
+                <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">In Progress</p>
+                <p className="text-xs md:text-lg font-semibold text-slate-900">{analytics.inProgressReports}</p>
+              </div>
+              <div className="p-1.5 md:p-3 bg-yellow-100 rounded-lg">
+                <Activity className="w-4 h-4 md:w-6 md:h-6 text-yellow-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Scheduled</p>
+                <p className="text-xs md:text-lg font-semibold text-slate-900">{analytics.scheduledReports}</p>
+              </div>
+              <div className="p-1.5 md:p-3 bg-slate-100 rounded-lg">
+                <Calendar className="w-4 h-4 md:w-6 md:h-6 text-slate-600" />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Reports List */}
-        <div className="space-y-3">
+        {/* Reports Grid */}
+        <div className={`grid gap-3 md:gap-6 mx-2 md:mx-0 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3`}>
           {filteredReports.map((report) => {
             const TypeIcon = reportTypes[report.type as keyof typeof reportTypes]?.icon || FileText;
             const typeColor = reportTypes[report.type as keyof typeof reportTypes]?.color || 'bg-slate-100 text-slate-700';
@@ -222,44 +238,135 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
             return (
               <div
                 key={report.id}
-                className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 flex flex-col h-full cursor-pointer p-2 md:p-3"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${typeColor}`}>
-                      <TypeIcon size={20} />
+                {/* Header - Title and Menu */}
+                <div className="mb-1 md:mb-4">
+                  <div className="flex items-start justify-between mb-0.5 md:mb-2">
+                    <div className="flex items-start gap-1.5 md:gap-3 flex-1 min-w-0">
+                      <div className={`p-1 md:p-2 rounded-lg flex-shrink-0 ${typeColor}`}>
+                        <TypeIcon className="w-3 h-3 md:w-4 md:h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-slate-900 text-[10px] md:text-lg mb-0.5 md:mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{report.title}</h3>
+                        <p className="text-[8px] md:text-sm text-slate-500 break-words">Report</p>
+                      </div>
                     </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-slate-900">{report.title}</h3>
-                      <div className="flex items-center space-x-4 mt-1 text-sm text-slate-500">
-                        <span className={`px-2 py-1 rounded text-xs ${statusColors[report.status as keyof typeof statusColors]}`}>
-                          {report.status}
-                        </span>
-                        <span>{report.size}</span>
-                        <span className="uppercase">{report.format}</span>
-                        <span>Updated {report.lastUpdated}</span>
+                    <div className="relative flex-shrink-0 ml-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMenu(report.id);
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                        aria-label="Open menu"
+                      >
+                        <MoreHorizontal size={14} className="text-slate-400" />
+                      </button>
+                      <div className={`absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-[160px] menu-container ${openMenuId === report.id ? '' : 'hidden'}`}>
+                        <div className="py-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(report);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            Download
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Add edit functionality here if needed
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit Report
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Add duplicate functionality here if needed
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                          >
+                            <Copy className="w-4 h-4" />
+                            Duplicate
+                          </button>
+                          <div className="border-t border-slate-200 my-1"></div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(report.id);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleDownload(report)}
-                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                      title="Download"
-                    >
-                      <Download size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(report.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <TrendingDown size={16} />
-                    </button>
+                </div>
+
+                {/* Report Stats */}
+                <div className="grid grid-cols-2 gap-1.5 md:gap-3 mb-1 md:mb-3">
+                  <div className="text-center">
+                    <div className="text-sm md:text-2xl font-bold text-slate-900">{report.size}</div>
+                    <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Size</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm md:text-2xl font-bold text-slate-900">{report.format.toUpperCase()}</div>
+                    <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Format</div>
                   </div>
                 </div>
+
+                {/* Status Bar */}
+                <div className="w-full bg-slate-200 rounded-full h-1 md:h-2 mb-0.5 md:mb-3">
+                  <div 
+                    className={`h-1 md:h-2 rounded-full transition-all duration-300 ${
+                      report.status === 'completed' ? 'bg-green-500' :
+                      report.status === 'in-progress' ? 'bg-yellow-500' :
+                      'bg-slate-400'
+                    }`}
+                    style={{ width: report.status === 'completed' ? '100%' : report.status === 'in-progress' ? '60%' : '20%' }}
+                  ></div>
+                </div>
+
+                {/* Status and Type Tags */}
+                <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-0.5 md:mb-3">
+                  <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${statusColors[report.status as keyof typeof statusColors]}`}>
+                    {report.status}
+                  </span>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${typeColor}`}>
+                    {report.type}
+                  </span>
+                </div>
+
+                {/* Details grid: desktop 2x2 (Last Updated, Type | Size, Format), mobile hidden */}
+                <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-1.5 md:mb-3">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span className="text-[10px] text-slate-700 font-medium break-words">{report.lastUpdated}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span className="text-[10px] text-slate-700 font-medium">{report.type}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span className="text-[10px] text-slate-700 font-medium">{report.size}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Download className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span className="text-[10px] text-slate-700 font-medium">{report.format.toUpperCase()}</span>
+                  </div>
+                </div>
+
+
               </div>
             );
           })}

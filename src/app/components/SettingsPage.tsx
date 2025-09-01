@@ -50,19 +50,19 @@ export default function SettingsPage() {
   const renderProfileTab = () => (
     <div className="space-y-6 animate-fade-in">
       {/* Profile Header */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <div className="flex items-center gap-4 mb-4 md:mb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
             {loading ? '...' : currentUser ? (currentUser.name?.charAt(0) || currentUser.email?.charAt(0) || 'U') : 'U'}
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900">
+            <h3 className="text-lg md:text-xl font-bold text-slate-900">
               {loading ? 'Loading...' : currentUser ? currentUser.name : 'User Profile'}
             </h3>
-            <p className="text-slate-600">
+            <p className="text-slate-600 text-sm md:text-base">
               {loading ? 'Loading user information...' : currentUser ? `${currentUser.role} • ${currentUser.department || 'No Department'}` : 'No user data'}
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-xs md:text-sm text-slate-500">
               {loading ? 'Member since loading...' : currentUser ? `Member since ${new Date(currentUser.joinDate).toLocaleDateString()}` : 'Member since unknown'}
             </p>
           </div>
@@ -70,46 +70,46 @@ export default function SettingsPage() {
       </div>
 
       {/* Personal Information */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-          <User className="w-5 h-5 text-blue-500" />
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <User className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
           Personal Information
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
+            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-2">First Name</label>
             <input
               type="text"
               defaultValue={currentUser?.name?.split(' ')[0] || ''}
               placeholder="Enter first name"
-              className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
+              className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-xs md:text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Last Name</label>
+            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-2">Last Name</label>
             <input
               type="text"
               defaultValue={currentUser?.name?.split(' ').slice(1).join(' ') || ''}
               placeholder="Enter last name"
-              className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-xs md:text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-2">Email</label>
             <input
               type="email"
               defaultValue={currentUser?.email || ''}
               placeholder="Enter email address"
-              className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-xs md:text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
+            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-2">Phone</label>
             <input
               type="tel"
               defaultValue={currentUser?.phone || ''}
               placeholder="Enter phone number"
-              className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-xs md:text-sm"
             />
           </div>
         </div>
@@ -569,36 +569,48 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-slate-500 to-gray-600 text-white font-semibold shadow-lg">
-            <Settings className="text-white mr-1" size={20} />
-            <span>Settings</span>
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-6">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="p-1.5 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-slate-500 to-gray-600 text-white shadow-md md:shadow-lg">
+              <Settings className="w-4 h-4 md:w-6 md:h-6" />
+            </div>
+            <div>
+              <h1 className="text-base md:text-xl font-bold text-slate-900 leading-tight">Settings</h1>
+              <p className="text-slate-600 mt-0.5 md:mt-1 text-xs md:text-base">Manage your account and application preferences</p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button 
-            className="group flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
-          >
-            <Download size={16} />
-            Export Settings
-          </button>
-          <button 
-            className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring"
-          >
-            <Save size={20} className="group-hover:rotate-12 transition-transform duration-200" />
-            Save All
-          </button>
+          
+          {/* Actions (responsive) */}
+          <div className="hidden md:flex items-center gap-3">
+            <button 
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md"
+            >
+              <Download size={16} />
+              Export Settings
+            </button>
+            <button 
+              className="flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold"
+            >
+              <Save size={20} />
+              Save All
+            </button>
+          </div>
+
+          {/* Mobile compact actions */}
+          <div className="flex md:hidden items-center gap-1.5 w-full justify-end">
+            <button className="px-3 py-1.5 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-md text-xs font-medium">Save</button>
+          </div>
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="px-1 md:px-8 py-2 md:py-8 space-y-2 md:space-y-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Settings Navigation */}
           <div className="lg:w-80">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Settings</h2>
               <div className="space-y-2">
                 {settingsTabs.map((tab) => {

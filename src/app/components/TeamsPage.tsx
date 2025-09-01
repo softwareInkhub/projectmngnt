@@ -1333,59 +1333,59 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
 
         {/* Enhanced Analytics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 animate-fade-in">
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-purple-50 rounded-md flex items-center justify-center mr-3">
-              <Users className="w-3 h-3 text-purple-600" />
+          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center">
+            <div className="w-5 h-5 bg-purple-50 rounded-md flex items-center justify-center mr-2">
+              <Users className="w-2.5 h-2.5 text-purple-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalTeams}</h3>
-              <p className="text-xs text-slate-500">Total Teams</p>
+              <h3 className="text-[8px] font-bold text-slate-900">{analytics.totalTeams}</h3>
+              <p className="text-[8px] text-slate-500">Total Teams</p>
             </div>
-            <div className="flex items-center gap-1 ml-2">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span className="text-xs text-slate-400">+1</span>
+            <div className="flex items-center gap-0.5 ml-1">
+              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
+              <span className="text-[8px] text-slate-400">+1</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-blue-50 rounded-md flex items-center justify-center mr-3">
-              <UserPlus className="w-3 h-3 text-blue-600" />
+          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center">
+            <div className="w-5 h-5 bg-blue-50 rounded-md flex items-center justify-center mr-2">
+              <UserPlus className="w-2.5 h-2.5 text-blue-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalMembers}</h3>
-              <p className="text-xs text-slate-500">Team Members</p>
+              <h3 className="text-[8px] font-bold text-slate-900">{analytics.totalMembers}</h3>
+              <p className="text-[8px] text-slate-500">Team Members</p>
             </div>
-            <div className="flex items-center gap-1 ml-2">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span className="text-xs text-slate-400">+3</span>
+            <div className="flex items-center gap-0.5 ml-1">
+              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
+              <span className="text-[8px] text-slate-400">+3</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-green-50 rounded-md flex items-center justify-center mr-3">
-              <Award className="w-3 h-3 text-green-600" />
+          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center">
+            <div className="w-5 h-5 bg-green-50 rounded-md flex items-center justify-center mr-2">
+              <Award className="w-2.5 h-2.5 text-green-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.avgPerformance}%</h3>
-              <p className="text-xs text-slate-500">Avg Performance</p>
+              <h3 className="text-[8px] font-bold text-slate-900">{analytics.avgPerformance}%</h3>
+              <p className="text-[8px] text-slate-500">Avg Performance</p>
             </div>
-            <div className="flex items-center gap-1 ml-2">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span className="text-xs text-slate-400">+5%</span>
+            <div className="flex items-center gap-0.5 ml-1">
+              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
+              <span className="text-[8px] text-slate-400">+5%</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-md border border-slate-200 p-2.5 h-20 flex items-center">
-            <div className="w-6 h-6 bg-orange-50 rounded-md flex items-center justify-center mr-3">
-              <Trophy className="w-3 h-3 text-orange-600" />
+          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center">
+            <div className="w-5 h-5 bg-orange-50 rounded-md flex items-center justify-center mr-2">
+              <Trophy className="w-2.5 h-2.5 text-orange-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900">{analytics.totalBudget}</h3>
-              <p className="text-xs text-slate-500">Total Budget</p>
+              <h3 className="text-[8px] font-bold text-slate-900">{analytics.totalBudget}</h3>
+              <p className="text-[8px] text-slate-500">Total Budget</p>
             </div>
-            <div className="flex items-center gap-1 ml-2">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span className="text-xs text-slate-400">+12%</span>
+            <div className="flex items-center gap-0.5 ml-1">
+              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
+              <span className="text-[8px] text-slate-400">+12%</span>
             </div>
           </div>
         </div>
@@ -1398,23 +1398,21 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
             // Grid View - Mobile Optimized (2 cards side by side)
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {uniqueTeams.map((team, index) => (
-                <div key={`${team.id}-grid-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group relative">
-                  <div className="p-4 sm:p-6">
-                    {/* Team Header */}
-                    <div className="flex items-start justify-between mb-3 sm:mb-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 group-hover:text-purple-600 transition-colors truncate">
-                          {team.name}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
-                          {team.description || "No description provided"}
-                        </p>
+                <div key={`${team.id}-grid-${index}`} className="relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 flex flex-col h-full cursor-pointer p-2 md:p-3">
+                  {/* Header - Title and Menu */}
+                  <div className="mb-1 md:mb-4">
+                    <div className="flex items-start justify-between mb-0.5 md:mb-2">
+                      <div className="flex items-start gap-1.5 md:gap-3 flex-1 min-w-0">
+                        <div className="p-1 md:p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                          <Users className="w-3 h-3 md:w-4 md:h-4 text-purple-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-slate-900 text-[10px] md:text-lg mb-0.5 md:mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{team.name}</h3>
+                          <p className="text-[8px] md:text-sm text-slate-500 break-words">{team.description || "No description provided"}</p>
+                        </div>
                       </div>
-                      
-                      {/* Three-dot menu */}
                       <div className="relative flex-shrink-0 ml-2">
                         <button 
-                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
                             const menu = e.currentTarget.nextElementSibling as HTMLElement;
@@ -1422,111 +1420,121 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                               menu.classList.toggle('hidden');
                             }
                           }}
+                          className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                          aria-label="Open menu"
                         >
-                          <MoreHorizontal className="w-4 h-4" />
+                          <MoreHorizontal size={14} className="text-slate-400" />
                         </button>
-                        
-                        <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 hidden">
+                        <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-[160px] menu-container hidden">
                           <div className="py-1">
                             <button
                               onClick={() => handleEditTeam(team)}
-                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                             >
-                              <Edit size={14} />
-                              Edit
+                              <Edit className="w-4 h-4" />
+                              Edit Team
                             </button>
                             <button
                               onClick={() => handleDuplicateTeam(team)}
-                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                             >
-                              <Copy size={14} />
+                              <Copy className="w-4 h-4" />
                               Duplicate
                             </button>
                             <button
                               onClick={() => handleArchiveTeam(team)}
-                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                             >
-                              <Archive size={14} />
+                              <Archive className="w-4 h-4" />
                               Archive
                             </button>
                             <button
                               onClick={() => handleExportTeam(team)}
-                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                             >
-                              <Download size={14} />
+                              <Download className="w-4 h-4" />
                               Export
                             </button>
+                            <div className="border-t border-slate-200 my-1"></div>
                             <button
                               onClick={() => handleDeleteTeam(team.id)}
-                              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                             >
-                              <Trash2 size={14} />
+                              <Trash2 className="w-4 h-4" />
                               Delete
                             </button>
                           </div>
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Progress and Tasks */}
-                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div className="text-xs sm:text-sm text-gray-600">
-                        <span className="font-medium">{team.performance}%</span> Performance
-                      </div>
-                      <div className="text-xs sm:text-sm text-gray-600">
-                        {team.tasksCompleted}/{team.totalTasks} Tasks
-                      </div>
+                  {/* Team Stats */}
+                  <div className="grid grid-cols-2 gap-1.5 md:gap-3 mb-1 md:mb-3">
+                    <div className="text-center">
+                      <div className="text-sm md:text-2xl font-bold text-slate-900">{team.performance || 0}%</div>
+                      <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Performance</div>
                     </div>
+                    <div className="text-center">
+                      <div className="text-sm md:text-2xl font-bold text-slate-900">{team.totalTasks || 0}</div>
+                      <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Tasks</div>
+                    </div>
+                  </div>
 
-                    {/* Progress Bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 mb-3 sm:mb-4">
-                      <div 
-                        className="bg-gradient-to-r from-purple-500 to-pink-600 h-1.5 sm:h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(team.tasksCompleted / team.totalTasks) * 100}%` }}
-                      ></div>
-                    </div>
+                  {/* Progress Bar */}
+                  <div className="w-full bg-slate-200 rounded-full h-1 md:h-2 mb-0.5 md:mb-3">
+                    <div 
+                      className="bg-gradient-to-r from-purple-500 to-pink-600 h-1 md:h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(team.tasksCompleted / team.totalTasks) * 100}%` }}
+                    ></div>
+                  </div>
 
-                    {/* Pill Badges */}
-                    <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        team.health === 'excellent' ? 'bg-green-100 text-green-700' :
-                        team.health === 'good' ? 'bg-blue-100 text-blue-700' :
-                        team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {team.health}
-                      </span>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                        {team.budget}
-                      </span>
-                    </div>
+                  {/* Status and Priority Tags */}
+                  <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-0.5 md:mb-3">
+                    <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${
+                      team.health === 'excellent' ? 'bg-green-100 text-green-700' :
+                      team.health === 'good' ? 'bg-blue-100 text-blue-700' :
+                      team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {team.health}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold bg-purple-100 text-purple-700">
+                      {team.budget}
+                    </span>
+                  </div>
 
-                    {/* Team Details - Compact */}
-                    <div className="space-y-2 mb-3 sm:mb-4">
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <Building className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                        <span className="truncate">{team.project}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <Users className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                        <span>{team.members.length} members</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                        <span>{team.startDate}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <Target className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                        <span>{team.startDate}</span>
-                      </div>
+                  {/* Details grid: desktop 2x2 (Project, Members | Start, End), mobile hidden */}
+                  <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-1.5 md:mb-3">
+                    <div className="flex items-center gap-2">
+                      <Building className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                      <span className="text-[10px] text-slate-700 font-medium break-words">{team.project}</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                      <span className="text-[10px] text-slate-700 font-medium">{team.members.length} members</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                      <span className="text-[10px] text-slate-700 font-medium">{team.startDate}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Target className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                      <span className="text-[10px] text-slate-700 font-medium">{team.startDate}</span>
+                    </div>
+                  </div>
 
-                    {/* Action Button */}
-                    <div className="flex items-center justify-between">
-                      <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                        View Details
-                      </button>
-                    </div>
+                  {/* Action Link */}
+                  <div className="mt-auto md:pt-4">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Add team detail navigation here if needed
+                      }}
+                      className="text-blue-600 hover:text-blue-700 text-[8px] md:text-xs font-medium transition-colors"
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               ))}
