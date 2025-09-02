@@ -340,7 +340,7 @@ export default function TeamsPageSheet({ open, onClose, onOpenTab, context }: {
   // Analytics
   const analytics = {
     totalTeams: teams.filter(t => !t.archived).length,
-    totalMembers: teams.filter(t => !t.archived).reduce((sum, team) => sum + team.members, 0),
+    totalMembers: teams.filter(t => !t.archived).reduce((sum, team) => sum + (Array.isArray(team.members) ? team.members.length : 0), 0),
     totalProjects: teams.filter(t => !t.archived).reduce((sum, team) => sum + team.projects, 0),
     avgPerformance: Math.round(teams.filter(t => !t.archived).reduce((sum, team) => sum + team.performance, 0) / teams.filter(t => !t.archived).length)
   };
@@ -771,7 +771,7 @@ const companies: string[] = [];
                       </div>
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4" />
-                        <span>{team.members} members</span>
+                        <span>{Array.isArray(team.members) ? team.members.length : 0} members</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Target className="w-4 h-4" />
@@ -827,7 +827,7 @@ const companies: string[] = [];
                             </div>
                             <div className="flex items-center gap-4">
                               <div className="text-center">
-                                <p className="text-xs font-medium">{subteam.members}</p>
+                                <p className="text-xs font-medium">{Array.isArray(subteam.members) ? subteam.members.length : 0}</p>
                                 <p className="text-xs text-neutral-500">Members</p>
                               </div>
                               <div className="text-center">

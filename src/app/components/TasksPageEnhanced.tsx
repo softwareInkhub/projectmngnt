@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle,
   AlertCircle,
@@ -105,6 +106,7 @@ const tags = [
 ];
 
 export default function TasksPageEnhanced({ context }: { context?: { company: string } }) {
+  const router = useRouter();
   const [tasks, setTasks] = useState(initialTasks);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -231,7 +233,21 @@ export default function TasksPageEnhanced({ context }: { context?: { company: st
 
   // Enhanced task management functions
   const handleTaskSelect = (task: TaskTreeNode) => {
-    setSelectedTaskId(task.id!);
+    console.log('=== TASK NAVIGATION DEBUG ===');
+    console.log('Navigating to task:', task.id);
+    console.log('Navigation URL:', `/tasks/${task.id}`);
+    console.log('Task type:', typeof task.id);
+    console.log('Task ID length:', task.id?.length);
+    console.log('Is task ID empty?', !task.id || task.id.trim() === '');
+    
+    // Ensure we have a valid task ID
+    if (!task.id || task.id.trim() === '') {
+      console.error('Invalid task ID:', task.id);
+      return;
+    }
+    
+    // Navigate to the task detail page
+    router.push(`/tasks/${task.id}`);
   };
 
   const handleAddSubtask = (parentId: string) => {

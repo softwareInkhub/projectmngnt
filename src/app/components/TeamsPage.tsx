@@ -414,7 +414,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
       name: team.name,
       description: team.description,
       project: team.project,
-      members: team.members.map(m => m.name),
+      members: Array.isArray(team.members) ? team.members.map(m => m.name) : [],
       roles: {} as Record<string, string>,
       budget: team.budget,
       startDate: team.startDate,
@@ -513,7 +513,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
       const duplicatedTeamData: TeamData = {
         name: `${team.name} (Copy)`,
         description: team.description,
-        members: JSON.stringify(team.members),
+        members: JSON.stringify(Array.isArray(team.members) ? team.members : []),
         project: team.project,
         tasksCompleted: team.tasksCompleted,
         totalTasks: team.totalTasks,
@@ -639,7 +639,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const removeMember = (teamId: number, memberId: number) => {
     setTeams(teams.map(team => 
       team.id === teamId 
-        ? { ...team, members: team.members.filter(member => member.id !== memberId) }
+        ? { ...team, members: Array.isArray(team.members) ? team.members.filter(member => member.id !== memberId) : [] }
         : team
     ));
   };
@@ -667,7 +667,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
     
     const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          team.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         team.members.some(member => member.name.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (Array.isArray(team.members) ? team.members.some(member => member.name.toLowerCase().includes(searchTerm.toLowerCase())) : false);
     const matchesProject = projectFilter === "All" || team.project === projectFilter;
     
     return matchesSearch && matchesProject;
@@ -1512,7 +1512,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                      <span className="text-[10px] text-slate-700 font-medium">{team.members.length} members</span>
+                      <span className="text-[10px] text-slate-700 font-medium">{Array.isArray(team.members) ? team.members.length : 0} members</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-slate-500 flex-shrink-0" />
@@ -1583,7 +1583,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       <div className="flex items-center gap-2 text-xs text-gray-600">
                         <Users className="w-3 h-3 text-gray-400" />
-                        <span className="truncate">{team.members.length} members</span>
+                        <span className="truncate">{Array.isArray(team.members) ? team.members.length : 0} members</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-600">
                         <Calendar className="w-3 h-3 text-gray-400" />

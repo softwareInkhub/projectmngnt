@@ -44,7 +44,8 @@ import {
   Filter,
   Grid3X3,
   List,
-  Eye
+  Eye,
+  Loader
 } from "lucide-react";
 import { ProjectApiService, ProjectData, transformProjectToUI } from "../../utils/projectApi";
 import { TABLE_NAMES } from "../../config/environment";
@@ -104,8 +105,21 @@ export default function ProjectDetailPage() {
       console.log('Response success:', response.success);
       console.log('Response error:', response.error);
       
-      if (response.success && response.data) {
-        const projectData = response.data as ProjectData;
+      // Handle different API response structures
+      let projectData: ProjectData | null = null;
+      
+      if (response.success) {
+        // Check for different possible response structures
+        if (response.data) {
+          projectData = response.data as ProjectData;
+        } else if ((response as any).item) {
+          projectData = (response as any).item as ProjectData;
+        } else if (response.items && Array.isArray(response.items) && response.items.length > 0) {
+          projectData = response.items[0] as ProjectData;
+        }
+      }
+      
+      if (projectData) {
         console.log('Project data before transform:', projectData);
         
         const transformedProject = transformProjectToUI(projectData);
@@ -337,193 +351,113 @@ export default function ProjectDetailPage() {
                      {activeTab === 'overview' && (
              <div className="space-y-6 md:space-y-8">
                {/* Project Header */}
-               <div className="text-center mb-6 md:mb-8">
-                 <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                   <Folder size={24} className="md:w-8 md:h-8 text-blue-600" />
+               <div className="mb-6 md:mb-8">
+                 <div className="flex items-center gap-2 mb-1">
+                   <Folder size={20} className="text-blue-600" />
+                   <h2 className="text-xl md:text-2xl font-bold text-slate-900">{project.name}</h2>
                  </div>
-                 <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">{project.name}</h2>
-                 <p className="text-sm md:text-base text-slate-600 max-w-2xl mx-auto">{project.description}</p>
+                 <p className="text-sm text-slate-600">{project.description || 'No description provided'}</p>
                  {isDemoProject && (
-                   <p className="text-xs text-yellow-600 mt-2">
-                     ⚠️ This is a demo project. Real project data will be displayed when available.
+                   <p className="text-xs text-yellow-600 mt-1">
+                     ⚠️ Demo project
                    </p>
                  )}
-                 <div className="flex items-center justify-center gap-2 mt-3 md:mt-4">
-                   <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium ${getStatusColor(project.status)}`}>
-                     {project.status}
-                   </span>
-                   <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium ${getPriorityColor(project.priority)}`}>
-                     {project.priority}
-                   </span>
-                 </div>
                </div>
 
-              {/* Compact Progress & Stats Section */}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-                {/* Progress Section */}
-                <div className="p-3 md:p-4 border-b border-slate-100">
-                  <div className="flex items-center justify-between mb-2 md:mb-3">
-                    <h3 className="text-xs md:text-sm font-semibold text-slate-900">Project Progress</h3>
-                    <span className="text-base md:text-lg font-bold text-blue-600">{project.progress}%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-1.5 md:h-2 mb-1">
-                    <div 
-                      className={`h-1.5 md:h-2 rounded-full transition-all duration-500 ${getProgressColor(project.progress)}`}
-                      style={{ width: `${project.progress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    {project.progress < 100 ? `${100 - project.progress}% remaining` : 'Project completed!'}
-                  </p>
-                </div>
-
-                {/* Compact Stats Grid */}
-                <div className="grid grid-cols-4 gap-0">
-                  <div className="text-center p-2 md:p-3 border-r border-b border-slate-100">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-1">
-                      <Target size={14} className="md:w-4 md:h-4 text-blue-600" />
-                    </div>
-                    <div className="text-sm md:text-lg font-bold text-slate-900">{project.tasks}</div>
-                    <div className="text-xs text-slate-500">Tasks</div>
-                  </div>
-                  <div className="text-center p-2 md:p-3 border-r border-b border-slate-100">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-1">
-                      <Users size={14} className="md:w-4 md:h-4 text-green-600" />
-                    </div>
-                    <div className="text-sm md:text-lg font-bold text-slate-900">{project.team.split(',').length}</div>
-                    <div className="text-xs text-slate-500">Team</div>
-                  </div>
-                  <div className="text-center p-2 md:p-3 border-r border-b border-slate-100">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-1">
-                      <DollarSign size={14} className="md:w-4 md:h-4 text-purple-600" />
-                    </div>
-                    <div className="text-xs md:text-sm font-bold text-slate-900">{project.budget}</div>
-                    <div className="text-xs text-slate-500">Budget</div>
-                  </div>
-                  <div className="text-center p-2 md:p-3 border-b border-slate-100">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-1">
-                      <Building size={14} className="md:w-4 md:h-4 text-orange-600" />
-                    </div>
-                    <div className="text-xs md:text-sm font-bold text-slate-900">{project.company}</div>
-                    <div className="text-xs text-slate-500">Company</div>
-                  </div>
-                </div>
-              </div>
-
                              {/* Project Information - Form Style */}
-               <div className="space-y-4 md:space-y-6">
-                 <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-4 md:mb-6">Project Information</h3>
+               <div className="space-y-3 md:space-y-4">
+                 <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-3 md:mb-4">Project Information</h3>
                  
                  {/* Form-style layout */}
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                    {/* Left Column */}
-                   <div className="space-y-4 md:space-y-6">
+                   <div className="space-y-3 md:space-y-4">
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <Folder size={14} className="md:w-4 md:h-4" />
                          Project Name
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <p className="text-sm md:text-base text-slate-900 font-medium">{project.name}</p>
-                       </div>
+                       <p className="text-sm md:text-base text-slate-900 font-medium">{project.name}</p>
                      </div>
 
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <FileText size={14} className="md:w-4 md:h-4" />
                          Description
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <p className="text-sm md:text-base text-slate-900">{project.description || 'No description provided'}</p>
-                       </div>
+                       <p className="text-sm md:text-base text-slate-900">{project.description || 'No description provided'}</p>
                      </div>
 
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <Building size={14} className="md:w-4 md:h-4" />
                          Company
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <p className="text-sm md:text-base text-slate-900">{project.company}</p>
-                       </div>
+                       <p className="text-sm md:text-base text-slate-900">{project.company}</p>
                      </div>
 
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <User size={14} className="md:w-4 md:h-4" />
-                         Assignee
+                         Team Member
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <p className="text-sm md:text-base text-slate-900">{project.assignee}</p>
-                       </div>
+                       <p className="text-sm md:text-base text-slate-900">{project.assignee}</p>
                      </div>
 
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <Users size={14} className="md:w-4 md:h-4" />
                          Team Members
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <p className="text-sm md:text-base text-slate-900">{project.team}</p>
-                       </div>
+                       <p className="text-sm md:text-base text-slate-900">{project.team}</p>
                      </div>
                    </div>
 
                    {/* Right Column */}
-                   <div className="space-y-4 md:space-y-6">
+                   <div className="space-y-3 md:space-y-4">
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <Calendar size={14} className="md:w-4 md:h-4" />
                          Start Date
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <p className="text-sm md:text-base text-slate-900">{project.startDate || 'Not set'}</p>
-                       </div>
+                       <p className="text-sm md:text-base text-slate-900">{project.startDate || 'Not set'}</p>
                      </div>
 
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <Target size={14} className="md:w-4 md:h-4" />
                          End Date
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <p className="text-sm md:text-base text-slate-900">{project.endDate}</p>
-                       </div>
+                       <p className="text-sm md:text-base text-slate-900">{project.endDate}</p>
                      </div>
 
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <DollarSign size={14} className="md:w-4 md:h-4" />
                          Budget
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <p className="text-sm md:text-base text-slate-900">{project.budget}</p>
-                       </div>
+                       <p className="text-sm md:text-base text-slate-900">{project.budget}</p>
                      </div>
 
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <Target size={14} className="md:w-4 md:h-4" />
                          Total Tasks
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <p className="text-sm md:text-base text-slate-900">{project.tasks} tasks</p>
-                       </div>
+                       <p className="text-sm md:text-base text-slate-900">{project.tasks} tasks</p>
                      </div>
 
                      <div className="form-group">
-                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                       <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                          <Tag size={14} className="md:w-4 md:h-4" />
                          Project Tags
                        </label>
-                       <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
-                         <div className="flex flex-wrap gap-1.5 md:gap-2">
-                           {project.tags.map((tag, idx) => (
-                             <span key={idx} className="px-2 py-1 md:px-3 md:py-1 bg-blue-100 text-blue-700 rounded-full text-xs md:text-sm">
-                               {tag}
-                             </span>
-                           ))}
-                         </div>
+                       <div className="flex flex-wrap gap-1.5 md:gap-2">
+                         {project.tags.map((tag, idx) => (
+                           <span key={idx} className="px-2 py-1 md:px-3 md:py-1 bg-blue-100 text-blue-700 rounded-full text-xs md:text-sm">
+                             {tag}
+                           </span>
+                         ))}
                        </div>
                      </div>
                    </div>
@@ -531,11 +465,11 @@ export default function ProjectDetailPage() {
 
                  {/* Full Width Notes */}
                  <div className="form-group">
-                   <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                   <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
                      <FileText size={14} className="md:w-4 md:h-4" />
                      Additional Notes
                    </label>
-                   <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 border border-slate-200">
+                   <div className="bg-slate-50 rounded-lg p-2 md:p-2.5 border border-slate-200">
                      <p className="text-sm md:text-base text-slate-900">{project.notes || 'No additional notes available.'}</p>
                    </div>
                  </div>

@@ -15,6 +15,7 @@ import {
   Zap,
   Building2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Building,
   BookOpen,
@@ -110,6 +111,8 @@ interface ContextSidebarProps {
   onMobileClose?: () => void;
   onClose?: () => void;
   onOpenTab?: (tab: string) => void;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
 export default function ContextSidebar({
@@ -134,6 +137,7 @@ export default function ContextSidebar({
   const [teamsError, setTeamsError] = useState<string | null>(null);
   const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
   const [expandedTeams, setExpandedTeams] = useState<number[]>([]);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -215,6 +219,10 @@ export default function ContextSidebar({
         ? prev.filter(id => id !== teamId)
         : [...prev, teamId]
     );
+  };
+
+  const toggleCollapse = () => {
+    setIsCollapsed(prev => !prev);
   };
 
   // Mobile context sidebar - Enhanced
@@ -359,7 +367,7 @@ export default function ContextSidebar({
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-xs text-gray-500">Total Members</div>
-                      <div className="text-sm font-semibold">{teamsList.reduce((acc, team) => acc + team.members.length, 0)}</div>
+                      <div className="text-sm font-semibold">{teamsList.reduce((acc, team) => acc + (Array.isArray(team.members) ? team.members.length : 0), 0)}</div>
                     </div>
                   </div>
                 </div>
@@ -449,10 +457,14 @@ export default function ContextSidebar({
   return (
     <>
       {(activeTab === 1 || activeTab === 2 || activeTab === 3 || activeTab === 4 || activeTab === 5 || activeTab === 6) && (
-        <aside className="sticky top-0 h-screen w-[320px] bg-white border-r border-neutral-200 flex flex-col overflow-y-auto z-20">
+        <aside className={`sticky top-0 h-screen bg-white border-r border-neutral-200 flex flex-col overflow-y-auto z-20 transition-all duration-300 ease-in-out ${
+          isCollapsed ? 'w-16' : 'w-[320px]'
+        }`}>
           {/* Header */}
           <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-neutral-800">
+            <h2 className={`text-lg font-semibold text-neutral-800 transition-all duration-300 ${
+              isCollapsed ? 'opacity-0 scale-0' : 'opacity-100 scale-100'
+            }`}>
               {activeTab === 1 ? "All Projects" : 
                activeTab === 2 ? "All Tasks" : 
                activeTab === 3 ? "All Teams" : 
@@ -460,17 +472,86 @@ export default function ContextSidebar({
                activeTab === 5 ? "Calendar Events" : 
                activeTab === 6 ? "All Reports" : "Context"}
             </h2>
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 transition-all duration-300 ${
+              isCollapsed ? 'opacity-0 scale-0' : 'opacity-100 scale-100'
+            }`}>
               <button className="p-1 rounded hover:bg-blue-100 text-blue-600" aria-label="Add Item">
                 <Plus size={20} />
               </button>
             </div>
+            
+            {/* Collapse Toggle Button */}
+            <button 
+              onClick={toggleCollapse}
+              className={`p-1 rounded hover:bg-gray-100 text-gray-600 transition-all duration-300 ${
+                isCollapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
+              }`}
+              aria-label={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            >
+              {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            </button>
+            
+            {/* Close Button */}
+            <button 
+              onClick={onClose}
+              className="p-1 rounded hover:bg-red-100 text-red-600 transition-all duration-300"
+              aria-label="Close Sidebar"
+            >
+              <X size={20} />
+            </button>
           </div>
 
           {/* Content based on active tab */}
-          <div className="flex-1 px-4 py-4 space-y-4 overflow-y-auto">
-            {/* Projects Tab */}
-            {activeTab === 1 && (
+          <div className={`flex-1 overflow-y-auto transition-all duration-300 ${
+            isCollapsed ? 'px-2 py-2' : 'px-4 py-4'
+          } space-y-4`}>
+            
+            {/* Collapsed State - Show only icons */}
+            {isCollapsed && (
+              <div className="flex flex-col items-center space-y-4">
+                <div className="group relative w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center cursor-pointer">
+                  <FolderKanban size={16} className="text-blue-600" />
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    Projects
+                  </div>
+                </div>
+                <div className="group relative w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center cursor-pointer">
+                  <CheckSquare size={16} className="text-green-600" />
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    Tasks
+                  </div>
+                </div>
+                <div className="group relative w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center cursor-pointer">
+                  <Users size={16} className="text-purple-600" />
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    Teams
+                  </div>
+                </div>
+                <div className="group relative w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center cursor-pointer">
+                  <Building size={16} className="text-orange-600" />
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    Companies
+                  </div>
+                </div>
+                
+                {/* Close button in collapsed state */}
+                <div className="pt-4">
+                  <button 
+                    onClick={onClose}
+                    className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center hover:bg-red-200 transition-colors group"
+                    aria-label="Close Sidebar"
+                  >
+                    <X size={16} className="text-red-600 group-hover:text-red-700" />
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Expanded State - Show full content */}
+            {!isCollapsed && (
+              <>
+                {/* Projects Tab */}
+                {activeTab === 1 && (
               <div className="space-y-4">
                 <div className="bg-white rounded-lg border border-gray-200 p-3">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">Project Overview</h3>
@@ -699,6 +780,8 @@ export default function ContextSidebar({
                   </div>
                 </div>
               </div>
+            )}
+              </>
             )}
           </div>
         </aside>

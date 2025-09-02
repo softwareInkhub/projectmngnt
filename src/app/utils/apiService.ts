@@ -105,26 +105,56 @@ export class ApiService {
   public async createItem<T>(tableName: string, item: T): Promise<ApiResponse<T>> {
     this.log(`Creating item in table: ${tableName}`, item);
     
-    return this.makeRequest<T>(`/crud?tableName=${tableName}`, {
+    const response = await this.makeRequest<T>(`/crud?tableName=${tableName}`, {
       method: 'POST',
       body: JSON.stringify({ item }),
     });
+    
+    // Handle the specific response structure from the backend
+    if (response.success && (response as any).item) {
+      return {
+        ...response,
+        data: (response as any).item
+      };
+    }
+    
+    return response;
   }
 
   public async getItems<T>(tableName: string): Promise<ApiResponse<T[]>> {
     this.log(`Fetching items from table: ${tableName}`);
     
-    return this.makeRequest<T[]>(`/crud?tableName=${tableName}`, {
+    const response = await this.makeRequest<T[]>(`/crud?tableName=${tableName}`, {
       method: 'GET',
     });
+    
+    // Handle the specific response structure from the backend
+    if (response.success && (response as any).items) {
+      return {
+        ...response,
+        data: (response as any).items
+      };
+    }
+    
+    return response;
   }
 
   public async getItem<T>(tableName: string, id: string): Promise<ApiResponse<T>> {
     this.log(`Fetching item from table: ${tableName} with id: ${id}`);
     
-    return this.makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
+    const response = await this.makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
       method: 'GET',
     });
+    
+    // Handle the specific response structure from the backend
+    if (response.success && (response as any).item) {
+      return {
+        ...response,
+        data: (response as any).item
+      };
+    }
+    
+    return response;
   }
 
   public async updateItem<T>(
@@ -134,22 +164,42 @@ export class ApiService {
   ): Promise<ApiResponse<T>> {
     this.log(`Updating item in table: ${tableName} with id: ${id}`, updates);
     
-    return this.makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
+    const response = await this.makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
       method: 'PUT',
       body: JSON.stringify({
         key: { id },
         updates
       }),
     });
+    
+    // Handle the specific response structure from the backend
+    if (response.success && (response as any).item) {
+      return {
+        ...response,
+        data: (response as any).item
+      };
+    }
+    
+    return response;
   }
 
   public async deleteItem<T>(tableName: string, id: string): Promise<ApiResponse<T>> {
     this.log(`Deleting item from table: ${tableName} with id: ${id}`);
     
-    return this.makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
+    const response = await this.makeRequest<T>(`/crud?tableName=${tableName}&id=${id}`, {
       method: 'DELETE',
       body: JSON.stringify({ id }),
     });
+    
+    // Handle the specific response structure from the backend
+    if (response.success && (response as any).item) {
+      return {
+        ...response,
+        data: (response as any).item
+      };
+    }
+    
+    return response;
   }
 
   // Health check

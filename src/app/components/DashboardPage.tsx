@@ -98,7 +98,7 @@ export default function DashboardPage({ open, onClose, onOpenTab }: { open: bool
         // Calculate real stats
         const completedTasks = tasksData.filter((task: any) => task.status === 'Done' || task.status === 'Completed').length;
         const activeProjects = projectsData.filter((project: any) => project.status === 'In Progress' || project.status === 'Active').length;
-        const totalTeamMembers = teamsData.reduce((acc: number, team: any) => acc + (team.members?.length || 0), 0);
+        const totalTeamMembers = teamsData.reduce((acc: number, team: any) => acc + (Array.isArray(team.members) ? team.members.length : 0), 0);
 
         // Update stats with real data
         setStats([
@@ -192,16 +192,20 @@ export default function DashboardPage({ open, onClose, onOpenTab }: { open: bool
         setProjectProgress(progress);
 
         // Generate real team members
-        const members = teamsData.flatMap((team: any) => 
-          (team.members || []).slice(0, 2).map((member: string) => ({
-            name: member,
+        const members = teamsData.flatMap((team: any) => {
+          if (!Array.isArray(team.members)) {
+            return [];
+          }
+          
+          return team.members.slice(0, 2).map((member: any) => ({
+            name: typeof member === 'string' ? member : (member?.name || 'Unknown Member'),
             role: "Team Member",
-            avatar: member.substring(0, 2).toUpperCase(),
+            avatar: (typeof member === 'string' ? member : (member?.name || 'UM')).substring(0, 2).toUpperCase(),
             status: "online",
             tasks: Math.floor(Math.random() * 10) + 1,
             projects: Math.floor(Math.random() * 3) + 1
-          }))
-        );
+          }));
+        });
         setTeamMembers(members.slice(0, 4));
 
         // Generate real notifications
