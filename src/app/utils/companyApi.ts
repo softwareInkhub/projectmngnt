@@ -12,6 +12,7 @@ export interface CompanyData {
   industry?: string;
   size?: string;
   location?: string;
+  address?: string;
   website?: string;
   email?: string;
   phone?: string;
@@ -19,6 +20,7 @@ export interface CompanyData {
   revenue?: string;
   employees?: number;
   status?: string;
+  tags?: string;
   createdAt?: string;
   updatedAt?: string;
 }

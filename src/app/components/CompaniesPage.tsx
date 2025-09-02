@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Building2, Building, ChevronRight, ChevronDown, Plus, Users, User, FolderKanban, Calendar, BarChart3, Settings, Search, MoreHorizontal, TrendingUp, Clock, CheckCircle, Mail, Phone, MapPin, Globe, Edit, Eye, Download, BookOpen, CheckSquare, Star, FilterX, Grid3X3, List, Heart, ExternalLink, GitCommit, DollarSign, UserCheck, Timer, Flag, Layers, Zap, SortAsc, Square, Play, Pause, StopCircle, RotateCcw, LineChart, Crown, Shield, Trophy, Medal, Users2, UserX, UserCheck2, UserMinus, UserPlus2, Briefcase, Video, MessageSquare, AlertCircle, Info, Award, Paperclip, FileText, BarChart, PieChart, ScatterChart, AreaChart, Gauge, Target, TrendingDown, Activity, Filter, Share2, Archive, Copy, Trash2, ArrowUpRight, ArrowDownRight, Minus, X, Save, ArrowLeft, Tag, AlertCircle as AlertCircleIcon, Calendar as CalendarIcon, Target as TargetIcon, MessageSquare as MessageSquareIcon, CheckSquare as CheckSquareIcon, UserPlus, FileText as FileTextIcon, Bell, Star as StarIcon, Eye as EyeIcon, Share2 as Share2Icon, Download as DownloadIcon, FilterX as FilterXIcon, Grid3X3 as Grid3X3Icon, List as ListIcon, Heart as HeartIcon, ExternalLink as ExternalLinkIcon, GitCommit as GitCommitIcon, DollarSign as DollarSignIcon, UserCheck as UserCheckIcon, Timer as TimerIcon, Flag as FlagIcon, Layers as LayersIcon, Zap as ZapIcon, TrendingDown as TrendingDownIcon, SortAsc as SortAscIcon, Square as SquareIcon, Play as PlayIcon, Pause as PauseIcon, StopCircle as StopCircleIcon, RotateCcw as RotateCcwIcon, LineChart as LineChartIcon, Crown as CrownIcon, Shield as ShieldIcon, Trophy as TrophyIcon, Medal as MedalIcon, Users2 as Users2Icon, UserX as UserXIcon, UserCheck2 as UserCheck2Icon, UserMinus as UserMinusIcon, UserPlus2 as UserPlus2Icon, Briefcase as BriefcaseIcon, Video as VideoIcon, MessageSquare as MessageSquareIcon2, AlertCircle as AlertCircleIcon2, Info as InfoIcon, Award as AwardIcon, Paperclip as PaperclipIcon, FileText as FileTextIcon2, BarChart as BarChartIcon, PieChart as PieChartIcon, ScatterChart as ScatterChartIcon, AreaChart as AreaChartIcon, Gauge as GaugeIcon, Target as TargetIcon2, TrendingDown as TrendingDownIcon2, Activity as ActivityIcon, Filter as FilterIcon, Share2 as Share2Icon2, Archive as ArchiveIcon, Copy as CopyIcon, Trash2 as Trash2Icon, ArrowUpRight as ArrowUpRightIcon, ArrowDownRight as ArrowDownRightIcon, Minus as MinusIcon
 } from "lucide-react";
@@ -37,6 +38,7 @@ const companySizes = ["Small", "Medium", "Large"];
 const companyStatuses = ["Active", "Inactive", "On Hold"];
 
 export default function CompaniesPage({ context }: { context?: { company: string } }) {
+  const router = useRouter();
   const [selectedCompany, setSelectedCompany] = useState(1);
   const [view, setView] = useState("overview");
   const [expandedDepartments, setExpandedDepartments] = useState<number[]>([]);
@@ -223,7 +225,21 @@ export default function CompaniesPage({ context }: { context?: { company: string
         handleDeleteCompany(company.id);
         break;
       case 'view':
-        console.log('View company:', company);
+        console.log('=== COMPANY NAVIGATION DEBUG ===');
+        console.log('Navigating to company:', company.id);
+        console.log('Navigation URL:', `/companies/${company.id}`);
+        console.log('Company type:', typeof company.id);
+        console.log('Company ID length:', company.id?.length);
+        console.log('Is company ID empty?', !company.id || company.id.trim() === '');
+        
+        // Ensure we have a valid company ID
+        if (!company.id || company.id.trim() === '') {
+          console.error('Invalid company ID:', company.id);
+          return;
+        }
+        
+        // Navigate to the company detail page
+        router.push(`/companies/${company.id}`);
         break;
       case 'website':
         if (company.website) {
@@ -341,7 +357,8 @@ export default function CompaniesPage({ context }: { context?: { company: string
             {filteredCompanies.map((company, index) => (
               <div 
                 key={company.id}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group relative"
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group relative cursor-pointer"
+                  onClick={() => handleCompanyAction(company, 'view')}
               >
                   <div className="p-3 sm:p-4">
                 {/* Company Header */}
@@ -430,7 +447,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
             // List View - Mobile Optimized
             <div className="space-y-3">
               {filteredCompanies.map((company, index) => (
-                <div key={`${company.id}-list-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group">
+                <div key={`${company.id}-list-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group cursor-pointer" onClick={() => handleCompanyAction(company, 'view')}>
                   <div className="p-4">
                     {/* Company Header */}
                     <div className="flex items-start justify-between mb-3">
