@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Users, 
   Plus, 
@@ -161,6 +162,7 @@ const tags = [
 ];
 
 export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: string, title?: string, context?: any) => void; context?: { company: string } }) {
+  const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -261,6 +263,24 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   useEffect(() => {
     fetchTeams();
   }, [context?.company]);
+
+  // Navigate to team details page
+  const handleTeamClick = (team: Team) => {
+    console.log('=== TEAM NAVIGATION DEBUG ===');
+    console.log('Navigating to team:', team.id);
+    console.log('Navigation URL:', `/teams/${team.id}`);
+    console.log('Team type:', typeof team.id);
+    console.log('Team ID length:', team.id?.toString().length);
+    console.log('Is team ID empty?', !team.id || team.id.toString().trim() === '');
+
+    if (!team.id || team.id.toString().trim() === '') {
+      console.error('Invalid team ID:', team.id);
+      return;
+    }
+    
+    // Navigate to the team detail page
+    router.push(`/teams/${team.id}`);
+  };
 
   const handleCreateTeam = async (team: { 
     name: string; 
@@ -1398,7 +1418,11 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
             // Grid View - Mobile Optimized (2 cards side by side)
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {uniqueTeams.map((team, index) => (
-                <div key={`${team.id}-grid-${index}`} className="relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 flex flex-col h-full cursor-pointer p-2 md:p-3">
+                <div 
+                  key={`${team.id}-grid-${index}`} 
+                  className="relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 flex flex-col h-full cursor-pointer p-2 md:p-3"
+                  onClick={() => handleTeamClick(team)}
+                >
                   {/* Header - Title and Menu */}
                   <div className="mb-1 md:mb-4">
                     <div className="flex items-start justify-between mb-0.5 md:mb-2">
@@ -1543,7 +1567,11 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
             // List View - Mobile Optimized
             <div className="space-y-3">
               {uniqueTeams.map((team, index) => (
-                <div key={`${team.id}-list-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group">
+                <div 
+                  key={`${team.id}-list-${index}`} 
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group cursor-pointer"
+                  onClick={() => handleTeamClick(team)}
+                >
                   <div className="p-4">
                     {/* Team Header */}
                     <div className="flex items-start justify-between mb-3">
