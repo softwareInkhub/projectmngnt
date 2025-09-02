@@ -399,23 +399,6 @@ export default function TaskDetailPage() {
                 <p className="text-sm text-slate-500">View and manage task information</p>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleEditTask}
-                className="px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Edit size={16} />
-                Edit
-              </button>
-              <button
-                onClick={handleDeleteTask}
-                className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Trash2 size={16} />
-                Delete
-              </button>
-            </div>
           </div>
         </div>
       </div>
