@@ -284,13 +284,22 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* Auth Button */}
+      {/* Logout Button */}
       <button
-        onClick={() => window.location.href = '/authPage'}
-        className={`group flex items-center w-full px-3 py-3 rounded-xl transition-all duration-300 hover:bg-blue-50 hover:text-blue-600 text-neutral-500 hover:shadow-md ${
+        onClick={async () => {
+          try {
+            await logout();
+            window.location.href = '/authPage';
+          } catch (error) {
+            console.error('Logout failed:', error);
+            // Still redirect to auth page even if logout fails
+            window.location.href = '/authPage';
+          }
+        }}
+        className={`group flex items-center w-full px-3 py-3 rounded-xl transition-all duration-300 hover:bg-red-50 hover:text-red-600 text-neutral-500 hover:shadow-md ${
           isExpanded ? 'justify-start gap-3' : 'justify-center'
         }`}
-        aria-label="Sign In"
+        aria-label="Logout"
       >
         <div className="flex items-center justify-center rounded-lg transition-all duration-300 p-1">
           <LogOut 
@@ -303,7 +312,7 @@ export default function Sidebar({
         </div>
         {isExpanded && (
           <span className="text-sm font-medium truncate transition-all duration-300">
-            Sign In
+            Logout
           </span>
         )}
       </button>

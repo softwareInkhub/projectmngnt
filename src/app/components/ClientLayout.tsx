@@ -480,6 +480,23 @@ export default function ClientLayout() {
               <Landmark size={16} className={sidebarActiveTab === 4 ? 'text-blue-600' : 'text-slate-600'} />
               <span className={`text-[9px] font-medium ${sidebarActiveTab === 4 ? 'text-blue-600' : 'text-slate-600'}`}>Companies</span>
             </button>
+
+            {/* Logout */}
+            <button 
+              onClick={async () => {
+                try {
+                  await logout();
+                  window.location.href = '/authPage';
+                } catch (error) {
+                  console.error('Logout failed:', error);
+                  window.location.href = '/authPage';
+                }
+              }}
+              className="flex flex-col items-center gap-0 p-1 rounded-lg transition-colors hover:bg-red-50 text-red-600"
+            >
+              <LogOut size={16} className="text-red-600" />
+              <span className="text-[9px] font-medium text-red-600">Logout</span>
+            </button>
           </div>
         </div>
       </div>

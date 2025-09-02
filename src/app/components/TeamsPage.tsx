@@ -164,6 +164,7 @@ const tags = [
 export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: string, title?: string, context?: any) => void; context?: { company: string } }) {
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
+  const [originalTeams, setOriginalTeams] = useState<TeamData[]>([]); // Store original team data
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -219,10 +220,13 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         console.log('Teams data:', teamsData);
         
         if (Array.isArray(teamsData)) {
+          // Store original team data
+          setOriginalTeams(teamsData);
+          
           const transformedTeamsData = teamsData.map((team: TeamData) => transformTeamToUI(team));
           
-          const transformedTeams: Team[] = transformedTeamsData.map(team => ({
-            id: team.id ? parseInt(team.id) || 0 : 0,
+          const transformedTeams: Team[] = transformedTeamsData.map((team, index) => ({
+            id: index, // Use array index as ID for navigation
             name: team.name,
             description: team.description,
             members: team.members,
@@ -266,20 +270,15 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
 
   // Navigate to team details page
   const handleTeamClick = (team: Team) => {
-    console.log('=== TEAM NAVIGATION DEBUG ===');
-    console.log('Navigating to team:', team.id);
-    console.log('Navigation URL:', `/teams/${team.id}`);
-    console.log('Team type:', typeof team.id);
-    console.log('Team ID length:', team.id?.toString().length);
-    console.log('Is team ID empty?', !team.id || team.id.toString().trim() === '');
-
-    if (!team.id || team.id.toString().trim() === '') {
+    // Get the original team data using the index
+    const originalTeam = originalTeams[team.id];
+    if (!originalTeam || !originalTeam.id) {
       console.error('Invalid team ID:', team.id);
       return;
     }
     
-    // Navigate to the team detail page
-    router.push(`/teams/${team.id}`);
+    // Navigate to the team detail page using the original team ID
+    router.push(`/teams/${originalTeam.id}`);
   };
 
   const handleCreateTeam = async (team: { 

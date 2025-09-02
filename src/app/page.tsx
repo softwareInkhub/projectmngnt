@@ -16,20 +16,22 @@ export default function Home() {
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
-        console.log('🔍 Authentication disabled - showing main app directly');
+        console.log('🔍 Checking authentication status...');
         
-        // Set mock tokens to bypass authentication
-        if (!localStorage.getItem('access_token')) {
-          localStorage.setItem('access_token', 'mock-token-disabled');
-          localStorage.setItem('id_token', 'mock-token-disabled');
-          localStorage.setItem('refresh_token', 'mock-token-disabled');
+        const accessToken = localStorage.getItem('access_token');
+        const idToken = localStorage.getItem('id_token');
+        
+        // Check if user has valid tokens (not mock tokens)
+        if (accessToken && idToken && accessToken !== 'mock-token-disabled') {
+          console.log('✅ User authenticated, showing main app');
+          setIsAuthenticated(true);
+        } else {
+          console.log('❌ User not authenticated, redirecting to auth page');
+          router.push('/authPage');
         }
-        
-        console.log('✅ Authentication bypassed, showing main app');
-        setIsAuthenticated(true);
       } catch (error) {
-        console.error('❌ Error in authentication bypass:', error);
-        setIsAuthenticated(true); // Still show the app even on error
+        console.error('❌ Error checking authentication:', error);
+        router.push('/authPage');
       } finally {
         setIsLoading(false);
       }
@@ -44,7 +46,7 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking authentication...</p>
+          <p className="text-gray-600">Loading application...</p>
         </div>
       </div>
     );
