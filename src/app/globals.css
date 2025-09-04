@@ -564,21 +564,21 @@ body {
 /* Enhanced mobile first approach */
 @media (min-width: 375px) {
   :root {
-    --mobile-sidebar-width: 300px;
+    --mobile-sidebar-width: 240px;
     --mobile-spacing: 18px;
   }
 }
 
 @media (min-width: 414px) {
   :root {
-    --mobile-sidebar-width: 320px;
+    --mobile-sidebar-width: 256px;
     --mobile-spacing: 20px;
   }
 }
 
 @media (min-width: 768px) {
   :root {
-    --mobile-sidebar-width: 280px;
+    --mobile-sidebar-width: 224px;
     --mobile-spacing: 24px;
   }
   
@@ -591,14 +591,14 @@ body {
 
 @media (min-width: 1024px) {
   :root {
-    --mobile-sidebar-width: 300px;
+    --mobile-sidebar-width: 240px;
     --mobile-spacing: 32px;
   }
 }
 
 @media (min-width: 1280px) {
   :root {
-    --mobile-sidebar-width: 320px;
+    --mobile-sidebar-width: 256px;
     --mobile-spacing: 40px;
   }
 }

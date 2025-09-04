@@ -85,7 +85,7 @@ export default function Sidebar({
         />
         
         {/* Enhanced Sidebar Content */}
-        <div className="relative h-full w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col mobile-optimized" style={{ zIndex: 50 }}>
+        <div className="relative h-full w-60 max-w-[85vw] bg-white shadow-2xl flex flex-col mobile-optimized" style={{ zIndex: 50 }}>
           {/* Enhanced Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
             <div className="flex items-center gap-3">
@@ -200,7 +200,7 @@ export default function Sidebar({
   return (
     <aside
       className={`sticky left-0 top-0 h-screen z-30 flex flex-col items-center bg-gradient-to-b from-white to-gray-50 border-r border-neutral-200 transition-all duration-300 ease-in-out ${
-        isExpanded ? 'w-64' : 'w-16'
+        isExpanded ? 'w-52' : 'w-16'
       } py-4 shadow-lg`}
     >
       {/* Expand/Collapse Button */}

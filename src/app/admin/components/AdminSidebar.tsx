@@ -39,7 +39,7 @@ export function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   return (
     <motion.div
       initial={false}
-      animate={{ width: isOpen ? 256 : 64 }}
+      animate={{ width: isOpen ? 208 : 64 }}
       className="fixed left-0 top-0 z-40 h-screen bg-gray-900 text-white shadow-lg"
     >
       <div className="flex h-full flex-col">

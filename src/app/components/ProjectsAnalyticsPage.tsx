@@ -480,25 +480,25 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-6">
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="p-1.5 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md md:shadow-lg">
-              <BarChart2 className="w-4 h-4 md:w-6 md:h-6" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
+              <BarChart2 className="w-6 h-6" />
             </div>
-        <div>
-              <h1 className="text-base md:text-xl font-bold text-slate-900 leading-tight">Projects Analytics</h1>
-              <p className="text-slate-600 mt-0.5 md:mt-1 text-xs md:text-base">Analytics and insights for your projects</p>
-        </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 leading-tight">Projects Analytics</h1>
+              <p className="text-slate-600 mt-1 text-xl">Analytics and insights for your projects</p>
+            </div>
           </div>
           
           {/* Actions (responsive) */}
           <div className="hidden md:flex items-center gap-3">
             {/* Desktop search/filters as before */}
             <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
-              <input type="text" placeholder="Search projects..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+              <input type="text" placeholder="Search projects..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
             </div>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
               <option value="All">All Status</option>
               <option value="Planning">Planning</option>
               <option value="Active">Active</option>
@@ -506,38 +506,38 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>
-            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
               <option value="All">All Priority</option>
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
               <option value="High">High</option>
               <option value="Critical">Critical</option>
             </select>
-            <button onClick={handleExportAll} className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md">
-              <Download size={16} />
+            <button onClick={handleExportAll} className="hidden md:flex items-center gap-2 px-2 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md text-xl">
+              <Download size={18} />
               Export All
           </button>
-            <button className="hidden md:flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold" onClick={() => setShowCreateForm(true)}>
-              <Plus size={20} className="group-hover:rotate-90 transition-transform duration-200" />
+            <button className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl" onClick={() => setShowCreateForm(true)}>
+              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-200" />
             Create Project
           </button>
           </div>
 
                       {/* Mobile compact actions - optimized for better fit */}
-            <div className="flex md:hidden items-center gap-1.5 w-full justify-end">
+            <div className="flex md:hidden items-center gap-2 w-full justify-end">
               {/* Mobile search - moved to header area */}
-              <div className="relative flex-1 max-w-32">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400" size={14} />
+              <div className="relative flex-1 max-w-28">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
                 <input 
                   type="text" 
                   placeholder="Search..." 
                   value={searchTerm} 
                   onChange={(e) => setSearchTerm(e.target.value)} 
-                  className="pl-7 pr-2 py-1.5 border border-slate-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent w-full" 
+                  className="pl-7 pr-2 py-2 border border-slate-300 rounded-md text-xl focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent w-full" 
                 />
               </div>
-              <button onClick={() => setShowCreateForm(true)} className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md text-xs font-medium">Create</button>
-              <button onClick={handleExportAll} className="px-2 py-1.5 bg-white border border-slate-300 rounded-md text-xs">Export</button>
+              <button onClick={() => setShowCreateForm(true)} className="px-2 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md text-xl font-medium">Create</button>
+              <button onClick={handleExportAll} className="px-2 py-2 bg-white border border-slate-300 rounded-md text-xl">Export</button>
             </div>
         </div>
       </div>
