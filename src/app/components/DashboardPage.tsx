@@ -407,27 +407,37 @@ export default function DashboardPage({ open, onClose, onOpenTab }: { open: bool
 
   // Desktop layout
   return (
-    <div className="h-full overflow-auto bg-neutral-50">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-neutral-900">Dashboard</h1>
-            <p className="text-neutral-600 mt-2">
-              {currentUser ? `Welcome back, ${currentUser.name?.split(' ')[0] || currentUser.email}!` : 'Welcome back!'} Here's what's happening today.
-            </p>
-          </div>
+    <div className="min-h-screen bg-slate-100">
+      {/* Header */}
+      <div className="bg-blue-100 border-b border-slate-200 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
           <div className="flex items-center gap-3">
-            <button className="btn-secondary">
-              <Download size={16} />
+            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
+              <BarChart2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 leading-tight">Dashboard</h1>
+              <p className="text-slate-600 mt-1 text-xl">
+                {currentUser ? `Welcome back, ${currentUser.name?.split(' ')[0] || currentUser.email}!` : 'Welcome back!'} Here's what's happening today.
+              </p>
+            </div>
+          </div>
+          
+          {/* Actions (responsive) */}
+          <div className="hidden md:flex items-center gap-3">
+            <button className="hidden md:flex items-center gap-2 px-2 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md text-xl">
+              <Download size={18} />
               Export
             </button>
-            <button className="btn-primary">
-              <Plus size={16} />
+            <button className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl" onClick={() => onOpenTab("create-project", "Create Project")}>
+              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-200" />
               New Project
             </button>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto p-6">
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

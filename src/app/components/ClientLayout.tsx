@@ -548,7 +548,7 @@ export default function ClientLayout() {
                     borderBottom: isActive ? '4px solid #2563eb' : '2px solid transparent'
                   }}
                 >
-                  <span className="truncate max-w-[120px] text-sm">{tab.title}</span>
+                  <span className="truncate max-w-[120px] text-lg">{tab.title}</span>
                   {isGridMode && (
                     <div className="ml-1 w-1 h-1 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   )}
@@ -593,7 +593,7 @@ export default function ClientLayout() {
                     borderBottom: isActive ? '4px solid #2563eb' : '2px solid transparent'
                   }}
                 >
-                  <span className="truncate max-w-[120px] text-sm">{tab.title}</span>
+                  <span className="truncate max-w-[120px] text-lg">{tab.title}</span>
                   {isGridMode && (
                     <div className="ml-1 w-1 h-1 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   )}

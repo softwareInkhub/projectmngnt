@@ -79,6 +79,38 @@ const priorityColors = {
   "Critical": "bg-purple-100 text-purple-700"
 };
 
+const getInitials = (name: string) => {
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
+  const letters = parts.slice(0, 2).map(p => p[0] || "");
+  return letters.join("").toUpperCase();
+};
+
+const parseTags = (tags: unknown): string[] => {
+  try {
+    if (Array.isArray(tags)) return tags as string[];
+    if (typeof tags === 'string') return JSON.parse(tags || '[]');
+  } catch {}
+  return [];
+};
+
+const formatDate = (date?: string) => (date ? date : "");
+
+const statusPillClass = (status: string) =>
+  (statusColors as Record<string, string>)[status] || 'bg-slate-100 text-slate-700';
+
+  // Colorful row themes for list view (explicit Tailwind classes)
+  const rowThemes = [
+    { bg: 'bg-blue-100', border: 'border-blue-200' },
+    { bg: 'bg-green-100', border: 'border-green-200' },
+    { bg: 'bg-purple-100', border: 'border-purple-200' },
+    { bg: 'bg-yellow-100', border: 'border-yellow-200' },
+    { bg: 'bg-pink-100', border: 'border-pink-200' },
+    { bg: 'bg-indigo-100', border: 'border-indigo-200' },
+    { bg: 'bg-cyan-100', border: 'border-cyan-200' },
+    { bg: 'bg-rose-100', border: 'border-rose-200' }
+  ];
+
 interface ProjectsAnalyticsPageProps {
   onOpenTab?: (tabType: string, context?: Record<string, unknown>) => void;
   onViewProject?: (project: any) => void;
@@ -95,7 +127,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("All");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
 
   // Form states
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -477,9 +509,9 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-100">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
+      <div className="bg-blue-100 border-b border-slate-200 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
@@ -546,56 +578,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
 
 
       <div className="px-1 md:px-8 py-2 md:py-8 space-y-2 md:space-y-6">
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6 max-w-[95%] md:max-w-none mx-auto md:mx-0">
-          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Total Projects</p>
-                <p className="text-xs md:text-lg font-semibold text-slate-900">{projects.length}</p>
-              </div>
-              <div className="p-1.5 md:p-3 bg-blue-100 rounded-lg">
-                <FolderKanban className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Active Projects</p>
-                <p className="text-xs md:text-lg font-semibold text-slate-900">{projects.filter(p => p.status === "Active").length}</p>
-              </div>
-              <div className="p-1.5 md:p-3 bg-green-100 rounded-lg">
-                <Activity className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Completed</p>
-                <p className="text-xs md:text-lg font-semibold text-slate-900">{projects.filter(p => p.status === "Completed").length}</p>
-              </div>
-              <div className="p-1.5 md:p-3 bg-emerald-100 rounded-lg">
-                <CheckCircle className="w-4 h-4 md:w-6 md:h-6 text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg md:rounded-xl p-2 md:p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[8px] md:text-xs text-slate-500 font-semibold md:font-normal">Avg Progress</p>
-                <p className="text-xs md:text-lg font-semibold text-slate-900">{projects.length > 0 ? Math.round(projects.reduce((sum, p) => sum + (p.progress || 0), 0) / projects.length) : 0}%</p>
-              </div>
-              <div className="p-1.5 md:p-3 bg-purple-100 rounded-lg">
-                <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Analytics cards removed per request */}
 
         {/* View Mode Toggle - Mobile optimized positioning */}
         <div className="flex items-center justify-between mb-4 md:mb-6 mx-2 md:mx-0">
@@ -983,298 +966,218 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
 
           
               {/* Projects Grid/List */}
-              <div className={`grid gap-3 md:gap-6 mx-2 md:mx-0 ${
-                viewMode === "grid" 
-                  ? "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3" 
-                  : "grid-cols-1"
-              }`}>
-                {filteredProjects.map((project) => (
-                  <div 
-                    key={project.id} 
-                    className={`relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 flex flex-col h-full cursor-pointer ${
-                      viewMode === "list" ? "p-4" : "p-2 md:p-3"
-                    }`}
-                    onClick={() => handleProjectClick(project.id || '')}
-                  >
-                    {viewMode === "list" ? (
-                      <>
-                        <div className="flex items-center gap-3 md:gap-4">
-                          {/* Checkbox */}
-                <input
-                            type="checkbox"
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                          />
-                          
-                          {/* Project Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between mb-1 md:mb-2">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-slate-900 text-sm md:text-base mb-0.5 truncate">{project.name}</h3>
-                                <p className="text-[11px] md:text-sm text-slate-600 line-clamp-1">{project.description}</p>
-              </div>
-              
-                              {/* Status and Priority Tags */}
-                              <div className="flex items-center gap-1.5 md:gap-2 ml-2 md:ml-4">
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium ${statusColors[project.status as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'}`}>
-                                  {project.status}
-                                </span>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium ${priorityColors[project.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700'}`}>
-                                  {project.priority}
-                                </span>
+              {viewMode === "list" ? (
+                <div className="mx-2 md:mx-0 overflow-visible">
+                  <table className="min-w-full bg-white border border-slate-200 rounded-xl shadow-sm">
+                    <thead className="bg-slate-50 text-slate-600 text-lg">
+                      <tr>
+                        <th className="text-left px-3 py-2 w-16">ID</th>
+                        <th className="text-left px-3 py-2">Project Name</th>
+                        <th className="text-left px-3 py-2 w-12">%</th>
+                        <th className="text-left px-3 py-2">Owner</th>
+                        <th className="text-left px-3 py-2">Status</th>
+                        <th className="text-left px-3 py-2">Tasks</th>
+                        <th className="text-left px-3 py-2">Phases</th>
+                        <th className="text-left px-3 py-2">Issues</th>
+                        <th className="text-left px-3 py-2">Start Date</th>
+                        <th className="text-left px-3 py-2">End Date</th>
+                        <th className="text-left px-3 py-2">Tags</th>
+                        <th className="text-right px-3 py-2 w-10">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-xl overflow-visible">
+                      {filteredProjects.map((project, idx) => {
+                        const lightThemes = [
+                          { bg: 'bg-blue-100', border: 'border-blue-200' },
+                          { bg: 'bg-green-100', border: 'border-green-200' },
+                          { bg: 'bg-purple-100', border: 'border-purple-200' },
+                          { bg: 'bg-yellow-100', border: 'border-yellow-200' },
+                          { bg: 'bg-pink-100', border: 'border-pink-200' },
+                          { bg: 'bg-indigo-100', border: 'border-indigo-200' },
+                          { bg: 'bg-cyan-100', border: 'border-cyan-200' },
+                          { bg: 'bg-rose-100', border: 'border-rose-200' }
+                        ];
+                        const theme = lightThemes[idx % lightThemes.length];
+                        return (
+                        <tr key={project.id} className={`cursor-pointer border-2 ${theme.border} ${theme.bg} rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:scale-[1.01] hover:-translate-y-0.5`} onClick={() => handleProjectClick(project.id || '')}>
+                          <td className="px-3 py-3 text-slate-700 align-middle">{project.id || '-'}</td>
+                          <td className="px-4 py-4 align-middle">
+                            <div className="text-slate-900 font-semibold text-xl">{project.name}</div>
+                            <div className="text-lg text-slate-500 line-clamp-1">{project.description}</div>
+                          </td>
+                          <td className="px-4 py-4 text-slate-900 font-semibold align-middle">{project.progress || 0}%</td>
+                          <td className="px-3 py-3 align-middle">
+                            <div className="flex items-center gap-2">
+                                <div className="h-6 w-6 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">
+                                {getInitials(project.company || project.assignee || '')}
                               </div>
-                              
-                              {/* Action Icons */}
-                              <div className="flex items-center gap-1.5 md:gap-2 ml-2 md:ml-4">
-                                <button 
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="p-0.5 md:p-1 text-slate-400 hover:text-red-500 transition-colors"
-                                >
-                                  <Heart className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                </button>
-                                <div className="relative">
-                <button
+                              <span className="text-slate-700 text-xl">{project.company || project.assignee || '—'}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 align-middle">
+                            <span className={`px-3 py-1.5 rounded text-lg font-semibold ${statusPillClass(project.status || '')}`}>{project.status || '—'}</span>
+                          </td>
+                          <td className="px-4 py-4 align-middle">
+                            <div className="flex items-center gap-3 w-40">
+                                <div className="w-full bg-blue-100 rounded-full h-2.5">
+                                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${project.progress || 0}%` }}></div>
+                              </div>
+                              <span className="text-lg text-slate-600">{project.tasks || 0}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 align-middle">
+                            <span className="text-lg text-slate-700 font-medium">No Phases</span>
+                          </td>
+                          <td className="px-4 py-4 align-middle">
+                            <span className="text-lg text-slate-700 font-medium">No Issues</span>
+                          </td>
+                          <td className="px-4 py-4 text-slate-700 align-middle text-xl whitespace-nowrap">{formatDate(project.startDate)}</td>
+                          <td className="px-4 py-4 text-slate-700 align-middle text-xl whitespace-nowrap">{formatDate(project.endDate)}</td>
+                          <td className="px-3 py-3 align-middle">
+                            <div className="flex flex-nowrap gap-2.5 max-w-[380px] overflow-hidden">
+                              {parseTags(project.tags).slice(0, 2).map((tag, idx) => (
+                                <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-lg font-medium">{tag}</span>
+                              ))}
+                              {parseTags(project.tags).length > 2 && (
+                                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-lg font-medium">+{parseTags(project.tags).length - 2}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 align-middle text-right relative menu-container overflow-visible">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleMenu(project.id || '');
+                              }}
+                              className="inline-flex items-center justify-center p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200 hover:scale-110"
+                              aria-label="Open menu"
+                            >
+                              <MoreHorizontal size={18} />
+                            </button>
+                            {openMenuId === project.id && (
+                              <div
+                                className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-in slide-in-from-top-2 duration-200"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="py-1">
+                                  <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      toggleMenu(project.id || '');
+                                      handleProjectClick(project.id || '');
                                     }}
-                                    className="p-0.5 md:p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="w-full px-4 py-2 text-left text-base text-blue-600 hover:bg-blue-50 flex items-center gap-2"
                                   >
-                                    <MoreHorizontal className="w-3.5 h-3.5 md:w-4 md:h-4" />
-        </button>
-                
-                                  {/* Dropdown Menu for List View */}
-                                  {openMenuId === project.id && (
-                                    <div 
-                                      className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[160px] menu-container"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <div className="py-1">
-          <button 
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleProjectClick(project.id || '');
-                                          }}
-                                          className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
-          >
-                                          <Eye className="w-4 h-4" />
-                                          View Details
-          </button>
-          <button 
-                                          onClick={() => handleEditProject(project)}
-                                          className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-          >
-                                          <Edit className="w-4 h-4" />
-                                          Edit Project
-          </button>
-                <button 
-                                          onClick={() => handleDuplicateProject(project)}
-                                          className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                      >
-                                          <Copy className="w-4 h-4" />
-                                          Duplicate
-                </button>
-                      <button
-                                          onClick={() => handleArchiveProject(project)}
-                                          className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                      >
-                                          <Archive className="w-4 h-4" />
-                                          Archive
-                      </button>
-                      <button
-                                          onClick={() => handleExportProject(project)}
-                                          className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                      >
-                                          <Download className="w-4 h-4" />
-                                          Export
-                      </button>
-                                        <div className="border-t border-slate-200 my-1"></div>
-                                        <button
-                                          onClick={() => handleDeleteProject(project)}
-                                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                        >
-                                          <Trash2 className="w-4 h-4" />
-                                          Delete
-              </button>
-      </div>
-          </div>
-          )}
+                                    <Eye size={16} />
+                                    View Details
+                                  </button>
+                                  <button
+                                    onClick={() => handleEditProject(project)}
+                                    className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                                  >
+                                    <Edit size={16} />
+                                    Edit
+                                  </button>
+                                  <div className="border-t border-slate-200 my-1"></div>
+                                  <button
+                                    onClick={() => handleDeleteProject(project)}
+                                    className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  >
+                                    <Trash2 size={16} />
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );})}
+                    </tbody>
+                  </table>
                 </div>
-                </div>
-              </div>
-              
-                            {/* Project Details Row */}
-                            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 md:flex md:items-center md:gap-6 text-[11px] md:text-sm text-slate-600 mt-1">
-                              <div className="flex items-center gap-1">
-                                <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400" />
-                                <span className="truncate">{project.assignee || 'Unassigned'}</span>
-                </div>
-                              <div className="flex items-center gap-1">
-                                <Building className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400" />
-                                <span className="truncate">{project.company}</span>
-              </div>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400" />
-                                <span className="truncate">Due: {project.endDate}</span>
-        </div>
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400" />
-                                <span>{project.tasks || 0}h</span>
-          </div>
+              ) : (
+                <div className="grid gap-3 md:gap-6 mx-2 md:mx-0 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {filteredProjects.map((project, idx) => {
+                      const lightColors = [
+                        { bg: 'bg-blue-100', border: 'border-blue-200', hoverBg: 'hover:bg-blue-200', hoverBorder: 'hover:border-blue-300' },
+                        { bg: 'bg-green-100', border: 'border-green-200', hoverBg: 'hover:bg-green-200', hoverBorder: 'hover:border-green-300' },
+                        { bg: 'bg-purple-100', border: 'border-purple-200', hoverBg: 'hover:bg-purple-200', hoverBorder: 'hover:border-purple-300' },
+                        { bg: 'bg-yellow-100', border: 'border-yellow-200', hoverBg: 'hover:bg-yellow-200', hoverBorder: 'hover:border-yellow-300' },
+                        { bg: 'bg-pink-100', border: 'border-pink-200', hoverBg: 'hover:bg-pink-200', hoverBorder: 'hover:border-pink-300' },
+                        { bg: 'bg-indigo-100', border: 'border-indigo-200', hoverBg: 'hover:bg-indigo-200', hoverBorder: 'hover:border-indigo-300' },
+                        { bg: 'bg-cyan-100', border: 'border-cyan-200', hoverBg: 'hover:bg-cyan-200', hoverBorder: 'hover:border-cyan-300' },
+                        { bg: 'bg-rose-100', border: 'border-rose-200', hoverBg: 'hover:bg-rose-200', hoverBorder: 'hover:border-rose-300' }
+                      ];
+                      const colorIndex = idx % lightColors.length;
+                      const theme = lightColors[colorIndex];
+                    
+                    return (
+                    <div
+                      key={project.id}
+                      className={`relative ${theme.bg} border-2 ${theme.border} rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 ${theme.hoverBorder} ${theme.hoverBg} transform hover:scale-105 hover:-translate-y-1 flex flex-col h-full cursor-pointer p-2 md:p-3`}
+                      onClick={() => handleProjectClick(project.id || '')}
+                    >
+                      <div className="flex items-center gap-3 md:gap-4">
+                        <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-blue-100 text-blue-700 font-semibold flex items-center justify-center">
+                          {getInitials(project.name || '')}
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-base md:text-xl font-semibold text-slate-900 truncate">{project.name}</h3>
+                          <p className="text-sm md:text-base text-slate-600">{(project.tasks || 0) === 1 ? '1 task' : `${project.tasks || 0} tasks`}</p>
                         </div>
                       </div>
-                    </div>
-                      </>
-                    ) : (
-                      <>
-                        {/* Header - Title and Menu */}
-                        <div className="mb-1 md:mb-4">
-                          <div className="flex items-start justify-between mb-0.5 md:mb-2">
-                              <div className="flex items-start gap-1.5 md:gap-3 flex-1 min-w-0">
-                                <div className="p-1 md:p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                                  <FolderKanban className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
-                      </div>
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-bold text-slate-900 text-[10px] md:text-lg mb-0.5 md:mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{project.name}</h3>
-                                  <p className="text-[8px] md:text-sm text-slate-500 break-words">{project.description || "No description provided"}</p>
-                    </div>
-                    </div>
-                              <div className="relative flex-shrink-0 ml-2">
-                        <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleMenu(project.id || '');
-                                  }}
-                                  className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-                                  aria-label="Open menu"
-                                >
-                                  <MoreHorizontal size={14} className="text-slate-400" />
-                        </button>
-                                {openMenuId === project.id && (
-                                  <div 
-                                    className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-[160px] menu-container"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="py-1">
-                        <button 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleProjectClick(project.id || '');
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+
+                      <div className="absolute top-2 right-2 menu-container">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMenu(project.id || '');
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200 hover:scale-110"
+                          aria-label="Open menu"
                         >
-                                        <Eye className="w-4 h-4" />
-                                        View Details
+                          <MoreHorizontal size={18} />
                         </button>
-                        <button 
-                                        onClick={() => handleEditProject(project)}
-                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        >
-                                        <Edit className="w-4 h-4" />
-                                        Edit Project
-                        </button>
-                        <button 
-                                        onClick={() => handleDuplicateProject(project)}
-                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        >
-                                        <Copy className="w-4 h-4" />
-                                        Duplicate
-                        </button>
-                        <button 
-                                        onClick={() => handleArchiveProject(project)}
-                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        >
-                                        <Archive className="w-4 h-4" />
-                                        Archive
-                        </button>
-                          <button 
-                                        onClick={() => handleExportProject(project)}
-                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        >
-                                        <Download className="w-4 h-4" />
-                                        Export
-                        </button>
-                                      <div className="border-t border-slate-200 my-1"></div>
-                            <button 
-                                        onClick={() => handleDeleteProject(project)}
-                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                        Delete
-                            </button>
-                                    </div>
+
+                        {openMenuId === project.id && (
+                          <div
+                            className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-20 animate-in slide-in-from-top-2 duration-200"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="py-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleProjectClick(project.id || '');
+                                }}
+                                className="w-full px-4 py-2 text-left text-base text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+                              >
+                                <Eye size={16} />
+                                View Details
+                              </button>
+                              <button
+                                onClick={() => handleEditProject(project)}
+                                className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                              >
+                                <Edit size={16} />
+                                Edit
+                              </button>
+                              <div className="border-t border-slate-200 my-1"></div>
+                              <button
+                                onClick={() => handleDeleteProject(project)}
+                                className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <Trash2 size={16} />
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
                     </div>
-                          </div>
-                          {/* Project Stats */}
-                        <div className="grid grid-cols-2 gap-1.5 md:gap-3 mb-1 md:mb-3">
-                          <div className="text-center">
-                            <div className="text-sm md:text-2xl font-bold text-slate-900">{project.progress || 0}%</div>
-                            <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Progress</div>
-                    </div>
-                          <div className="text-center">
-                            <div className="text-sm md:text-2xl font-bold text-slate-900">{project.tasks || 0}</div>
-                            <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Tasks</div>
-          </div>
-        </div>
-
-                        {/* Progress Bar */}
-                        <div className="w-full bg-slate-200 rounded-full h-1 md:h-2 mb-0.5 md:mb-3">
-                          <div 
-                            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-1 md:h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${project.progress || 0}%` }}
-                          ></div>
-                        </div>
-
-                        {/* Status and Priority Tags */}
-                        <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-0.5 md:mb-3">
-                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${statusColors[project.status as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'}`}>
-                            {project.status}
-                          </span>
-                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${priorityColors[project.priority as keyof typeof priorityColors] || 'bg-slate-100 text-slate-700'}`}>
-                            {project.priority}
-                          </span>
-                        </div>
-
-                        {/* Details grid: desktop 2x2 (Company, Members | Start, End), mobile hidden */}
-                        <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-1.5 md:mb-3">
-                          <div className="flex items-center gap-2">
-                            <Building className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                            <span className="text-[10px] text-slate-700 font-medium break-words">{project.company}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                            <span className="text-[10px] text-slate-700 font-medium">{project.team?.split(',').length || 0} members</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                            <span className="text-[10px] text-slate-700 font-medium">{project.startDate}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Target className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                            <span className="text-[10px] text-slate-700 font-medium">{project.endDate}</span>
-                          </div>
-                        </div>
-
-                                                {/* Action Link */}
-                        <div className="mt-auto md:pt-4">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleProjectClick(project.id || '');
-                            }}
-                            className="text-blue-600 hover:text-blue-700 text-[8px] md:text-xs font-medium transition-colors"
-                          >
-                            View Details
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-          </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
         )}
                   </div>
