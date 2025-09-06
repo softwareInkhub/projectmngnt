@@ -119,17 +119,17 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-100">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-6">
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="p-1.5 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-md md:shadow-lg">
-              <FileText className="w-4 h-4 md:w-6 md:h-6" />
+      <div className="bg-blue-100 border-b border-slate-200 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
+              <FileText className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-base md:text-xl font-bold text-slate-900 leading-tight">Reports Analytics</h1>
-              <p className="text-slate-600 mt-0.5 md:mt-1 text-xs md:text-base">Generate and manage project reports</p>
+              <h1 className="text-2xl font-bold text-slate-900 leading-tight">Reports Analytics</h1>
+              <p className="text-slate-600 mt-1 text-xl">Generate and manage project reports</p>
             </div>
           </div>
           
@@ -137,24 +137,24 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
           <div className="hidden md:flex items-center gap-3">
             {/* Desktop search/filters */}
             <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
-              <input type="text" placeholder="Search reports..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+              <input type="text" placeholder="Search reports..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
             </div>
-            <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
               <option value="all">All Types</option>
               <option value="analytics">Analytics</option>
               <option value="performance">Performance</option>
               <option value="financial">Financial</option>
               <option value="team">Team</option>
             </select>
-            <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="px-2 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
               <option value="all">All Status</option>
               <option value="completed">Completed</option>
               <option value="in-progress">In Progress</option>
               <option value="scheduled">Scheduled</option>
             </select>
-            <button className="hidden md:flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold">
-              <FileText size={20} className="group-hover:rotate-90 transition-transform duration-200" />
+            <button className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl">
+              <FileText size={18} className="group-hover:rotate-90 transition-transform duration-200" />
               New Report
             </button>
           </div>

@@ -34,6 +34,7 @@ import {
   FolderOpen
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
 import { TaskApiService, TaskData } from "../utils/taskApi";
 import { ProjectApiService, ProjectData } from "../utils/projectApi";
@@ -123,6 +124,7 @@ export default function ContextSidebar({
   onClose,
   onOpenTab
 }: ContextSidebarProps) {
+  const router = useRouter();
   const [companiesList, setCompaniesList] = useState<CompanyData[]>([]);
   const [tasksList, setTasksList] = useState<TaskData[]>([]);
   const [projectsList, setProjectsList] = useState<ProjectData[]>([]);
@@ -138,6 +140,18 @@ export default function ContextSidebar({
   const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
   const [expandedTeams, setExpandedTeams] = useState<number[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Predefined colorful themes for project boxes (keeps Tailwind classes explicit)
+  const projectBoxThemes = [
+    { bg: 'bg-blue-100', border: 'border-blue-200', text: 'text-blue-900' },
+    { bg: 'bg-green-100', border: 'border-green-200', text: 'text-green-900' },
+    { bg: 'bg-purple-100', border: 'border-purple-200', text: 'text-purple-900' },
+    { bg: 'bg-yellow-100', border: 'border-yellow-200', text: 'text-yellow-900' },
+    { bg: 'bg-pink-100', border: 'border-pink-200', text: 'text-pink-900' },
+    { bg: 'bg-indigo-100', border: 'border-indigo-200', text: 'text-indigo-900' },
+    { bg: 'bg-cyan-100', border: 'border-cyan-200', text: 'text-cyan-900' },
+    { bg: 'bg-rose-100', border: 'border-rose-200', text: 'text-rose-900' }
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -268,23 +282,23 @@ export default function ContextSidebar({
               // Projects context
               <div className="space-y-3">
                 <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Projects Overview</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Projects</div>
-                      <div className="text-sm font-semibold">{projectsList.length}</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Project Status Summary</h3>
+                  <div className="grid grid-cols-2 gap-1">
+                    <div className="bg-blue-50 rounded-lg p-2">
+                      <div className="text-base text-blue-700">Planning</div>
+                      <div className="text-2xl font-bold text-blue-900">{projectsList.filter((p: any) => p.status === 'Planning').length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Tasks</div>
-                      <div className="text-sm font-semibold">{tasksList.length}</div>
+                    <div className="bg-green-50 rounded-lg p-2">
+                      <div className="text-base text-green-700">In Progress</div>
+                      <div className="text-2xl font-bold text-green-900">{projectsList.filter((p: any) => p.status === 'In Progress').length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Teams</div>
-                      <div className="text-sm font-semibold">{teamsList.length}</div>
+                    <div className="bg-emerald-50 rounded-lg p-2">
+                      <div className="text-base text-emerald-700">Completed</div>
+                      <div className="text-2xl font-bold text-emerald-900">{projectsList.filter((p: any) => p.status === 'Completed').length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Companies</div>
-                      <div className="text-sm font-semibold">{companiesList.length}</div>
+                    <div className="bg-yellow-50 rounded-lg p-2">
+                      <div className="text-base text-yellow-700">On Hold</div>
+                      <div className="text-2xl font-bold text-yellow-900">{projectsList.filter((p: any) => p.status === 'On Hold').length}</div>
                     </div>
                   </div>
                 </div>
@@ -300,18 +314,28 @@ export default function ContextSidebar({
                 </div>
 
                 <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Projects</h3>
-                  <div className="space-y-2">
-                    {projectsList.slice(0,3).map((p, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                        <FolderOpen size={12} className="text-blue-600" />
-                        <div className="text-xs flex-1 truncate">{p.name}</div>
-                      </div>
-                    ))}
-                    {projectsList.length === 0 && (
-                      <div className="text-xs text-gray-500">No recent items</div>
-                    )}
-                  </div>
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">Projects</h3>
+                  {projectsList.length > 0 ? (
+                    <ul className="list-disc list-inside space-y-1 text-base">
+                      {projectsList.slice(0, 8).map((p, idx) => {
+                        const theme = projectBoxThemes[idx % projectBoxThemes.length];
+                        return (
+                        <li
+                          key={(p as any).id || idx}
+                          className={`truncate px-2 py-1 rounded-md border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer`}
+                          onClick={() => { const id = (p as any).id; if (id) router.push(`/projects/${id}`); }}
+                          title={p.name}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { const id = (p as any).id; if (id) router.push(`/projects/${id}`); } }}
+                        >
+                          {p.name}
+                        </li>
+                      );})}
+                    </ul>
+                  ) : (
+                    <div className="text-sm text-gray-500">No projects</div>
+                  )}
                 </div>
               </div>
             )}
@@ -515,40 +539,52 @@ export default function ContextSidebar({
                 {/* Projects Tab */}
                 {activeTab === 1 && (
               <div className="space-y-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Project Overview</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Total Projects</div>
-                      <div className="text-sm font-semibold">{projectsList.length}</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Status Summary</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-100 rounded-lg p-3 border border-blue-200">
+                      <div className="text-sm font-medium text-blue-800">Planning</div>
+                      <div className="text-2xl font-bold text-blue-900 mt-1">{projectsList.filter((p: any) => p.status === 'Planning').length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Active</div>
-                      <div className="text-sm font-semibold">{projectsList.filter((p: any) => p.status === 'In Progress').length}</div>
+                    <div className="bg-green-100 rounded-lg p-3 border border-green-200">
+                      <div className="text-sm font-medium text-green-800">In Progress</div>
+                      <div className="text-2xl font-bold text-green-900 mt-1">{projectsList.filter((p: any) => p.status === 'In Progress').length}</div>
+                    </div>
+                    <div className="bg-emerald-100 rounded-lg p-3 border border-emerald-200">
+                      <div className="text-sm font-medium text-emerald-800">Completed</div>
+                      <div className="text-2xl font-bold text-emerald-900 mt-1">{projectsList.filter((p: any) => p.status === 'Completed').length}</div>
+                    </div>
+                    <div className="bg-yellow-100 rounded-lg p-3 border border-yellow-200">
+                      <div className="text-sm font-medium text-yellow-800">On Hold</div>
+                      <div className="text-2xl font-bold text-yellow-900 mt-1">{projectsList.filter((p: any) => p.status === 'On Hold').length}</div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Projects</h3>
-                  <div className="space-y-2">
-                    {projectsList.slice(0,3).map((project, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                        <FolderKanban size={12} className="text-blue-600" />
-                        <div className="text-xs flex-1 truncate">{project.name}</div>
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                          project.status === "In Progress" ? "bg-green-100 text-green-700" :
-                          project.status === "Planning" ? "bg-blue-100 text-blue-700" :
-                          "bg-gray-100 text-gray-700"
-                        }`}>
-                          {project.status}
-                        </span>
-                      </div>
-                    ))}
-                    {projectsList.length === 0 && (
-                      <div className="text-xs text-gray-500">No recent projects</div>
-                    )}
-                  </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Projects</h3>
+                  {projectsList.length > 0 ? (
+                    <ul className="space-y-3">
+                      {projectsList.map((project, idx) => {
+                        const theme = projectBoxThemes[idx % projectBoxThemes.length];
+                        return (
+                        <li
+                          key={(project as any).id || idx}
+                          className={`flex items-center px-3 py-2 rounded-lg border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer hover:shadow-sm`}
+                          onClick={() => { const id = (project as any).id; if (id) router.push(`/projects/${id}`); }}
+                          title={project.name}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { const id = (project as any).id; if (id) router.push(`/projects/${id}`); } }}
+                        >
+                          <div className={`w-2 h-2 rounded-full mr-3 ${theme.bg.replace('bg-', 'bg-').replace('-100', '-600')}`}></div>
+                          <span className="text-sm font-medium truncate">{project.name}</span>
+                        </li>
+                      );})}
+                    </ul>
+                  ) : (
+                    <div className="text-sm text-gray-500">No projects</div>
+                  )}
                 </div>
               </div>
             )}
@@ -556,40 +592,62 @@ export default function ContextSidebar({
             {/* Tasks Tab */}
             {activeTab === 2 && (
               <div className="space-y-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Task Overview</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Total Tasks</div>
-                      <div className="text-sm font-semibold">{tasksList.length}</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Status Summary</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-100 rounded-lg p-3 border border-blue-200">
+                      <div className="text-sm font-medium text-blue-800">To Do</div>
+                      <div className="text-2xl font-bold text-blue-900 mt-1">{tasksList.filter((t: any) => t.status === 'To Do').length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Completed</div>
-                      <div className="text-sm font-semibold">{tasksList.filter((t: any) => t.status === 'Done').length}</div>
+                    <div className="bg-green-100 rounded-lg p-3 border border-green-200">
+                      <div className="text-sm font-medium text-green-800">In Progress</div>
+                      <div className="text-2xl font-bold text-green-900 mt-1">{tasksList.filter((t: any) => t.status === 'In Progress').length}</div>
+                    </div>
+                    <div className="bg-emerald-100 rounded-lg p-3 border border-emerald-200">
+                      <div className="text-sm font-medium text-emerald-800">Done</div>
+                      <div className="text-2xl font-bold text-emerald-900 mt-1">{tasksList.filter((t: any) => t.status === 'Done').length}</div>
+                    </div>
+                    <div className="bg-yellow-100 rounded-lg p-3 border border-yellow-200">
+                      <div className="text-sm font-medium text-yellow-800">Blocked</div>
+                      <div className="text-2xl font-bold text-yellow-900 mt-1">{tasksList.filter((t: any) => t.status === 'Blocked').length}</div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Tasks</h3>
-                  <div className="space-y-2">
-                    {tasksList.slice(0,3).map((task, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                        <CheckSquare size={12} className="text-green-600" />
-                        <div className="text-xs flex-1 truncate">{task.title}</div>
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                          task.status === "Done" ? "bg-green-100 text-green-700" :
-                          task.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                          "bg-gray-100 text-gray-700"
-                        }`}>
-                          {task.status}
-                        </span>
-                      </div>
-                    ))}
-                    {tasksList.length === 0 && (
-                      <div className="text-xs text-gray-500">No recent tasks</div>
-                    )}
-                  </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks</h3>
+                  {tasksList.length > 0 ? (
+                    <ul className="space-y-3">
+                      {tasksList.slice(0, 8).map((task, idx) => {
+                        const taskThemes = [
+                          { bg: 'bg-blue-100', border: 'border-blue-200', text: 'text-blue-900', dot: 'bg-blue-600' },
+                          { bg: 'bg-green-100', border: 'border-green-200', text: 'text-green-900', dot: 'bg-green-600' },
+                          { bg: 'bg-purple-100', border: 'border-purple-200', text: 'text-purple-900', dot: 'bg-purple-600' },
+                          { bg: 'bg-yellow-100', border: 'border-yellow-200', text: 'text-yellow-900', dot: 'bg-yellow-600' },
+                          { bg: 'bg-pink-100', border: 'border-pink-200', text: 'text-pink-900', dot: 'bg-pink-600' },
+                          { bg: 'bg-indigo-100', border: 'border-indigo-200', text: 'text-indigo-900', dot: 'bg-indigo-600' },
+                          { bg: 'bg-cyan-100', border: 'border-cyan-200', text: 'text-cyan-900', dot: 'bg-cyan-600' },
+                          { bg: 'bg-rose-100', border: 'border-rose-200', text: 'text-rose-900', dot: 'bg-rose-600' }
+                        ];
+                        const theme = taskThemes[idx % taskThemes.length];
+                        return (
+                        <li
+                          key={task.id || idx}
+                          className={`flex items-center px-3 py-2 rounded-lg border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer hover:shadow-sm`}
+                          onClick={() => { if (task.id) router.push(`/tasks/${task.id}`); }}
+                          title={task.title}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter' && task.id) router.push(`/tasks/${task.id}`); }}
+                        >
+                          <div className={`w-2 h-2 rounded-full mr-3 ${theme.dot}`}></div>
+                          <span className="text-sm font-medium truncate">{task.title}</span>
+                        </li>
+                      );})}
+                    </ul>
+                  ) : (
+                    <div className="text-sm text-gray-500">No tasks</div>
+                  )}
                 </div>
               </div>
             )}
@@ -597,40 +655,62 @@ export default function ContextSidebar({
             {/* Teams Tab */}
             {activeTab === 3 && (
               <div className="space-y-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Team Overview</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Total Teams</div>
-                      <div className="text-sm font-semibold">{teamsList.length}</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Team Status Summary</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-100 rounded-lg p-3 border border-blue-200">
+                      <div className="text-sm font-medium text-blue-800">Active</div>
+                      <div className="text-2xl font-bold text-blue-900 mt-1">{teamsList.filter((t: any) => t.status === 'Active').length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Active</div>
-                      <div className="text-sm font-semibold">{teamsList.length}</div>
+                    <div className="bg-green-100 rounded-lg p-3 border border-green-200">
+                      <div className="text-sm font-medium text-green-800">Inactive</div>
+                      <div className="text-2xl font-bold text-green-900 mt-1">{teamsList.filter((t: any) => t.status === 'Inactive').length}</div>
+                    </div>
+                    <div className="bg-emerald-100 rounded-lg p-3 border border-emerald-200">
+                      <div className="text-sm font-medium text-emerald-800">On Hold</div>
+                      <div className="text-2xl font-bold text-emerald-900 mt-1">{teamsList.filter((t: any) => t.status === 'On Hold').length}</div>
+                    </div>
+                    <div className="bg-yellow-100 rounded-lg p-3 border border-yellow-200">
+                      <div className="text-sm font-medium text-yellow-800">Total</div>
+                      <div className="text-2xl font-bold text-yellow-900 mt-1">{teamsList.length}</div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Teams</h3>
-                  <div className="space-y-2">
-                    {teamsList.slice(0,3).map((team, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                        <Users size={12} className="text-purple-600" />
-                        <div className="text-xs flex-1 truncate">{team.name}</div>
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                          team.health === 'excellent' ? 'bg-green-100 text-green-700' :
-                          team.health === 'good' ? 'bg-blue-100 text-blue-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {team.health}
-                        </span>
-                      </div>
-                    ))}
-                    {teamsList.length === 0 && (
-                      <div className="text-xs text-gray-500">No recent teams</div>
-                    )}
-                  </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Teams</h3>
+                  {teamsList.length > 0 ? (
+                    <ul className="space-y-3">
+                      {teamsList.slice(0, 8).map((team, idx) => {
+                        const teamThemes = [
+                          { bg: 'bg-blue-100', border: 'border-blue-200', text: 'text-blue-900', dot: 'bg-blue-600' },
+                          { bg: 'bg-green-100', border: 'border-green-200', text: 'text-green-900', dot: 'bg-green-600' },
+                          { bg: 'bg-purple-100', border: 'border-purple-200', text: 'text-purple-900', dot: 'bg-purple-600' },
+                          { bg: 'bg-yellow-100', border: 'border-yellow-200', text: 'text-yellow-900', dot: 'bg-yellow-600' },
+                          { bg: 'bg-pink-100', border: 'border-pink-200', text: 'text-pink-900', dot: 'bg-pink-600' },
+                          { bg: 'bg-indigo-100', border: 'border-indigo-200', text: 'text-indigo-900', dot: 'bg-indigo-600' },
+                          { bg: 'bg-cyan-100', border: 'border-cyan-200', text: 'text-cyan-900', dot: 'bg-cyan-600' },
+                          { bg: 'bg-rose-100', border: 'border-rose-200', text: 'text-rose-900', dot: 'bg-rose-600' }
+                        ];
+                        const theme = teamThemes[idx % teamThemes.length];
+                        return (
+                        <li
+                          key={team.id || idx}
+                          className={`flex items-center px-3 py-2 rounded-lg border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer hover:shadow-sm`}
+                          onClick={() => { if (team.id) router.push(`/teams/${team.id}`); }}
+                          title={team.name}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter' && team.id) router.push(`/teams/${team.id}`); }}
+                        >
+                          <div className={`w-2 h-2 rounded-full mr-3 ${theme.dot}`}></div>
+                          <span className="text-sm font-medium truncate">{team.name}</span>
+                        </li>
+                      );})}
+                    </ul>
+                  ) : (
+                    <div className="text-sm text-gray-500">No teams</div>
+                  )}
                 </div>
               </div>
             )}
@@ -638,39 +718,62 @@ export default function ContextSidebar({
             {/* Companies Tab */}
             {activeTab === 4 && (
               <div className="space-y-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Company Overview</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Total Companies</div>
-                      <div className="text-sm font-semibold">{companiesList.length}</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Status Summary</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-100 rounded-lg p-3 border border-blue-200">
+                      <div className="text-sm font-medium text-blue-800">Active</div>
+                      <div className="text-2xl font-bold text-blue-900 mt-1">{companiesList.filter((c: any) => c.status === 'Active').length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Active</div>
-                      <div className="text-sm font-semibold">{companiesList.length}</div>
+                    <div className="bg-green-100 rounded-lg p-3 border border-green-200">
+                      <div className="text-sm font-medium text-green-800">Inactive</div>
+                      <div className="text-2xl font-bold text-green-900 mt-1">{companiesList.filter((c: any) => c.status === 'Inactive').length}</div>
+                    </div>
+                    <div className="bg-emerald-100 rounded-lg p-3 border border-emerald-200">
+                      <div className="text-sm font-medium text-emerald-800">On Hold</div>
+                      <div className="text-2xl font-bold text-emerald-900 mt-1">{companiesList.filter((c: any) => c.status === 'On Hold').length}</div>
+                    </div>
+                    <div className="bg-yellow-100 rounded-lg p-3 border border-yellow-200">
+                      <div className="text-sm font-medium text-yellow-800">Total</div>
+                      <div className="text-2xl font-bold text-yellow-900 mt-1">{companiesList.length}</div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Companies</h3>
-                  <div className="space-y-2">
-                    {companiesList.slice(0,3).map((company, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                        <Building2 size={12} className="text-blue-600" />
-                        <div className="text-xs flex-1 truncate">{company.name}</div>
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                          company.status === "Active" ? "bg-green-100 text-green-700" :
-                          "bg-gray-100 text-gray-700"
-                        }`}>
-                          {company.status}
-                        </span>
-                      </div>
-                    ))}
-                    {companiesList.length === 0 && (
-                      <div className="text-xs text-gray-500">No recent companies</div>
-                    )}
-                  </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Companies</h3>
+                  {companiesList.length > 0 ? (
+                    <ul className="space-y-3">
+                      {companiesList.slice(0, 8).map((company, idx) => {
+                        const companyThemes = [
+                          { bg: 'bg-blue-100', border: 'border-blue-200', text: 'text-blue-900', dot: 'bg-blue-600' },
+                          { bg: 'bg-green-100', border: 'border-green-200', text: 'text-green-900', dot: 'bg-green-600' },
+                          { bg: 'bg-purple-100', border: 'border-purple-200', text: 'text-purple-900', dot: 'bg-purple-600' },
+                          { bg: 'bg-yellow-100', border: 'border-yellow-200', text: 'text-yellow-900', dot: 'bg-yellow-600' },
+                          { bg: 'bg-pink-100', border: 'border-pink-200', text: 'text-pink-900', dot: 'bg-pink-600' },
+                          { bg: 'bg-indigo-100', border: 'border-indigo-200', text: 'text-indigo-900', dot: 'bg-indigo-600' },
+                          { bg: 'bg-cyan-100', border: 'border-cyan-200', text: 'text-cyan-900', dot: 'bg-cyan-600' },
+                          { bg: 'bg-rose-100', border: 'border-rose-200', text: 'text-rose-900', dot: 'bg-rose-600' }
+                        ];
+                        const theme = companyThemes[idx % companyThemes.length];
+                        return (
+                        <li
+                          key={company.id || idx}
+                          className={`flex items-center px-3 py-2 rounded-lg border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer hover:shadow-sm`}
+                          onClick={() => { if (company.id) router.push(`/companies/${company.id}`); }}
+                          title={company.name}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter' && company.id) router.push(`/companies/${company.id}`); }}
+                        >
+                          <div className={`w-2 h-2 rounded-full mr-3 ${theme.dot}`}></div>
+                          <span className="text-sm font-medium truncate">{company.name}</span>
+                        </li>
+                      );})}
+                    </ul>
+                  ) : (
+                    <div className="text-sm text-gray-500">No companies</div>
+                  )}
                 </div>
               </div>
             )}
@@ -678,31 +781,60 @@ export default function ContextSidebar({
             {/* Calendar Tab */}
             {activeTab === 5 && (
               <div className="space-y-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Calendar Overview</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Total Events</div>
-                      <div className="text-sm font-semibold">{allCalendarEvents.length}</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Calendar Summary</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-100 rounded-lg p-3 border border-blue-200">
+                      <div className="text-sm font-medium text-blue-800">Total Events</div>
+                      <div className="text-2xl font-bold text-blue-900 mt-1">{allCalendarEvents.length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">This Week</div>
-                      <div className="text-sm font-semibold">{allCalendarEvents.length}</div>
+                    <div className="bg-green-100 rounded-lg p-3 border border-green-200">
+                      <div className="text-sm font-medium text-green-800">This Week</div>
+                      <div className="text-2xl font-bold text-green-900 mt-1">{allCalendarEvents.length}</div>
+                    </div>
+                    <div className="bg-emerald-100 rounded-lg p-3 border border-emerald-200">
+                      <div className="text-sm font-medium text-emerald-800">Upcoming</div>
+                      <div className="text-2xl font-bold text-emerald-900 mt-1">{allCalendarEvents.length}</div>
+                    </div>
+                    <div className="bg-yellow-100 rounded-lg p-3 border border-yellow-200">
+                      <div className="text-sm font-medium text-yellow-800">Completed</div>
+                      <div className="text-2xl font-bold text-yellow-900 mt-1">0</div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Upcoming Events</h3>
-                  <div className="space-y-2">
-                    {allCalendarEvents.slice(0,3).map((event, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                        <Calendar size={12} className="text-orange-600" />
-                        <div className="text-xs flex-1 truncate">{event.title}</div>
-                        <span className="text-xs text-gray-500">{event.date}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Events</h3>
+                  {allCalendarEvents.length > 0 ? (
+                    <ul className="space-y-3">
+                      {allCalendarEvents.slice(0, 8).map((event, idx) => {
+                        const eventThemes = [
+                          { bg: 'bg-blue-100', border: 'border-blue-200', text: 'text-blue-900', dot: 'bg-blue-600' },
+                          { bg: 'bg-green-100', border: 'border-green-200', text: 'text-green-900', dot: 'bg-green-600' },
+                          { bg: 'bg-purple-100', border: 'border-purple-200', text: 'text-purple-900', dot: 'bg-purple-600' },
+                          { bg: 'bg-yellow-100', border: 'border-yellow-200', text: 'text-yellow-900', dot: 'bg-yellow-600' },
+                          { bg: 'bg-pink-100', border: 'border-pink-200', text: 'text-pink-900', dot: 'bg-pink-600' },
+                          { bg: 'bg-indigo-100', border: 'border-indigo-200', text: 'text-indigo-900', dot: 'bg-indigo-600' },
+                          { bg: 'bg-cyan-100', border: 'border-cyan-200', text: 'text-cyan-900', dot: 'bg-cyan-600' },
+                          { bg: 'bg-rose-100', border: 'border-rose-200', text: 'text-rose-900', dot: 'bg-rose-600' }
+                        ];
+                        const theme = eventThemes[idx % eventThemes.length];
+                        return (
+                        <li
+                          key={event.id || idx}
+                          className={`flex items-center px-3 py-2 rounded-lg border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer hover:shadow-sm`}
+                          title={event.title}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <div className={`w-2 h-2 rounded-full mr-3 ${theme.dot}`}></div>
+                          <span className="text-sm font-medium truncate">{event.title}</span>
+                        </li>
+                      );})}
+                    </ul>
+                  ) : (
+                    <div className="text-sm text-gray-500">No events</div>
+                  )}
                 </div>
               </div>
             )}
@@ -710,36 +842,60 @@ export default function ContextSidebar({
             {/* Reports Tab */}
             {activeTab === 6 && (
               <div className="space-y-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Reports Overview</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Total Reports</div>
-                      <div className="text-sm font-semibold">{allReports.length}</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Reports Summary</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-100 rounded-lg p-3 border border-blue-200">
+                      <div className="text-sm font-medium text-blue-800">Total Reports</div>
+                      <div className="text-2xl font-bold text-blue-900 mt-1">{allReports.length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-500">Published</div>
-                      <div className="text-sm font-semibold">{allReports.filter(r => r.status === 'Published').length}</div>
+                    <div className="bg-green-100 rounded-lg p-3 border border-green-200">
+                      <div className="text-sm font-medium text-green-800">Published</div>
+                      <div className="text-2xl font-bold text-green-900 mt-1">{allReports.filter(r => r.status === 'Published').length}</div>
+                    </div>
+                    <div className="bg-emerald-100 rounded-lg p-3 border border-emerald-200">
+                      <div className="text-sm font-medium text-emerald-800">Draft</div>
+                      <div className="text-2xl font-bold text-emerald-900 mt-1">{allReports.filter(r => r.status === 'Draft').length}</div>
+                    </div>
+                    <div className="bg-yellow-100 rounded-lg p-3 border border-yellow-200">
+                      <div className="text-sm font-medium text-yellow-800">In Review</div>
+                      <div className="text-2xl font-bold text-yellow-900 mt-1">{allReports.filter(r => r.status === 'In Review').length}</div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg border border-gray-200 p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Recent Reports</h3>
-                  <div className="space-y-2">
-                    {allReports.slice(0,3).map((report, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                        <BarChart3 size={12} className="text-purple-600" />
-                        <div className="text-xs flex-1 truncate">{report.title}</div>
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                          report.status === "Published" ? "bg-green-100 text-green-700" :
-                          "bg-yellow-100 text-yellow-700"
-                        }`}>
-                          {report.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Reports</h3>
+                  {allReports.length > 0 ? (
+                    <ul className="space-y-3">
+                      {allReports.slice(0, 8).map((report, idx) => {
+                        const reportThemes = [
+                          { bg: 'bg-blue-100', border: 'border-blue-200', text: 'text-blue-900', dot: 'bg-blue-600' },
+                          { bg: 'bg-green-100', border: 'border-green-200', text: 'text-green-900', dot: 'bg-green-600' },
+                          { bg: 'bg-purple-100', border: 'border-purple-200', text: 'text-purple-900', dot: 'bg-purple-600' },
+                          { bg: 'bg-yellow-100', border: 'border-yellow-200', text: 'text-yellow-900', dot: 'bg-yellow-600' },
+                          { bg: 'bg-pink-100', border: 'border-pink-200', text: 'text-pink-900', dot: 'bg-pink-600' },
+                          { bg: 'bg-indigo-100', border: 'border-indigo-200', text: 'text-indigo-900', dot: 'bg-indigo-600' },
+                          { bg: 'bg-cyan-100', border: 'border-cyan-200', text: 'text-cyan-900', dot: 'bg-cyan-600' },
+                          { bg: 'bg-rose-100', border: 'border-rose-200', text: 'text-rose-900', dot: 'bg-rose-600' }
+                        ];
+                        const theme = reportThemes[idx % reportThemes.length];
+                        return (
+                        <li
+                          key={report.id || idx}
+                          className={`flex items-center px-3 py-2 rounded-lg border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer hover:shadow-sm`}
+                          title={report.title}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <div className={`w-2 h-2 rounded-full mr-3 ${theme.dot}`}></div>
+                          <span className="text-sm font-medium truncate">{report.title}</span>
+                        </li>
+                      );})}
+                    </ul>
+                  ) : (
+                    <div className="text-sm text-gray-500">No reports</div>
+                  )}
                 </div>
               </div>
             )}

@@ -569,17 +569,17 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-100">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-3 md:py-6">
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="p-1.5 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-slate-500 to-gray-600 text-white shadow-md md:shadow-lg">
-              <Settings className="w-4 h-4 md:w-6 md:h-6" />
+      <div className="bg-blue-100 border-b border-slate-200 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
+              <Settings className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-base md:text-xl font-bold text-slate-900 leading-tight">Settings</h1>
-              <p className="text-slate-600 mt-0.5 md:mt-1 text-xs md:text-base">Manage your account and application preferences</p>
+              <h1 className="text-2xl font-bold text-slate-900 leading-tight">Settings</h1>
+              <p className="text-slate-600 mt-1 text-xl">Manage your account and application preferences</p>
             </div>
           </div>
           
