@@ -196,47 +196,47 @@ export default function NewTabPage() {
   const getColorClasses = (color: string) => {
     switch (color) {
       case "blue":
-        return "bg-gradient-to-br from-blue-500 to-indigo-600";
+        return "bg-gradient-to-br from-blue-500 to-blue-600";
       case "green":
-        return "bg-gradient-to-br from-emerald-500 to-teal-600";
+        return "bg-gradient-to-br from-blue-500 to-blue-600";
       case "purple":
-        return "bg-gradient-to-br from-purple-500 to-pink-600";
+        return "bg-gradient-to-br from-blue-500 to-blue-600";
       case "pink":
-        return "bg-gradient-to-br from-pink-500 to-rose-600";
+        return "bg-gradient-to-br from-blue-500 to-blue-600";
       case "indigo":
-        return "bg-gradient-to-br from-indigo-500 to-purple-600";
+        return "bg-gradient-to-br from-blue-500 to-blue-600";
       case "orange":
-        return "bg-gradient-to-br from-orange-500 to-red-600";
+        return "bg-gradient-to-br from-blue-500 to-blue-600";
       default:
-        return "bg-gradient-to-br from-slate-500 to-gray-600";
+        return "bg-gradient-to-br from-blue-500 to-blue-600";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "text-red-600 bg-red-100";
+        return "text-blue-800 bg-blue-200";
       case "medium":
-        return "text-yellow-600 bg-yellow-100";
+        return "text-blue-700 bg-blue-100";
       case "low":
-        return "text-green-600 bg-green-100";
+        return "text-blue-600 bg-blue-50";
       default:
-        return "text-slate-600 bg-slate-100";
+        return "text-blue-700 bg-blue-100";
     }
   };
 
   const getHealthColor = (health: string) => {
     switch (health) {
       case "excellent":
-        return "text-green-600 bg-green-100";
+        return "text-blue-800 bg-blue-200";
       case "good":
-        return "text-blue-600 bg-blue-100";
+        return "text-blue-700 bg-blue-100";
       case "fair":
-        return "text-yellow-600 bg-yellow-100";
+        return "text-blue-600 bg-blue-50";
       case "poor":
-        return "text-red-600 bg-red-100";
+        return "text-blue-700 bg-blue-100";
       default:
-        return "text-slate-600 bg-slate-100";
+        return "text-blue-700 bg-blue-100";
     }
   };
 

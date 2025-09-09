@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ProjectApiService, ProjectData } from "../utils/projectApi";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
+import UniversalDetailsModal from "./UniversalDetailsModal";
 import { 
   X, 
   FolderOpen, 
@@ -63,20 +64,20 @@ import {
   MoreHorizontal
 } from "lucide-react";
 
-// Status and priority colors for cards
+// Professional status and priority colors with gradients
 const statusColors = {
-  "Planning": "bg-blue-100 text-blue-700",
-  "Active": "bg-green-100 text-green-700",
-  "On Hold": "bg-orange-100 text-orange-700",
-  "Completed": "bg-emerald-100 text-emerald-700",
-  "Cancelled": "bg-red-100 text-red-700"
+  "Planning": "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border border-slate-300",
+  "Active": "bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-700 border border-emerald-300",
+  "On Hold": "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 border border-amber-300",
+  "Completed": "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border border-slate-300",
+  "Cancelled": "bg-gradient-to-r from-red-100 to-red-200 text-red-700 border border-red-300"
 };
 
 const priorityColors = {
-  "Low": "bg-green-100 text-green-700",
-  "Medium": "bg-yellow-100 text-yellow-700",
-  "High": "bg-red-100 text-red-700",
-  "Critical": "bg-purple-100 text-purple-700"
+  "Low": "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border border-slate-300",
+  "Medium": "bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 border border-amber-300",
+  "High": "bg-gradient-to-r from-red-100 to-red-200 text-red-700 border border-red-300",
+  "Critical": "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border border-slate-300"
 };
 
 const getInitials = (name: string) => {
@@ -97,18 +98,15 @@ const parseTags = (tags: unknown): string[] => {
 const formatDate = (date?: string) => (date ? date : "");
 
 const statusPillClass = (status: string) =>
-  (statusColors as Record<string, string>)[status] || 'bg-slate-100 text-slate-700';
+  (statusColors as Record<string, string>)[status] || 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border border-slate-300';
 
-  // Colorful row themes for list view (explicit Tailwind classes)
+  // Blue gradient row themes for list view
   const rowThemes = [
-    { bg: 'bg-blue-100', border: 'border-blue-200' },
-    { bg: 'bg-green-100', border: 'border-green-200' },
-    { bg: 'bg-purple-100', border: 'border-purple-200' },
-    { bg: 'bg-yellow-100', border: 'border-yellow-200' },
-    { bg: 'bg-pink-100', border: 'border-pink-200' },
-    { bg: 'bg-indigo-100', border: 'border-indigo-200' },
-    { bg: 'bg-cyan-100', border: 'border-cyan-200' },
-    { bg: 'bg-rose-100', border: 'border-rose-200' }
+    { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' },
+    { bg: 'bg-gradient-to-r from-blue-100 to-blue-200', border: 'border-blue-300' },
+    { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' },
+    { bg: 'bg-gradient-to-r from-blue-100 to-blue-200', border: 'border-blue-300' },
+    { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' }
   ];
 
 interface ProjectsAnalyticsPageProps {
@@ -145,6 +143,13 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
+  
+  // Universal Details Modal state
+  const [detailsModal, setDetailsModal] = useState({
+    isOpen: false,
+    itemType: 'project' as 'project' | 'task' | 'team' | 'company',
+    itemId: ''
+  });
 
 
   const statuses = ["Planning", "Active", "Completed", "On Hold", "Cancelled"];
@@ -488,11 +493,10 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     a.click();
   };
 
-  // Navigation function
+  // Open Universal Details Modal
   const handleProjectClick = (projectId: string) => {
-    console.log('=== PROJECT NAVIGATION DEBUG ===');
-    console.log('Navigating to project:', projectId);
-    console.log('Navigation URL:', `/projects/${projectId}`);
+    console.log('=== PROJECT DETAILS MODAL DEBUG ===');
+    console.log('Opening details modal for project:', projectId);
     console.log('Project type:', typeof projectId);
     console.log('Project ID length:', projectId?.length);
     console.log('Is project ID empty?', !projectId || projectId.trim() === '');
@@ -504,17 +508,30 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
       return;
     }
     
-    // Navigate to the project detail page
-    router.push(`/projects/${projectId}`);
+    // Open the Universal Details Modal
+    setDetailsModal({
+      isOpen: true,
+      itemType: 'project',
+      itemId: projectId
+    });
+  };
+
+  // Close Universal Details Modal
+  const closeDetailsModal = () => {
+    setDetailsModal({
+      isOpen: false,
+      itemType: 'project',
+      itemId: ''
+    });
   };
 
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Header */}
-      <div className="bg-blue-100 border-b border-slate-200 shadow-sm">
+      <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
+            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
               <BarChart2 className="w-6 h-6" />
             </div>
             <div>
@@ -549,7 +566,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               <Download size={18} />
               Export All
           </button>
-            <button className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl" onClick={() => setShowCreateForm(true)}>
+            <button className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl" onClick={() => setShowCreateForm(true)}>
               <Plus size={18} className="group-hover:rotate-90 transition-transform duration-200" />
             Create Project
           </button>
@@ -568,7 +585,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                   className="pl-7 pr-2 py-2 border border-slate-300 rounded-md text-xl focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent w-full" 
                 />
               </div>
-              <button onClick={() => setShowCreateForm(true)} className="px-2 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md text-xl font-medium">Create</button>
+              <button onClick={() => setShowCreateForm(true)} className="px-2 py-2 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-md text-xl font-medium">Create</button>
               <button onClick={handleExportAll} className="px-2 py-2 bg-white border border-slate-300 rounded-md text-xl">Export</button>
             </div>
         </div>
@@ -606,7 +623,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                 <List size={14} className="md:w-4 md:h-4" />
               </button>
             </div>
-            <span className="text-xs md:text-sm text-slate-600">
+            <span className="text-sm md:text-base text-slate-600">
               {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
             </span>
           </div>
@@ -636,10 +653,10 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           <div className="bg-white border border-slate-200 rounded-xl shadow-lg p-4 md:p-8 mb-4 md:mb-8">
             <div className="flex items-center justify-between mb-4 md:mb-8">
               <div>
-                <h2 className="text-lg md:text-xl font-bold text-slate-900 mb-0.5 md:mb-1">
+                <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-0.5 md:mb-1">
                   {editingProject ? 'Edit Project' : 'Create New Project'}
                 </h2>
-                <p className="text-slate-500 text-xs md:text-sm">
+                <p className="text-slate-500 text-sm md:text-base">
                   {editingProject ? 'Update the project details below' : 'Fill in the details below to create a new project'}
                 </p>
               </div>
@@ -671,28 +688,28 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                   <div className="p-1.5 md:p-2 bg-blue-100 rounded-lg">
                     <Briefcase className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                   </div>
-                  <h3 className="text-base md:text-lg font-semibold text-slate-900">Project Information</h3>
+                  <h3 className="text-lg md:text-xl font-semibold text-slate-900">Project Information</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-lg">
               <div>
-                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Project Name *</label>
+                    <label className="block text-sm md:text-base font-bold text-slate-700 mb-1.5 md:mb-2">Project Name *</label>
                 <input 
                   value={projectName} 
                   onChange={e => setProjectName(e.target.value)} 
-                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
+                      className="w-full px-1.5 md:px-2 py-2 md:py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base md:text-lg"
                   placeholder="Enter project name"
                   required
                 />
               </div>
               
               <div>
-                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Company *</label>
+                    <label className="block text-sm md:text-base font-bold text-slate-700 mb-1.5 md:mb-2">Company *</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
-                        className={`w-full px-3 md:px-4 py-2 md:py-3 border rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base ${
+                        className={`w-full px-1.5 md:px-2 py-2 md:py-2.5 border rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base md:text-lg ${
                           selectedCompany ? "border-slate-300 text-slate-900" : "border-red-300 text-slate-500"
                         }`}
                   >
@@ -718,7 +735,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                                 setSelectedCompany(company.name);
                             setShowCompanyDropdown(false);
                           }}
-                                  className="w-full text-left px-4 py-3 hover:bg-slate-50 text-sm transition-colors border-b border-slate-100 last:border-b-0"
+                                  className="w-full text-left px-2 py-1.5 hover:bg-slate-50 text-base transition-colors border-b border-slate-100 last:border-b-0"
                                 >
                                   <div className="font-medium text-slate-900">{company.name}</div>
                                   {company.description && (
@@ -739,7 +756,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                                     }
                                 setShowCompanyDropdown(false);
                               }}
-                                  className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-blue-600 font-medium transition-colors"
+                                  className="w-full text-left px-2 py-1.5 hover:bg-blue-50 text-base text-blue-600 font-medium transition-colors"
                                 >
                                   + Create New Company
                             </button>
@@ -753,11 +770,11 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               </div>
 
               <div>
-                  <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Description</label>
+                  <label className="block text-sm md:text-base font-bold text-slate-700 mb-1.5 md:mb-2">Description</label>
                   <textarea
                     value={projectDescription}
                     onChange={e => setProjectDescription(e.target.value)}
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-sm md:text-base"
+                    className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-base md:text-lg"
                     rows={2}
                     placeholder="Describe the project goals, objectives, and key deliverables..."
                   />
@@ -770,17 +787,17 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                   <div className="p-1.5 md:p-2 bg-green-100 rounded-lg">
                     <Settings className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
                   </div>
-                  <h3 className="text-base md:text-lg font-semibold text-slate-900">Project Details</h3>
+                  <h3 className="text-lg md:text-xl font-semibold text-slate-900">Project Details</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 max-w-lg">
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Status</label>
+                    <label className="block text-sm md:text-base font-bold text-slate-700 mb-1.5 md:mb-2">Status</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                        className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
+                        className="w-full px-1.5 md:px-2 py-2 md:py-2.5 border border-slate-300 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base md:text-lg"
                   >
                         <span className="text-slate-900">{projectStatus}</span>
                         <ChevronDown size={14} className="md:w-4 md:h-4 text-slate-400" />
@@ -807,12 +824,12 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
             </div>
 
               <div>
-                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Priority</label>
+                    <label className="block text-sm md:text-base font-bold text-slate-700 mb-1.5 md:mb-2">Priority</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowPriorityDropdown(!showPriorityDropdown)}
-                        className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
+                        className="w-full px-1.5 md:px-2 py-2 md:py-2.5 border border-slate-300 rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base md:text-lg"
                   >
                         <span className="text-slate-900">{projectPriority}</span>
                         <ChevronDown size={14} className="md:w-4 md:h-4 text-slate-400" />
@@ -839,35 +856,35 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               </div>
 
               <div>
-                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Budget</label>
+                    <label className="block text-sm md:text-base font-bold text-slate-700 mb-1.5 md:mb-2">Budget</label>
                 <input 
                       type="text"
                   value={budget} 
                   onChange={e => setBudget(e.target.value)} 
-                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
+                      className="w-full px-1.5 md:px-2 py-2 md:py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base md:text-lg"
                       placeholder="Enter budget amount"
                 />
               </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 max-w-lg">
               <div>
-                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Start Date</label>
+                    <label className="block text-sm md:text-base font-bold text-slate-700 mb-1.5 md:mb-2">Start Date</label>
                 <input 
                   type="date"
                   value={startDate} 
                   onChange={e => setStartDate(e.target.value)} 
-                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
+                      className="w-full px-1.5 md:px-2 py-2 md:py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base md:text-lg"
                 />
               </div>
               <div>
-                    <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">End Date</label>
+                    <label className="block text-sm md:text-base font-bold text-slate-700 mb-1.5 md:mb-2">End Date</label>
                 <input 
                   type="date"
                   value={endDate} 
                   onChange={e => setEndDate(e.target.value)} 
-                      className="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
-                />
+                      className="w-full px-1.5 md:px-2 py-2 md:py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base md:text-lg"
+                  />
                   </div>
               </div>
             </div>
@@ -878,16 +895,16 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                   <div className="p-1.5 md:p-2 bg-purple-100 rounded-lg">
                     <Users className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
                   </div>
-                  <h3 className="text-base md:text-lg font-semibold text-slate-900">Team Members</h3>
+                  <h3 className="text-lg md:text-xl font-semibold text-slate-900">Team Members</h3>
                 </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 max-w-lg">
                   {availableMembers.map((member) => (
                   <button
                     key={member}
                     type="button"
                     onClick={() => toggleMember(member)}
-                        className={`p-2 md:p-3 rounded-lg border-2 transition-all ${
+                        className={`p-1 md:p-1.5 rounded-lg border-2 transition-all ${
                       selectedMembers.includes(member) 
                           ? "border-blue-500 bg-blue-50 text-blue-700"
                           : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
@@ -897,7 +914,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                         <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${
                           selectedMembers.includes(member) ? "bg-blue-500" : "bg-slate-300"
                         }`}></div>
-                          <span className="text-xs md:text-sm font-medium">{member}</span>
+                          <span className="text-sm md:text-base font-medium">{member}</span>
                         </div>
                   </button>
                 ))}
@@ -909,13 +926,13 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               <button 
                 type="button"
                 onClick={cancelCreate}
-                  className="px-4 md:px-6 py-2.5 md:py-3 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors font-medium text-sm md:text-base"
+                  className="px-4 md:px-6 py-2.5 md:py-3 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors font-medium text-base md:text-lg"
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                  className="px-4 md:px-6 py-2.5 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm md:text-base"
+                  className="px-4 md:px-6 py-2.5 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-base md:text-lg"
               >
                   {editingProject ? 'Update Project' : 'Create Project'}
               </button>
@@ -969,81 +986,71 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               {viewMode === "list" ? (
                 <div className="mx-2 md:mx-0 overflow-visible">
                   <table className="min-w-full bg-white border border-slate-200 rounded-xl shadow-sm">
-                    <thead className="bg-slate-50 text-slate-600 text-lg">
+                    <thead className="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 text-lg border-b border-slate-300">
                       <tr>
-                        <th className="text-left px-3 py-2 w-16">ID</th>
-                        <th className="text-left px-3 py-2">Project Name</th>
-                        <th className="text-left px-3 py-2 w-12">%</th>
-                        <th className="text-left px-3 py-2">Owner</th>
-                        <th className="text-left px-3 py-2">Status</th>
-                        <th className="text-left px-3 py-2">Tasks</th>
-                        <th className="text-left px-3 py-2">Phases</th>
-                        <th className="text-left px-3 py-2">Issues</th>
-                        <th className="text-left px-3 py-2">Start Date</th>
-                        <th className="text-left px-3 py-2">End Date</th>
-                        <th className="text-left px-3 py-2">Tags</th>
-                        <th className="text-right px-3 py-2 w-10">Actions</th>
+                        <th className="text-left px-2 py-1.5 w-16">ID</th>
+                        <th className="text-left px-3 py-1.5">Project Name</th>
+                        <th className="text-left px-3 py-1.5 w-12">%</th>
+                        <th className="text-left px-2 py-1.5">Owner</th>
+                        <th className="text-left px-3 py-1.5">Status</th>
+                        <th className="text-left px-3 py-1.5">Tasks</th>
+                        <th className="text-left px-3 py-1.5">Phases</th>
+                        <th className="text-left px-3 py-1.5">Issues</th>
+                        <th className="text-left px-3 py-1.5">Start Date</th>
+                        <th className="text-left px-3 py-1.5">End Date</th>
+                        <th className="text-left px-2 py-1.5">Tags</th>
+                        <th className="text-right px-2 py-1.5 w-10">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="text-xl overflow-visible">
+                    <tbody className="text-lg overflow-visible">
                       {filteredProjects.map((project, idx) => {
-                        const lightThemes = [
-                          { bg: 'bg-blue-100', border: 'border-blue-200' },
-                          { bg: 'bg-green-100', border: 'border-green-200' },
-                          { bg: 'bg-purple-100', border: 'border-purple-200' },
-                          { bg: 'bg-yellow-100', border: 'border-yellow-200' },
-                          { bg: 'bg-pink-100', border: 'border-pink-200' },
-                          { bg: 'bg-indigo-100', border: 'border-indigo-200' },
-                          { bg: 'bg-cyan-100', border: 'border-cyan-200' },
-                          { bg: 'bg-rose-100', border: 'border-rose-200' }
-                        ];
-                        const theme = lightThemes[idx % lightThemes.length];
+                        const theme = { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' };
                         return (
-                        <tr key={project.id} className={`cursor-pointer border-2 ${theme.border} ${theme.bg} rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:scale-[1.01] hover:-translate-y-0.5`} onClick={() => handleProjectClick(project.id || '')}>
-                          <td className="px-3 py-3 text-slate-700 align-middle">{project.id || '-'}</td>
-                          <td className="px-4 py-4 align-middle">
-                            <div className="text-slate-900 font-semibold text-xl">{project.name}</div>
+                        <tr key={project.id} className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`} onClick={() => handleProjectClick(project.id || '')}>
+                          <td className="px-2 py-2 text-slate-600 align-middle text-lg">{project.id || '-'}</td>
+                          <td className="px-3 py-2 align-middle">
+                            <div className="text-slate-900 font-semibold text-2xl">{project.name}</div>
                             <div className="text-lg text-slate-500 line-clamp-1">{project.description}</div>
                           </td>
-                          <td className="px-4 py-4 text-slate-900 font-semibold align-middle">{project.progress || 0}%</td>
-                          <td className="px-3 py-3 align-middle">
+                          <td className="px-3 py-2 text-slate-900 font-semibold align-middle text-2xl">{project.progress || 0}%</td>
+                          <td className="px-2 py-2 align-middle">
                             <div className="flex items-center gap-2">
-                                <div className="h-6 w-6 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">
+                                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-base flex items-center justify-center font-bold">
                                 {getInitials(project.company || project.assignee || '')}
                               </div>
-                              <span className="text-slate-700 text-xl">{project.company || project.assignee || '—'}</span>
+                              <span className="text-slate-700 text-lg">{project.company || project.assignee || '—'}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-4 align-middle">
-                            <span className={`px-3 py-1.5 rounded text-lg font-semibold ${statusPillClass(project.status || '')}`}>{project.status || '—'}</span>
+                          <td className="px-3 py-2 align-middle">
+                            <span className={`px-2 py-1 rounded-full text-lg font-medium ${statusPillClass(project.status || '')}`}>{project.status || '—'}</span>
                           </td>
-                          <td className="px-4 py-4 align-middle">
-                            <div className="flex items-center gap-3 w-40">
-                                <div className="w-full bg-blue-100 rounded-full h-2.5">
-                                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${project.progress || 0}%` }}></div>
+                          <td className="px-3 py-2 align-middle">
+                            <div className="flex items-center gap-2 w-32">
+                                <div className="w-full bg-gradient-to-r from-slate-200 to-slate-300 rounded-full h-2">
+                                  <div className="bg-gradient-to-r from-slate-600 to-slate-700 h-2 rounded-full" style={{ width: `${project.progress || 0}%` }}></div>
                               </div>
                               <span className="text-lg text-slate-600">{project.tasks || 0}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-4 align-middle">
-                            <span className="text-lg text-slate-700 font-medium">No Phases</span>
+                          <td className="px-3 py-2 align-middle">
+                            <span className="text-lg text-slate-600 font-medium">No Phases</span>
                           </td>
-                          <td className="px-4 py-4 align-middle">
-                            <span className="text-lg text-slate-700 font-medium">No Issues</span>
+                          <td className="px-3 py-2 align-middle">
+                            <span className="text-lg text-slate-600 font-medium">No Issues</span>
                           </td>
-                          <td className="px-4 py-4 text-slate-700 align-middle text-xl whitespace-nowrap">{formatDate(project.startDate)}</td>
-                          <td className="px-4 py-4 text-slate-700 align-middle text-xl whitespace-nowrap">{formatDate(project.endDate)}</td>
-                          <td className="px-3 py-3 align-middle">
-                            <div className="flex flex-nowrap gap-2.5 max-w-[380px] overflow-hidden">
+                          <td className="px-3 py-2 text-slate-600 align-middle text-lg whitespace-nowrap">{formatDate(project.startDate)}</td>
+                          <td className="px-3 py-2 text-slate-600 align-middle text-lg whitespace-nowrap">{formatDate(project.endDate)}</td>
+                          <td className="px-2 py-2 align-middle">
+                            <div className="flex flex-nowrap gap-1.5 max-w-[200px] overflow-hidden">
                               {parseTags(project.tags).slice(0, 2).map((tag, idx) => (
-                                <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-lg font-medium">{tag}</span>
+                                <span key={idx} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">{tag}</span>
                               ))}
                               {parseTags(project.tags).length > 2 && (
-                                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-lg font-medium">+{parseTags(project.tags).length - 2}</span>
+                                <span className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">+{parseTags(project.tags).length - 2}</span>
                               )}
                             </div>
                           </td>
-                          <td className="px-3 py-3 align-middle text-right relative menu-container overflow-visible">
+                          <td className="px-2 py-2 align-middle text-right relative menu-container overflow-visible">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1061,18 +1068,8 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                               >
                                 <div className="py-1">
                                   <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleProjectClick(project.id || '');
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-base text-blue-600 hover:bg-blue-50 flex items-center gap-2"
-                                  >
-                                    <Eye size={16} />
-                                    View Details
-                                  </button>
-                                  <button
                                     onClick={() => handleEditProject(project)}
-                                    className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                                    className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 flex items-center gap-2"
                                   >
                                     <Edit size={16} />
                                     Edit
@@ -1080,7 +1077,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                                   <div className="border-t border-slate-200 my-1"></div>
                                   <button
                                     onClick={() => handleDeleteProject(project)}
-                                    className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                    className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 flex items-center gap-2"
                                   >
                                     <Trash2 size={16} />
                                     Delete
@@ -1095,47 +1092,36 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                   </table>
                 </div>
               ) : (
-                <div className="grid gap-3 md:gap-6 mx-2 md:mx-0 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid gap-2 md:gap-3 mx-2 md:mx-0 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
                     {filteredProjects.map((project, idx) => {
-                      const lightColors = [
-                        { bg: 'bg-blue-100', border: 'border-blue-200', hoverBg: 'hover:bg-blue-200', hoverBorder: 'hover:border-blue-300' },
-                        { bg: 'bg-green-100', border: 'border-green-200', hoverBg: 'hover:bg-green-200', hoverBorder: 'hover:border-green-300' },
-                        { bg: 'bg-purple-100', border: 'border-purple-200', hoverBg: 'hover:bg-purple-200', hoverBorder: 'hover:border-purple-300' },
-                        { bg: 'bg-yellow-100', border: 'border-yellow-200', hoverBg: 'hover:bg-yellow-200', hoverBorder: 'hover:border-yellow-300' },
-                        { bg: 'bg-pink-100', border: 'border-pink-200', hoverBg: 'hover:bg-pink-200', hoverBorder: 'hover:border-pink-300' },
-                        { bg: 'bg-indigo-100', border: 'border-indigo-200', hoverBg: 'hover:bg-indigo-200', hoverBorder: 'hover:border-indigo-300' },
-                        { bg: 'bg-cyan-100', border: 'border-cyan-200', hoverBg: 'hover:bg-cyan-200', hoverBorder: 'hover:border-cyan-300' },
-                        { bg: 'bg-rose-100', border: 'border-rose-200', hoverBg: 'hover:bg-rose-200', hoverBorder: 'hover:border-rose-300' }
-                      ];
-                      const colorIndex = idx % lightColors.length;
-                      const theme = lightColors[colorIndex];
+                      const theme = { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', border: 'border-blue-200', hoverBg: 'hover:from-blue-100 hover:to-blue-200', hoverBorder: 'hover:border-blue-300' };
                     
                     return (
                     <div
                       key={project.id}
-                      className={`relative ${theme.bg} border-2 ${theme.border} rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 ${theme.hoverBorder} ${theme.hoverBg} transform hover:scale-105 hover:-translate-y-1 flex flex-col h-full cursor-pointer p-2 md:p-3`}
+                      className={`relative ${theme.bg} border ${theme.border} rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ${theme.hoverBorder} ${theme.hoverBg} flex flex-col h-full cursor-pointer p-2`}
                       onClick={() => handleProjectClick(project.id || '')}
                     >
-                      <div className="flex items-center gap-3 md:gap-4">
-                        <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-blue-100 text-blue-700 font-semibold flex items-center justify-center">
+                      <div className="flex items-center gap-2">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-lg font-bold flex items-center justify-center">
                           {getInitials(project.name || '')}
                         </div>
-                        <div className="min-w-0">
-                          <h3 className="text-base md:text-xl font-semibold text-slate-900 truncate">{project.name}</h3>
-                          <p className="text-sm md:text-base text-slate-600">{(project.tasks || 0) === 1 ? '1 task' : `${project.tasks || 0} tasks`}</p>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg font-semibold text-slate-900 truncate">{project.name}</h3>
+                          <p className="text-base text-slate-600">{(project.tasks || 0) === 1 ? '1 task' : `${project.tasks || 0} tasks`}</p>
                         </div>
                       </div>
 
-                      <div className="absolute top-2 right-2 menu-container">
+                      <div className="absolute top-0.5 right-0.5 menu-container">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleMenu(project.id || '');
                           }}
-                          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200 hover:scale-110"
+                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
                           aria-label="Open menu"
                         >
-                          <MoreHorizontal size={18} />
+                          <MoreHorizontal size={16} />
                         </button>
 
                         {openMenuId === project.id && (
@@ -1145,18 +1131,8 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                           >
                             <div className="py-1">
                               <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleProjectClick(project.id || '');
-                                }}
-                                className="w-full px-4 py-2 text-left text-base text-blue-600 hover:bg-blue-50 flex items-center gap-2"
-                              >
-                                <Eye size={16} />
-                                View Details
-                              </button>
-                              <button
                                 onClick={() => handleEditProject(project)}
-                                className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                                className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 flex items-center gap-2"
                               >
                                 <Edit size={16} />
                                 Edit
@@ -1164,7 +1140,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                               <div className="border-t border-slate-200 my-1"></div>
                               <button
                                 onClick={() => handleDeleteProject(project)}
-                                className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 flex items-center gap-2"
                               >
                                 <Trash2 size={16} />
                                 Delete
@@ -1187,12 +1163,20 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
              {!showCreateForm && (
                <button
                  onClick={() => setShowCreateForm(true)}
-                 className="fixed bottom-20 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center z-50"
+                 className="fixed bottom-20 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center z-50"
                  aria-label="Create Project"
                >
                  <Plus size={20} className="text-white" />
                </button>
              )}
+
+        {/* Universal Details Modal */}
+        <UniversalDetailsModal
+          isOpen={detailsModal.isOpen}
+          onClose={closeDetailsModal}
+          itemType={detailsModal.itemType}
+          itemId={detailsModal.itemId}
+        />
       </div>
     );
 } 

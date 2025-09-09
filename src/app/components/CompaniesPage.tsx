@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import UniversalDetailsModal from "./UniversalDetailsModal";
 import {
   Building2, Building, ChevronRight, ChevronDown, Plus, Users, User, FolderKanban, Calendar, BarChart3, Settings, Search, MoreHorizontal, TrendingUp, Clock, CheckCircle, Mail, Phone, MapPin, Globe, Edit, Eye, Download, BookOpen, CheckSquare, Star, FilterX, Grid3X3, List, Heart, ExternalLink, GitCommit, DollarSign, UserCheck, Timer, Flag, Layers, Zap, SortAsc, Square, Play, Pause, StopCircle, RotateCcw, LineChart, Crown, Shield, Trophy, Medal, Users2, UserX, UserCheck2, UserMinus, UserPlus2, Briefcase, Video, MessageSquare, AlertCircle, Info, Award, Paperclip, FileText, BarChart, PieChart, ScatterChart, AreaChart, Gauge, Target, TrendingDown, Activity, Filter, Share2, Archive, Copy, Trash2, ArrowUpRight, ArrowDownRight, Minus, X, Save, ArrowLeft, Tag, AlertCircle as AlertCircleIcon, Calendar as CalendarIcon, Target as TargetIcon, MessageSquare as MessageSquareIcon, CheckSquare as CheckSquareIcon, UserPlus, FileText as FileTextIcon, Bell, Star as StarIcon, Eye as EyeIcon, Share2 as Share2Icon, Download as DownloadIcon, FilterX as FilterXIcon, Grid3X3 as Grid3X3Icon, List as ListIcon, Heart as HeartIcon, ExternalLink as ExternalLinkIcon, GitCommit as GitCommitIcon, DollarSign as DollarSignIcon, UserCheck as UserCheckIcon, Timer as TimerIcon, Flag as FlagIcon, Layers as LayersIcon, Zap as ZapIcon, TrendingDown as TrendingDownIcon, SortAsc as SortAscIcon, Square as SquareIcon, Play as PlayIcon, Pause as PauseIcon, StopCircle as StopCircleIcon, RotateCcw as RotateCcwIcon, LineChart as LineChartIcon, Crown as CrownIcon, Shield as ShieldIcon, Trophy as TrophyIcon, Medal as MedalIcon, Users2 as Users2Icon, UserX as UserXIcon, UserCheck2 as UserCheck2Icon, UserMinus as UserMinusIcon, UserPlus2 as UserPlus2Icon, Briefcase as BriefcaseIcon, Video as VideoIcon, MessageSquare as MessageSquareIcon2, AlertCircle as AlertCircleIcon2, Info as InfoIcon, Award as AwardIcon, Paperclip as PaperclipIcon, FileText as FileTextIcon2, BarChart as BarChartIcon, PieChart as PieChartIcon, ScatterChart as ScatterChartIcon, AreaChart as AreaChartIcon, Gauge as GaugeIcon, Target as TargetIcon2, TrendingDown as TrendingDownIcon2, Activity as ActivityIcon, Filter as FilterIcon, Share2 as Share2Icon2, Archive as ArchiveIcon, Copy as CopyIcon, Trash2 as Trash2Icon, ArrowUpRight as ArrowUpRightIcon, ArrowDownRight as ArrowDownRightIcon, Minus as MinusIcon
 } from "lucide-react";
@@ -68,6 +69,13 @@ export default function CompaniesPage({ context }: { context?: { company: string
     revenue: ""
   });
 
+  // Universal Details Modal state
+  const [detailsModal, setDetailsModal] = useState({
+    isOpen: false,
+    itemType: 'company' as 'project' | 'task' | 'team' | 'company',
+    itemId: ''
+  });
+
   useEffect(() => {
     fetchCompanies();
   }, []);
@@ -108,13 +116,17 @@ export default function CompaniesPage({ context }: { context?: { company: string
     switch (action) {
       case 'view':
         if (!company.id || company.id.trim() === '') return;
-        router.push(`/companies/${company.id}`);
+        // Open the UniversalDetailsModal with company details
+        setDetailsModal({
+          isOpen: true,
+          itemType: 'company',
+          itemId: company.id
+        });
         break;
       case 'edit':
         setEditingCompany(company);
         setFormData({ ...company });
-        setShowEditForm(true);
-        setShowCreateForm(false);
+        setShowCreateForm(true);
         break;
       case 'delete':
         if (window.confirm('Are you sure you want to delete this company?')) {
@@ -130,6 +142,15 @@ export default function CompaniesPage({ context }: { context?: { company: string
         company.website && window.open(company.website, '_blank');
         break;
     }
+  };
+
+  // Close UniversalDetailsModal
+  const closeDetailsModal = () => {
+    setDetailsModal({
+      isOpen: false,
+      itemType: 'company',
+      itemId: ''
+    });
   };
 
   const filteredCompanies = companies.filter(company =>
@@ -148,16 +169,13 @@ export default function CompaniesPage({ context }: { context?: { company: string
       .slice(0, 2);
   };
 
-  // Colorful themes for company cards
+  // Professional themes for company cards
   const companyThemes = [
-    { bg: 'bg-blue-100', avatar: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
-    { bg: 'bg-green-100', avatar: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' },
-    { bg: 'bg-purple-100', avatar: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
-    { bg: 'bg-yellow-100', avatar: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-200' },
-    { bg: 'bg-pink-100', avatar: 'bg-pink-100', text: 'text-pink-700', border: 'border-pink-200' },
-    { bg: 'bg-indigo-100', avatar: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-200' },
-    { bg: 'bg-cyan-100', avatar: 'bg-cyan-100', text: 'text-cyan-700', border: 'border-cyan-200' },
-    { bg: 'bg-rose-100', avatar: 'bg-rose-100', text: 'text-rose-700', border: 'border-rose-200' }
+    { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', avatar: 'bg-gradient-to-br from-blue-100 to-blue-200', text: 'text-blue-700', border: 'border-blue-200' },
+    { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', avatar: 'bg-gradient-to-br from-blue-100 to-blue-200', text: 'text-blue-700', border: 'border-blue-200' },
+    { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', avatar: 'bg-gradient-to-br from-blue-100 to-blue-200', text: 'text-blue-700', border: 'border-blue-200' },
+    { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', avatar: 'bg-gradient-to-br from-blue-100 to-blue-200', text: 'text-blue-700', border: 'border-blue-200' },
+    { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', avatar: 'bg-gradient-to-br from-blue-100 to-blue-200', text: 'text-blue-700', border: 'border-blue-200' }
   ];
 
   const renderOverview = () => (
@@ -218,14 +236,14 @@ export default function CompaniesPage({ context }: { context?: { company: string
                         <div className="py-1">
                           <button
                             onClick={() => handleCompanyAction(company, 'view')}
-                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                           >
                             <Eye size={14} />
                             View Details
                           </button>
                           <button
                             onClick={() => handleCompanyAction(company, 'edit')}
-                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                           >
                             <Edit size={14} />
                             Edit
@@ -233,7 +251,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
                           {company.website && (
                             <button
                               onClick={() => handleCompanyAction(company, 'website')}
-                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
                               <ExternalLink size={14} />
                               Visit Website
@@ -295,7 +313,7 @@ export default function CompaniesPage({ context }: { context?: { company: string
       )}
 
       {/* Header */}
-      <div className="bg-blue-100 border-b border-slate-200 shadow-sm">
+      <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
@@ -631,6 +649,14 @@ export default function CompaniesPage({ context }: { context?: { company: string
 
         {renderOverview()}
       </div>
+
+      {/* Universal Details Modal */}
+      <UniversalDetailsModal
+        isOpen={detailsModal.isOpen}
+        onClose={closeDetailsModal}
+        itemType={detailsModal.itemType}
+        itemId={detailsModal.itemId}
+      />
     </div>
   );
 } 

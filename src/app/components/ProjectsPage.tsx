@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import UniversalDetailsModal from "./UniversalDetailsModal";
 import { 
   CheckCircle, 
   AlertCircle, 
@@ -83,6 +84,13 @@ export default function ProjectsPage({ context }: { context?: { company: string 
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  
+  // Universal Details Modal state
+  const [detailsModal, setDetailsModal] = useState({
+    isOpen: false,
+    itemType: 'project' as 'project' | 'task' | 'team' | 'company',
+    itemId: ''
+  });
 
   // Form data for creating new project
   const [createFormData, setCreateFormData] = useState({
@@ -425,11 +433,10 @@ export default function ProjectsPage({ context }: { context?: { company: string 
     }
   };
 
-  // Navigation function
+  // Open Universal Details Modal
   const handleProjectClick = (projectId: string) => {
-    console.log('=== PROJECT NAVIGATION DEBUG ===');
-    console.log('Navigating to project:', projectId);
-    console.log('Navigation URL:', `/projects/${projectId}`);
+    console.log('=== PROJECT DETAILS MODAL DEBUG ===');
+    console.log('Opening details modal for project:', projectId);
     console.log('Project type:', typeof projectId);
     console.log('Project ID length:', projectId?.length);
     console.log('Is project ID empty?', !projectId || projectId.trim() === '');
@@ -441,8 +448,21 @@ export default function ProjectsPage({ context }: { context?: { company: string 
       return;
     }
     
-    // Navigate to the project detail page
-    router.push(`/projects/${projectId}`);
+    // Open the Universal Details Modal
+    setDetailsModal({
+      isOpen: true,
+      itemType: 'project',
+      itemId: projectId
+    });
+  };
+
+  // Close Universal Details Modal
+  const closeDetailsModal = () => {
+    setDetailsModal({
+      isOpen: false,
+      itemType: 'project',
+      itemId: ''
+    });
   };
 
   // Menu toggle functions
@@ -554,14 +574,14 @@ export default function ProjectsPage({ context }: { context?: { company: string 
         {/* Projects Grid */}
         <div className={`${
           viewMode === 'grid' 
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+            ? 'grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3' 
             : 'space-y-3'
         }`}>
           {projects.map((project) => (
             <div 
               key={project.id} 
               className={`bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 hover:shadow-xl transition-all duration-200 group cursor-pointer ${
-                viewMode === 'list' ? 'p-3' : 'p-6'
+                viewMode === 'list' ? 'p-3' : 'p-4'
               }`}
               onClick={() => handleProjectClick(project.id)}
             >
@@ -634,7 +654,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                       }}
                       className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                     >
-                      <MoreHorizontal size={14} />
+                      <MoreHorizontal size={18} />
                     </button>
                     
                     {openMenuId === project.id && (
@@ -699,12 +719,12 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                 }`}>
                 <div className="flex-1">
                     <h3 className={`font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors ${
-                      viewMode === 'list' ? 'text-base' : 'text-lg'
+                      viewMode === 'list' ? 'text-xl' : 'text-2xl'
                     }`}>
                     {project.name}
                   </h3>
                     <p className={`text-slate-600 ${
-                      viewMode === 'list' ? 'text-xs line-clamp-1' : 'text-sm line-clamp-2'
+                      viewMode === 'list' ? 'text-base line-clamp-1' : 'text-lg line-clamp-2'
                     }`}>
                       {project.description}
                     </p>
@@ -714,7 +734,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                     onClick={() => toggleMenu(project.id)}
                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                   >
-                    <MoreHorizontal size={16} />
+                    <MoreHorizontal size={20} />
                   </button>
                   
                   {openMenuId === project.id && (
@@ -725,14 +745,14 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                               e.stopPropagation();
                               handleProjectClick(project.id);
                             }}
-                            className="w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+                            className="w-full px-4 py-2 text-left text-base text-blue-600 hover:bg-blue-50 flex items-center gap-2"
                           >
                             <Eye size={14} />
                             View Details
                           </button>
                         <button
                           onClick={() => handleEditProject(project)}
-                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
                         >
                           <Edit size={14} />
                           Edit
@@ -744,7 +764,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                             setTimeout(() => setSuccessMessage(null), 2000);
                             setOpenMenuId(null);
                           }}
-                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
                         >
                           <Copy size={14} />
                           Copy
@@ -756,14 +776,14 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                             setTimeout(() => setSuccessMessage(null), 2000);
                             setOpenMenuId(null);
                           }}
-                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
                         >
                           <Archive size={14} />
                           Archive
                         </button>
                         <button
                           onClick={() => handleDeleteProject(project.id)}
-                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-red-50 flex items-center gap-2"
                         >
                           <Trash2 size={14} />
                           Delete
@@ -777,7 +797,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
               <div className="space-y-3">
                 {/* Progress */}
                 <div>
-                  <div className="flex items-center justify-between text-sm mb-1">
+                  <div className="flex items-center justify-between text-lg mb-1">
                     <span className="text-slate-600">Progress</span>
                     <span className="font-medium text-slate-900">{project.progress}%</span>
                   </div>
@@ -790,31 +810,31 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                 </div>
 
                 {/* Project Details */}
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-2 gap-3 text-lg">
                   <div className="flex items-center gap-2">
-                    <User size={14} className="text-slate-400" />
+                    <User size={18} className="text-slate-400" />
                     <span className="text-slate-600">{project.assignee}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Calendar size={14} className="text-slate-400" />
+                    <Calendar size={18} className="text-slate-400" />
                     <span className="text-slate-600">{project.endDate}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Target size={14} className="text-slate-400" />
+                    <Target size={18} className="text-slate-400" />
                     <span className="text-slate-600">{project.tasks} tasks</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <DollarSign size={14} className="text-slate-400" />
+                    <DollarSign size={18} className="text-slate-400" />
                     <span className="text-slate-600">{project.budget}</span>
                   </div>
                 </div>
 
                 {/* Status and Priority */}
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                  <span className={`px-2 py-1 rounded-full text-base font-medium ${getStatusColor(project.status)}`}>
                     {project.status}
                   </span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
+                  <span className={`px-2 py-1 rounded-full text-base font-medium ${getPriorityColor(project.priority)}`}>
                     {project.priority}
                   </span>
                 </div>
@@ -822,12 +842,12 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1">
                   {project.tags.slice(0, 3).map((tag, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
+                    <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-base">
                       {tag}
                     </span>
                   ))}
                   {project.tags.length > 3 && (
-                    <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
+                    <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-base">
                       +{project.tags.length - 3}
                     </span>
                   )}
@@ -862,7 +882,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                           <div className="py-1">
                             <button
                               onClick={() => handleEditProject(project)}
-                              className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
                             >
                               <Edit size={14} />
                               Edit
@@ -874,7 +894,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                                 setTimeout(() => setSuccessMessage(null), 2000);
                                 setOpenMenuId(null);
                               }}
-                              className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
                             >
                               <Copy size={14} />
                               Copy
@@ -885,14 +905,14 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                                 setTimeout(() => setSuccessMessage(null), 2000);
                                 setOpenMenuId(null);
                               }}
-                              className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-slate-100 flex items-center gap-2"
                             >
                               <Archive size={14} />
                               Archive
                             </button>
                             <button
                               onClick={() => handleDeleteProject(project.id)}
-                              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-red-50 flex items-center gap-2"
                             >
                               <Trash2 size={14} />
                               Delete
@@ -962,19 +982,6 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                       )}
                     </div>
 
-                    {/* View Details Button */}
-                    <div className="pt-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleProjectClick(project.id);
-                        }}
-                        className="w-full text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Eye size={14} />
-                        View Details
-                      </button>
-                    </div>
                   </div>
                 </>
               )}
@@ -1424,6 +1431,14 @@ export default function ProjectsPage({ context }: { context?: { company: string 
           </div>
         </div>
       )}
+
+      {/* Universal Details Modal */}
+      <UniversalDetailsModal
+        isOpen={detailsModal.isOpen}
+        onClose={closeDetailsModal}
+        itemType={detailsModal.itemType}
+        itemId={detailsModal.itemId}
+      />
     </div>
   );
 } 

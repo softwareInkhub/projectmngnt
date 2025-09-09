@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import UniversalDetailsModal from "./UniversalDetailsModal";
 import { 
   Users, 
   Plus, 
@@ -92,6 +93,11 @@ const healthColors = {
   "critical": "text-red-600 bg-red-100"
 };
 
+const getInitials = (name: string) => {
+  if (!name) return "";
+  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
+};
+
 interface Team {
   id: number;
   name: string;
@@ -173,7 +179,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const [showEditForm, setShowEditForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [showFilters, setShowFilters] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Set<number>>(new Set());
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -195,6 +201,13 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
     goals: "",
     notes: "",
     department: ""
+  });
+
+  // Universal Details Modal state
+  const [detailsModal, setDetailsModal] = useState({
+    isOpen: false,
+    itemType: 'team' as 'project' | 'task' | 'team' | 'company',
+    itemId: ''
   });
 
   const whatsappGroups = [
@@ -268,7 +281,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
     fetchTeams();
   }, [context?.company]);
 
-  // Navigate to team details page
+  // Open team details in UniversalDetailsModal
   const handleTeamClick = (team: Team) => {
     // Get the original team data using the index
     const originalTeam = originalTeams[team.id];
@@ -277,8 +290,21 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
       return;
     }
     
-    // Navigate to the team detail page using the original team ID
-    router.push(`/teams/${originalTeam.id}`);
+    // Open the UniversalDetailsModal with team details
+    setDetailsModal({
+      isOpen: true,
+      itemType: 'team',
+      itemId: originalTeam.id
+    });
+  };
+
+  // Close UniversalDetailsModal
+  const closeDetailsModal = () => {
+    setDetailsModal({
+      isOpen: false,
+      itemType: 'team',
+      itemId: ''
+    });
   };
 
   const handleCreateTeam = async (team: { 
@@ -841,113 +867,105 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         </div>
       )}
 
-      {/* Enhanced Header - Mobile Optimized */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold shadow-lg">
-            <Users className="text-white mr-1" size={16} />
-            <span className="text-sm sm:text-base">{context?.company ? `${context.company} Teams` : 'Teams'}</span>
-          </div>
-          {context?.company && (
-            <div className="text-xs sm:text-sm text-slate-600 hidden sm:block">
-              Managing teams for {context.company}
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
+              <Users className="w-6 h-6" />
             </div>
-          )}
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button 
-            className="hidden sm:flex group items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl border border-white/20 hover:bg-white/90 text-slate-700 font-medium transition-all duration-200 hover:scale-105 focus-ring"
-          >
-            <Download size={14} />
-            <span className="hidden sm:inline">Export</span>
-          </button>
-          <button 
-            onClick={() => {
-              console.log('=== CREATE NEW TEAM DEBUG ===');
-              setShowCreateForm(true);
-              setShowEditForm(false);
-              setEditingTeam(null);
-              // Reset form data for new team creation (no ID)
-              setFormData({
-                id: 0, // No ID for new team
-                name: "",
-                description: "",
-                project: context?.company || projects[0],
-                members: [],
-                roles: {},
-                budget: "",
-                startDate: "",
-                tags: [],
-                whatsappGroupId: "",
-                whatsappGroupName: "",
-                goals: "",
-                notes: "",
-                department: ""
-              });
-              console.log('✅ Create mode activated (no team ID)');
-            }}
-            className="group flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring text-sm sm:text-base"
-          >
-            <Plus size={16} className="group-hover:rotate-90 transition-transform duration-200" />
-            <span className="hidden sm:inline">New Team</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 leading-tight">Teams Management</h1>
+              <p className="text-slate-600 mt-1 text-xl">Manage and organize your teams</p>
+            </div>
+          </div>
+          
+          {/* Actions (responsive) */}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Desktop search/filters */}
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+              <input type="text" placeholder="Search teams..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
+            </div>
+            <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
+              <option value="All">All Projects</option>
+              {projects.map((project) => (
+                <option key={project} value={project}>{project}</option>
+              ))}
+            </select>
+            <button onClick={() => setShowCreateForm(true)} className="hidden md:flex items-center gap-2 px-2 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md text-xl">
+              <Download size={18} />
+              Export All
+            </button>
+            <button className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl" onClick={() => setShowCreateForm(true)}>
+              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-200" />
+              Create Team
+            </button>
+          </div>
+
+          {/* Mobile compact actions */}
+          <div className="flex md:hidden items-center gap-2 w-full justify-end">
+            {/* Mobile search */}
+            <div className="relative flex-1 max-w-28">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                className="pl-7 pr-2 py-2 border border-slate-300 rounded-md text-xl focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent w-full" 
+              />
+            </div>
+            <button onClick={() => setShowCreateForm(true)} className="px-2 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-md text-xl font-medium">Create</button>
+            <button onClick={() => setShowCreateForm(true)} className="px-2 py-2 bg-white border border-slate-300 rounded-md text-xl">Export</button>
+          </div>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-
-        {/* Compact Search and Filters - Mobile Optimized */}
-        <div className="space-y-3">
-          {/* Search Bar - Compact */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="text"
-              placeholder="Search teams, members, or descriptions"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-            />
-          </div>
-          
-          {/* Filters and View Toggle - Compact */}
-          <div className="flex items-center justify-between">
-            {/* Filters Button */}
-            <button 
-              className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="w-4 h-4" />
-              <span>Filters</span>
-            </button>
-            
-            {/* View Toggle - Compact */}
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+      <div className="px-1 md:px-8 py-1 md:py-2 space-y-1 md:space-y-2">
+        {/* View Mode Toggle - Mobile optimized positioning */}
+        <div className="flex items-center justify-between mb-1 md:mb-2 mx-2 md:mx-0">
+          {/* Left side - Grid/List toggle and team count */}
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center bg-slate-100 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-1.5 rounded-md transition-colors ${
+                className={`p-1.5 md:p-2 rounded-md transition-colors ${
                   viewMode === "grid" 
-                    ? "bg-white text-purple-600 shadow-sm" 
-                    : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <Grid3X3 size={14} />
+                <Grid3X3 size={14} className="md:w-4 md:h-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-1.5 rounded-md transition-colors ${
+                className={`p-1.5 md:p-2 rounded-md transition-colors ${
                   viewMode === "list" 
-                    ? "bg-white text-purple-600 shadow-sm" 
-                    : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <List size={14} />
+                <List size={14} className="md:w-4 md:h-4" />
               </button>
             </div>
+            <span className="text-sm md:text-base text-slate-600">
+              {filteredTeams.length} team{filteredTeams.length !== 1 ? 's' : ''}
+            </span>
           </div>
+          
+          {/* Right side - Status and Priority filters (mobile only) */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
+              <option value="All">All</option>
+              {projects.slice(0, 3).map((project) => (
+                <option key={project} value={project}>{project.substring(0, 8)}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-          {/* Filters Panel - Compact */}
+        {/* Filters Panel - Compact */}
           {showFilters && (
             <div className="pt-3 border-t border-gray-200 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -994,6 +1012,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           )}
         </div>
 
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
         {/* Team Creation/Edit Form */}
         {(showCreateForm || showEditForm) && (
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-8 animate-fade-in">
@@ -1350,305 +1370,206 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           </div>
         )}
 
-        {/* Enhanced Analytics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 animate-fade-in">
-          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center">
-            <div className="w-5 h-5 bg-purple-50 rounded-md flex items-center justify-center mr-2">
-              <Users className="w-2.5 h-2.5 text-purple-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-[8px] font-bold text-slate-900">{analytics.totalTeams}</h3>
-              <p className="text-[8px] text-slate-500">Total Teams</p>
-            </div>
-            <div className="flex items-center gap-0.5 ml-1">
-              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
-              <span className="text-[8px] text-slate-400">+1</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center">
-            <div className="w-5 h-5 bg-blue-50 rounded-md flex items-center justify-center mr-2">
-              <UserPlus className="w-2.5 h-2.5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-[8px] font-bold text-slate-900">{analytics.totalMembers}</h3>
-              <p className="text-[8px] text-slate-500">Team Members</p>
-            </div>
-            <div className="flex items-center gap-0.5 ml-1">
-              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
-              <span className="text-[8px] text-slate-400">+3</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center">
-            <div className="w-5 h-5 bg-green-50 rounded-md flex items-center justify-center mr-2">
-              <Award className="w-2.5 h-2.5 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-[8px] font-bold text-slate-900">{analytics.avgPerformance}%</h3>
-              <p className="text-[8px] text-slate-500">Avg Performance</p>
-            </div>
-            <div className="flex items-center gap-0.5 ml-1">
-              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
-              <span className="text-[8px] text-slate-400">+5%</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border-2 border-slate-300 p-1 h-12 flex items-center">
-            <div className="w-5 h-5 bg-orange-50 rounded-md flex items-center justify-center mr-2">
-              <Trophy className="w-2.5 h-2.5 text-orange-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-[8px] font-bold text-slate-900">{analytics.totalBudget}</h3>
-              <p className="text-[8px] text-slate-500">Total Budget</p>
-            </div>
-            <div className="flex items-center gap-0.5 ml-1">
-              <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />
-              <span className="text-[8px] text-slate-400">+12%</span>
-            </div>
-          </div>
-        </div>
-
-
-
         {/* Team Grid/List View */}
-        <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
+        <div className="animate-fade-in">
           {viewMode === "grid" ? (
-            // Grid View - Mobile Optimized (2 cards side by side)
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-              {uniqueTeams.map((team, index) => (
-                <div 
-                  key={`${team.id}-grid-${index}`} 
-                  className="relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 flex flex-col h-full cursor-pointer p-2 md:p-3"
-                  onClick={() => handleTeamClick(team)}
-                >
-                  {/* Header - Title and Menu */}
-                  <div className="mb-1 md:mb-4">
-                    <div className="flex items-start justify-between mb-0.5 md:mb-2">
-                      <div className="flex items-start gap-1.5 md:gap-3 flex-1 min-w-0">
-                        <div className="p-1 md:p-2 bg-purple-100 rounded-lg flex-shrink-0">
-                          <Users className="w-3 h-3 md:w-4 md:h-4 text-purple-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-slate-900 text-[10px] md:text-lg mb-0.5 md:mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{team.name}</h3>
-                          <p className="text-[8px] md:text-sm text-slate-500 break-words">{team.description || "No description provided"}</p>
-                        </div>
+            <div className="grid gap-2 md:gap-3 mx-2 md:mx-0 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+              {uniqueTeams.map((team, index) => {
+                const theme = { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', border: 'border-blue-200', hoverBg: 'hover:from-blue-100 hover:to-blue-200', hoverBorder: 'hover:border-blue-300' };
+                
+                return (
+                  <div
+                    key={`${team.id}-grid-${index}`}
+                    className={`relative ${theme.bg} border ${theme.border} rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 ${theme.hoverBorder} ${theme.hoverBg} flex flex-col h-full cursor-pointer p-3`}
+                    onClick={() => handleTeamClick(team)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 text-white text-base font-bold flex items-center justify-center">
+                        {getInitials(team.name || '')}
                       </div>
-                      <div className="relative flex-shrink-0 ml-2">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const menu = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (menu) {
-                              menu.classList.toggle('hidden');
-                            }
-                          }}
-                          className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-                          aria-label="Open menu"
-                        >
-                          <MoreHorizontal size={14} className="text-slate-400" />
-                        </button>
-                        <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-[160px] menu-container hidden">
-                          <div className="py-1">
-                            <button
-                              onClick={() => handleEditTeam(team)}
-                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                            >
-                              <Edit className="w-4 h-4" />
-                              Edit Team
-                            </button>
-                            <button
-                              onClick={() => handleDuplicateTeam(team)}
-                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                            >
-                              <Copy className="w-4 h-4" />
-                              Duplicate
-                            </button>
-                            <button
-                              onClick={() => handleArchiveTeam(team)}
-                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                            >
-                              <Archive className="w-4 h-4" />
-                              Archive
-                            </button>
-                            <button
-                              onClick={() => handleExportTeam(team)}
-                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                            >
-                              <Download className="w-4 h-4" />
-                              Export
-                            </button>
-                            <div className="border-t border-slate-200 my-1"></div>
-                            <button
-                              onClick={() => handleDeleteTeam(team.id)}
-                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Delete
-                            </button>
-                          </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base font-semibold text-slate-900 truncate">{team.name}</h3>
+                        <p className="text-sm text-slate-600">{Array.isArray(team.members) ? team.members.length : 0} members</p>
+                      </div>
+                    </div>
+
+                    <div className="absolute top-1 right-1 menu-container">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const menu = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (menu) {
+                            menu.classList.toggle('hidden');
+                          }
+                        }}
+                        className="inline-flex items-center justify-center p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200 hover:scale-110"
+                        aria-label="Open menu"
+                      >
+                        <MoreHorizontal size={14} />
+                      </button>
+                      <div
+                        className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-in slide-in-from-top-2 duration-200 hidden"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="py-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTeamClick(team);
+                            }}
+                            className="w-full px-4 py-2 text-left text-base text-slate-600 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 flex items-center gap-2"
+                          >
+                            <Eye size={16} />
+                            View Details
+                          </button>
+                          <button
+                            onClick={() => handleEditTeam(team)}
+                            className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 flex items-center gap-2"
+                          >
+                            <Edit size={16} />
+                            Edit
+                          </button>
+                          <div className="border-t border-slate-200 my-1"></div>
+                          <button
+                            onClick={() => handleDeleteTeam(team.id)}
+                            className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 flex items-center gap-2"
+                          >
+                            <Trash2 size={16} />
+                            Delete
+                          </button>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Team Stats */}
-                  <div className="grid grid-cols-2 gap-1.5 md:gap-3 mb-1 md:mb-3">
-                    <div className="text-center">
-                      <div className="text-sm md:text-2xl font-bold text-slate-900">{team.performance || 0}%</div>
-                      <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Performance</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm md:text-2xl font-bold text-slate-900">{team.totalTasks || 0}</div>
-                      <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Tasks</div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-full bg-gradient-to-r from-slate-200 to-slate-300 rounded-full h-2">
+                          <div className="bg-gradient-to-r from-blue-300 to-blue-400 h-2 rounded-full" style={{ width: `${team.performance || 0}%` }}></div>
+                        </div>
+                        <span className="text-base text-slate-600">{team.performance || 0}%</span>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full bg-slate-200 rounded-full h-1 md:h-2 mb-0.5 md:mb-3">
-                    <div 
-                      className="bg-gradient-to-r from-purple-500 to-pink-600 h-1 md:h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(team.tasksCompleted / team.totalTasks) * 100}%` }}
-                    ></div>
-                  </div>
-
-                  {/* Status and Priority Tags */}
-                  <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-0.5 md:mb-3">
-                    <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${
-                      team.health === 'excellent' ? 'bg-green-100 text-green-700' :
-                      team.health === 'good' ? 'bg-blue-100 text-blue-700' :
-                      team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {team.health}
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold bg-purple-100 text-purple-700">
-                      {team.budget}
-                    </span>
-                  </div>
-
-                  {/* Details grid: desktop 2x2 (Project, Members | Start, End), mobile hidden */}
-                  <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-1.5 md:mb-3">
-                    <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                      <span className="text-[10px] text-slate-700 font-medium break-words">{team.project}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                      <span className="text-[10px] text-slate-700 font-medium">{Array.isArray(team.members) ? team.members.length : 0} members</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                      <span className="text-[10px] text-slate-700 font-medium">{team.startDate}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Target className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                      <span className="text-[10px] text-slate-700 font-medium">{team.startDate}</span>
-                    </div>
-                  </div>
-
-                  {/* Action Link */}
-                  <div className="mt-auto md:pt-4">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Add team detail navigation here if needed
-                      }}
-                      className="text-blue-600 hover:text-blue-700 text-[8px] md:text-xs font-medium transition-colors"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
-            // List View - Mobile Optimized
-            <div className="space-y-3">
-              {uniqueTeams.map((team, index) => (
-                <div 
-                  key={`${team.id}-list-${index}`} 
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group cursor-pointer"
-                  onClick={() => handleTeamClick(team)}
-                >
-                  <div className="p-4">
-                    {/* Team Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {/* Team Icon */}
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <Users className="w-4 h-4 text-purple-600" />
+            <div className="mx-2 md:mx-0 overflow-visible">
+              <table className="min-w-full bg-white border border-slate-200 rounded-xl shadow-sm">
+                <thead className="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 text-lg border-b border-slate-300">
+                  <tr>
+                    <th className="text-left px-2 py-1.5 w-16">ID</th>
+                    <th className="text-left px-3 py-1.5">Team Name</th>
+                    <th className="text-left px-3 py-1.5 w-12">%</th>
+                    <th className="text-left px-2 py-1.5">Project</th>
+                    <th className="text-left px-3 py-1.5">Members</th>
+                    <th className="text-left px-3 py-1.5">Health</th>
+                    <th className="text-left px-3 py-1.5">Budget</th>
+                    <th className="text-left px-3 py-1.5">Start Date</th>
+                    <th className="text-left px-2 py-1.5">Tags</th>
+                    <th className="text-right px-2 py-1.5 w-10">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="text-lg overflow-visible">
+                  {uniqueTeams.map((team, idx) => {
+                    const theme = { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' };
+                    return (
+                      <tr key={`${team.id}-list-${idx}`} className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`} onClick={() => handleTeamClick(team)}>
+                        <td className="px-2 py-2 text-slate-600 align-middle text-lg">{team.id || '-'}</td>
+                        <td className="px-3 py-2 align-middle">
+                          <div className="text-slate-900 font-semibold text-2xl">{team.name}</div>
+                          <div className="text-lg text-slate-500 line-clamp-1">{team.description || 'No description'}</div>
+                        </td>
+                        <td className="px-3 py-2 text-slate-900 font-semibold align-middle text-2xl">{team.performance || 0}%</td>
+                        <td className="px-2 py-2 align-middle">
+                          <div className="flex items-center gap-2">
+                            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 text-white text-base flex items-center justify-center font-bold">
+                              {getInitials(team.project || '')}
+                            </div>
+                            <span className="text-slate-700 text-lg">{team.project || '—'}</span>
                           </div>
-                        </div>
-                        
-                        {/* Team Title & Badges */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <h3 className="text-sm font-semibold text-gray-900 group-hover:text-purple-600 transition-colors truncate">
-                              {team.name}
-                            </h3>
-                            <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                team.health === 'excellent' ? 'bg-green-100 text-green-700' :
-                                team.health === 'good' ? 'bg-blue-100 text-blue-700' :
-                                team.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
-                                'bg-red-100 text-red-700'
-                              }`}>
-                                {team.health}
-                              </span>
-                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                                {team.budget}
-                              </span>
+                        </td>
+                        <td className="px-3 py-2 align-middle">
+                          <div className="flex items-center gap-2 w-32">
+                            <div className="w-full bg-gradient-to-r from-slate-200 to-slate-300 rounded-full h-2">
+                              <div className="bg-gradient-to-r from-blue-300 to-blue-400 h-2 rounded-full" style={{ width: `${(Array.isArray(team.members) ? team.members.length : 0) / 10 * 100}%` }}></div>
+                            </div>
+                            <span className="text-lg text-slate-600">{Array.isArray(team.members) ? team.members.length : 0}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 align-middle">
+                          <span className={`px-2 py-1 rounded-full text-lg font-medium ${
+                            team.health === 'excellent' ? 'bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-700 border border-emerald-300' :
+                            team.health === 'good' ? 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 border border-blue-300' :
+                            team.health === 'fair' ? 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-700 border border-yellow-300' :
+                            'bg-gradient-to-r from-red-100 to-red-200 text-red-700 border border-red-300'
+                          }`}>{team.health || '—'}</span>
+                        </td>
+                        <td className="px-3 py-2 align-middle">
+                          <span className="text-lg text-slate-600 font-medium">{team.budget || '—'}</span>
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 align-middle text-lg whitespace-nowrap">{team.startDate || '—'}</td>
+                        <td className="px-2 py-2 align-middle">
+                          <div className="flex flex-nowrap gap-1.5 max-w-[200px] overflow-hidden">
+                            {team.tags && team.tags.length > 0 ? team.tags.slice(0, 2).map((tag, idx) => (
+                              <span key={idx} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">{tag}</span>
+                            )) : (
+                              <span className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">No tags</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-2 py-2 align-middle text-right relative menu-container overflow-visible">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const menu = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (menu) {
+                                menu.classList.toggle('hidden');
+                              }
+                            }}
+                            className="inline-flex items-center justify-center p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200 hover:scale-110"
+                            aria-label="Open menu"
+                          >
+                            <MoreHorizontal size={18} />
+                          </button>
+                          <div
+                            className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-in slide-in-from-top-2 duration-200 hidden"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="py-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTeamClick(team);
+                                }}
+                                className="w-full px-4 py-2 text-left text-base text-slate-600 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 flex items-center gap-2"
+                              >
+                                <Eye size={16} />
+                                View Details
+                              </button>
+                              <button
+                                onClick={() => handleEditTeam(team)}
+                                className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 flex items-center gap-2"
+                              >
+                                <Edit size={16} />
+                                Edit
+                              </button>
+                              <div className="border-t border-slate-200 my-1"></div>
+                              <button
+                                onClick={() => handleDeleteTeam(team.id)}
+                                className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 flex items-center gap-2"
+                              >
+                                <Trash2 size={16} />
+                                Delete
+                              </button>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Team Details - Compact 2x2 Grid */}
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <Users className="w-3 h-3 text-gray-400" />
-                        <span className="truncate">{Array.isArray(team.members) ? team.members.length : 0} members</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <Calendar className="w-3 h-3 text-gray-400" />
-                        <span className="truncate">{team.startDate}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <Building className="w-3 h-3 text-gray-400" />
-                        <span className="truncate">{team.project}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <Target className="w-3 h-3 text-gray-400" />
-                        <span className="truncate">{team.performance}% performance</span>
-                      </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                        <span>Progress</span>
-                        <span>{team.tasksCompleted}/{team.totalTasks} tasks</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5">
-                        <div 
-                          className="bg-gradient-to-r from-purple-500 to-pink-600 h-1.5 rounded-full transition-all duration-300"
-                          style={{ width: `${(team.tasksCompleted / team.totalTasks) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Action Button */}
-                    <div className="flex items-center justify-between">
-                      <button className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -1671,6 +1592,14 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           </div>
         )}
       </div>
+
+      {/* Universal Details Modal */}
+      <UniversalDetailsModal
+        isOpen={detailsModal.isOpen}
+        onClose={closeDetailsModal}
+        itemType={detailsModal.itemType}
+        itemId={detailsModal.itemId}
+      />
     </div>
   );
 } 

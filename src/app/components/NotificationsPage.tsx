@@ -569,7 +569,7 @@ export default function NotificationsPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-1 md:gap-2">
-                          <button className="px-2 md:px-3 py-1 text-orange-600 hover:text-orange-700 text-xs md:text-sm font-medium hover:bg-orange-50 rounded-lg transition-all duration-200">
+                          <button className="px-2 md:px-3 py-1 text-orange-600 hover:text-orange-700 text-sm md:text-base font-medium hover:bg-orange-50 rounded-lg transition-all duration-200">
                             {notification.action}
                           </button>
                           <button className="p-1.5 md:p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">

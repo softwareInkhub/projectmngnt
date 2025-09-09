@@ -65,17 +65,8 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
-// Colorful row themes
-const rowThemes = [
-  { bg: 'bg-blue-100', border: 'border-blue-200' },
-  { bg: 'bg-green-100', border: 'border-green-200' },
-  { bg: 'bg-purple-100', border: 'border-purple-200' },
-  { bg: 'bg-yellow-100', border: 'border-yellow-200' },
-  { bg: 'bg-pink-100', border: 'border-pink-200' },
-  { bg: 'bg-indigo-100', border: 'border-indigo-200' },
-  { bg: 'bg-cyan-100', border: 'border-cyan-200' },
-  { bg: 'bg-rose-100', border: 'border-rose-200' }
-];
+// Consistent light gradient theme for all rows
+const rowTheme = { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' };
 
 export default function TaskListView({
   tasks,
@@ -165,9 +156,9 @@ export default function TaskListView({
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="w-full space-y-3 px-4">
+      <div className="w-full space-y-3 px-4 ml-6 overflow-x-hidden">
         {flattenedTasks.map((task, index) => {
-          const theme = rowThemes[index % rowThemes.length];
+          const theme = rowTheme;
           const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Square;
           const isCompleted = task.status === 'Done';
 
@@ -177,12 +168,178 @@ export default function TaskListView({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className={`${theme.bg} ${theme.border} rounded-lg border p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer`}
+              className={`${theme.bg} ${theme.border} rounded-lg border p-2 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer`}
+              style={{ marginLeft: `${task.level * 20}px` }}
               onClick={() => onTaskSelect(task)}
             >
-              {/* Task Header */}
-              <div className="flex items-center justify-between mb-3">
+               {/* Simplified Task Card */}
+               <div className="flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                   {/* Hierarchy Indicator */}
+                   {task.level > 0 && (
+                     <div className="flex items-center">
+                       {Array.from({ length: task.level }, (_, i) => (
+                         <div key={i} className="w-3 h-px bg-slate-300 mr-1"></div>
+                       ))}
+                       <div className="w-1.5 h-1.5 bg-slate-400 rounded-full mr-2"></div>
+                     </div>
+                   )}
+                   
+                   {/* Task Title */}
+                   <div className="flex-1 min-w-0">
+                     <h4 className={`font-bold text-xl ${isCompleted ? 'line-through text-slate-500' : 'text-slate-900'}`}>
+                       {task.title || 'Untitled Task'}
+                     </h4>
+                   </div>
+
+                   {/* Expand/Collapse Button */}
+                   {hasChildren(task) && (
+                     <button
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         toggleExpanded(task.id!);
+                       }}
+                       className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                     >
+                       <motion.div
+                         animate={{ rotate: isExpanded(task.id!) ? 90 : 0 }}
+                         transition={{ duration: 0.2 }}
+                       >
+                         <ChevronRight className="w-4 h-4" />
+                       </motion.div>
+                     </button>
+                   )}
+
+                   {/* Status Checkbox */}
+                   <button
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       handleStatusToggle(task);
+                     }}
+                     className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                   >
+                     <StatusIcon className={`w-4 h-4 ${isCompleted ? 'text-emerald-500' : 'text-slate-400'}`} />
+                   </button>
+                 </div>
+
+                 {/* Action Buttons */}
+                 <div className="flex items-center gap-2">
+                   {/* Three-dot Menu */}
+                   <div className="relative">
+                     <button
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         e.preventDefault();
+                         e.nativeEvent.stopImmediatePropagation();
+                         console.log('Mobile menu clicked for task:', task.id);
+                         setOpenMenuId(openMenuId === task.id ? null : (task.id || null));
+                       }}
+                       onMouseDown={(e) => {
+                         e.stopPropagation();
+                       }}
+                       className="p-1 text-gray-400 hover:text-gray-600 transition-colors hover:scale-110 relative z-10"
+                     >
+                       <MoreHorizontal className="w-4 h-4" />
+                     </button>
+
+                     {/* Dropdown Menu */}
+                     {openMenuId === task.id && (
+                       <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-[9999] animate-in slide-in-from-top-2 duration-200">
+                         <div className="py-1">
+                           <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'view'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Eye size={14} />View Details</button>
+                           <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'edit'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Edit size={14} />Edit</button>
+                           <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'add-subtask'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Plus size={14} />Add Subtask</button>
+                           <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'delete'); }} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} />Delete</button>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+
+                   {/* Edit Button */}
+                   <button
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       handleMenuAction(task, 'edit');
+                     }}
+                     className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
+                   >
+                     <Edit className="w-4 h-4" />
+                   </button>
+
+                   {/* Delete Button */}
+                   <button
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       handleMenuAction(task, 'delete');
+                     }}
+                     className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                   >
+                     <Trash2 className="w-4 h-4" />
+                   </button>
+                 </div>
+               </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Desktop Layout - Table View
+  return (
+    <div className="w-full ml-2 overflow-x-hidden">
+      {/* Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gradient-to-r from-blue-100 to-blue-200">
+              <th className="text-left px-2 py-1.5 w-16 text-lg font-bold text-slate-900">ID</th>
+              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Task Name</th>
+              <th className="text-left px-3 py-1.5 w-12 text-lg font-bold text-slate-900">%</th>
+              <th className="text-left px-2 py-1.5 text-lg font-bold text-slate-900">Assignee</th>
+              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Status</th>
+              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Priority</th>
+              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Due Date</th>
+              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Progress</th>
+              <th className="text-left px-2 py-1.5 text-lg font-bold text-slate-900">Tags</th>
+              <th className="text-right px-2 py-1.5 w-10 text-lg font-bold text-slate-900">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="text-lg overflow-visible">
+        {flattenedTasks.map((task, index) => {
+          const theme = rowTheme;
+          const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Square;
+          const isCompleted = task.status === 'Done';
+
+          return (
+            <tr
+              key={task.id}
+              className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}
+              onClick={() => onTaskSelect(task)}
+            >
+              {/* ID */}
+              <td className="px-2 py-2 text-slate-600 align-middle text-lg">{task.id?.slice(-8) || 'N/A'}</td>
+              
+              {/* Task Name */}
+              <td className="px-3 py-2 align-middle">
                 <div className="flex items-center gap-3">
+                  {/* Hierarchy Indicator */}
+                  {task.level > 0 && (
+                    <div className="flex items-center">
+                      {Array.from({ length: task.level }, (_, i) => (
+                        <div key={i} className="w-4 h-px bg-slate-300 mr-1"></div>
+                      ))}
+                      <div className="w-2 h-2 bg-slate-400 rounded-full mr-2"></div>
+                    </div>
+                  )}
+                  {/* Task Title */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-slate-900 font-semibold text-2xl">{task.title || 'Untitled Task'}</div>
+                    {task.description && (
+                      <div className="text-lg text-slate-500 line-clamp-1">{task.description}</div>
+                    )}
+                  </div>
+
                   {/* Expand/Collapse Button */}
                   {hasChildren(task) && (
                     <button
@@ -211,279 +368,117 @@ export default function TaskListView({
                   >
                     <StatusIcon className={`w-4 h-4 ${isCompleted ? 'text-emerald-500' : 'text-slate-400'}`} />
                   </button>
-
-                  {/* Task Title */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className={`font-bold text-lg ${isCompleted ? 'line-through text-slate-500' : 'text-slate-900'}`}>
-                      {task.title || 'Untitled Task'}
-                    </h4>
-                    {task.description && (
-                      <p className="text-base text-slate-600 mt-1 line-clamp-2">
-                        {task.description}
-                      </p>
-                    )}
-                  </div>
                 </div>
+              </td>
 
-                {/* Three-dot Menu */}
-                <div className="relative">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenMenuId(openMenuId === task.id ? null : task.id);
-                    }}
-                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors hover:scale-110"
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {openMenuId === task.id && (
-                    <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 animate-in slide-in-from-top-2 duration-200">
-                      <div className="py-1">
-                        <button onClick={() => handleMenuAction(task, 'view')} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Eye size={14} />View Details</button>
-                        <button onClick={() => handleMenuAction(task, 'edit')} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Edit size={14} />Edit</button>
-                        <button onClick={() => handleMenuAction(task, 'add-subtask')} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Plus size={14} />Add Subtask</button>
-                        <button onClick={() => handleMenuAction(task, 'delete')} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} />Delete</button>
-                      </div>
+              {/* Progress Percentage */}
+              <td className="px-3 py-2 text-slate-900 font-semibold align-middle text-2xl">{isCompleted ? '100' : '0'}%</td>
+              
+              {/* Assignee */}
+              <td className="px-2 py-2 align-middle">
+                {task.assignee && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-base flex items-center justify-center font-bold">
+                      {getInitials(task.assignee)}
                     </div>
-                  )}
-                </div>
-              </div>
+                    <span className="text-lg text-slate-700">{task.assignee}</span>
+                  </div>
+                )}
+              </td>
 
-              {/* Task Details */}
-              <div className="flex items-center gap-4 text-base">
-                {/* Status Badge */}
-                <span className={`px-3 py-1.5 rounded-full text-base font-medium ${
-                  statusColors[task.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-700'
+              {/* Status */}
+              <td className="px-3 py-2 align-middle">
+                <span className={`px-2 py-1 rounded-full text-lg font-medium ${
+                  statusColors[task.status as keyof typeof statusColors] || 'bg-slate-200 text-slate-700'
                 }`}>
                   {task.status}
                 </span>
+              </td>
 
-                {/* Priority Badge */}
+              {/* Priority */}
+              <td className="px-3 py-2 align-middle">
                 {task.priority && (
-                  <span className={`px-3 py-1.5 rounded-full text-base font-medium ${
-                    priorityColors[task.priority as keyof typeof priorityColors] || 'bg-gray-100 text-gray-700'
+                  <span className={`px-2 py-1 rounded-full text-lg font-medium ${
+                    priorityColors[task.priority as keyof typeof priorityColors] || 'bg-slate-200 text-slate-700'
                   }`}>
                     {task.priority}
                   </span>
                 )}
+              </td>
 
-                {/* Assignee */}
-                {task.assignee && (
-                  <div className="flex items-center gap-2 text-base text-slate-600">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-bold text-blue-700">
-                        {getInitials(task.assignee)}
+              {/* Due Date */}
+              <td className="px-3 py-2 text-slate-700 align-middle text-lg">{task.dueDate || 'No date'}</td>
+
+              {/* Progress Bar */}
+              <td className="px-3 py-2 align-middle">
+                <div className="flex items-center gap-2">
+                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${isCompleted ? 100 : 0}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-lg text-slate-700">{isCompleted ? '100' : '0'}</span>
+                </div>
+              </td>
+
+              {/* Tags */}
+              <td className="px-2 py-2 align-middle">
+                {task.tags && Array.isArray(task.tags) && task.tags.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {(task.tags as string[]).slice(0, 2).map((tag, idx) => (
+                      <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-base font-medium">
+                        {tag}
                       </span>
-                    </div>
-                    <span className="truncate max-w-20">{task.assignee}</span>
-                  </div>
-                )}
-
-                {/* Due Date */}
-                {task.dueDate && (
-                  <div className="flex items-center gap-1 text-base text-slate-600">
-                    <Calendar className="w-4 h-4" />
-                    <span>{task.dueDate}</span>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  // Desktop Layout - Table View
-  return (
-    <div className="w-full">
-      {/* Table Header */}
-      <div className="bg-blue-100 rounded-lg border border-blue-200 shadow-sm">
-        <div className="grid grid-cols-12 gap-4 p-4 text-base font-semibold text-slate-900">
-          <div className="col-span-1">ID</div>
-          <div className="col-span-3">Task Name</div>
-          <div className="col-span-1">Status</div>
-          <div className="col-span-1">Priority</div>
-          <div className="col-span-1">Assignee</div>
-          <div className="col-span-1">Due Date</div>
-          <div className="col-span-1">Progress</div>
-          <div className="col-span-1">Tags</div>
-          <div className="col-span-1">Actions</div>
-        </div>
-      </div>
-
-      {/* Table Body */}
-      <div className="space-y-2 mt-2">
-        {flattenedTasks.map((task, index) => {
-          const theme = rowThemes[index % rowThemes.length];
-          const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Square;
-          const isCompleted = task.status === 'Done';
-
-          return (
-            <motion.div
-              key={task.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`${theme.bg} ${theme.border} rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer`}
-              onClick={() => onTaskSelect(task)}
-            >
-              <div className="grid grid-cols-12 gap-4 p-4 items-center">
-                {/* ID */}
-                <div className="col-span-1 text-base font-medium text-slate-700 truncate">
-                  {task.id?.slice(-8) || 'N/A'}
-                </div>
-
-                {/* Task Name */}
-                <div className="col-span-3">
-                  <div className="flex items-center gap-3">
-                    {/* Expand/Collapse Button */}
-                    {hasChildren(task) && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleExpanded(task.id!);
-                        }}
-                        className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
-                      >
-                        <motion.div
-                          animate={{ rotate: isExpanded(task.id!) ? 90 : 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </motion.div>
-                      </button>
+                    ))}
+                    {(task.tags as string[]).length > 2 && (
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-base font-medium">
+                        +{(task.tags as string[]).length - 2}
+                      </span>
                     )}
-
-                    {/* Status Checkbox */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStatusToggle(task);
-                      }}
-                      className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                      <StatusIcon className={`w-4 h-4 ${isCompleted ? 'text-emerald-500' : 'text-slate-400'}`} />
-                    </button>
-
-                    {/* Task Title */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className={`font-bold text-lg ${isCompleted ? 'line-through text-slate-500' : 'text-slate-900'}`}>
-                        {task.title || 'Untitled Task'}
-                      </h4>
-                      {task.description && (
-                        <p className="text-base text-slate-600 mt-1 line-clamp-1">
-                          {task.description}
-                        </p>
-                      )}
-                    </div>
                   </div>
-                </div>
+                ) : (
+                  <span className="text-lg text-slate-500">No tags</span>
+                )}
+              </td>
 
-                {/* Status */}
-                <div className="col-span-1">
-                  <span className={`px-3 py-1.5 rounded-full text-base font-medium ${
-                    statusColors[task.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {task.status}
-                  </span>
-                </div>
-
-                {/* Priority */}
-                <div className="col-span-1">
-                  {task.priority && (
-                    <span className={`px-3 py-1.5 rounded-full text-base font-medium ${
-                      priorityColors[task.priority as keyof typeof priorityColors] || 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {task.priority}
-                    </span>
-                  )}
-                </div>
-
-                {/* Assignee */}
-                <div className="col-span-1">
-                  {task.assignee && (
-                    <div className="flex items-center gap-2 text-base text-slate-600">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-blue-700">
-                          {getInitials(task.assignee)}
-                        </span>
-                      </div>
-                      <span className="truncate max-w-20">{task.assignee}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Due Date */}
-                <div className="col-span-1 text-base text-slate-600 whitespace-nowrap">
-                  {task.dueDate || 'No date'}
-                </div>
-
-                {/* Progress */}
-                <div className="col-span-1">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${isCompleted ? 100 : 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-base font-medium text-slate-700">
-                      {isCompleted ? '100' : '0'}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                <div className="col-span-1">
-                  {task.tags && Array.isArray(task.tags) && task.tags.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {task.tags.slice(0, 2).map((tag, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                          {tag}
-                        </span>
-                      ))}
-                      {task.tags.length > 2 && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                          +{task.tags.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-base text-slate-500">No tags</span>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="col-span-1 relative">
+              {/* Actions */}
+              <td className="px-2 py-2 align-middle">
+                <div className="relative flex justify-end">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setOpenMenuId(openMenuId === task.id ? null : task.id);
+                      e.preventDefault();
+                      e.nativeEvent.stopImmediatePropagation();
+                      console.log('Desktop menu clicked for task:', task.id);
+                      setOpenMenuId(openMenuId === task.id ? null : (task.id || null));
                     }}
-                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors hover:scale-110"
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                    }}
+                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors hover:scale-110 relative z-10"
                   >
                     <MoreHorizontal className="w-4 h-4" />
                   </button>
 
                   {/* Dropdown Menu */}
                   {openMenuId === task.id && (
-                    <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50 animate-in slide-in-from-top-2 duration-200">
+                    <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-[9999] animate-in slide-in-from-top-2 duration-200">
                       <div className="py-1">
-                        <button onClick={() => handleMenuAction(task, 'view')} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Eye size={14} />View Details</button>
-                        <button onClick={() => handleMenuAction(task, 'edit')} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Edit size={14} />Edit</button>
-                        <button onClick={() => handleMenuAction(task, 'add-subtask')} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Plus size={14} />Add Subtask</button>
-                        <button onClick={() => handleMenuAction(task, 'delete')} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} />Delete</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'view'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Eye size={14} />View Details</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'edit'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Edit size={14} />Edit</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'add-subtask'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Plus size={14} />Add Subtask</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'delete'); }} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} />Delete</button>
                       </div>
                     </div>
                   )}
                 </div>
-              </div>
-            </motion.div>
+              </td>
+            </tr>
           );
         })}
+          </tbody>
+        </table>
       </div>
 
       {/* Empty State */}
