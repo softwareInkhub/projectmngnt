@@ -19,6 +19,9 @@ import {
   MoreHorizontal,
   User,
   Calendar,
+  Eye,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import {
   TaskApiService,
@@ -55,6 +58,7 @@ export default function TasksPageEnhanced({
   const [editingTask, setEditingTask] = useState<TaskData | null>(null);
   const [parentTaskId, setParentTaskId] = useState<string | null>(null);
   const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const fetchTasks = async () => {
     try {
@@ -82,6 +86,15 @@ export default function TasksPageEnhanced({
     fetchTasks();
   }, []);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   const filteredTasks = tasks.filter(
     (task) =>
       (task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,11 +108,44 @@ export default function TasksPageEnhanced({
     router.push(`/tasks/${task.id}`);
   };
 
+  const handleMenuAction = (task: TaskTreeNode, action: string) => {
+    setOpenMenuId(null);
+    switch (action) {
+      case 'view':
+        handleTaskSelect(task);
+        break;
+      case 'edit':
+        setEditingTask(task as any);
+        setShowEnhancedModal(true);
+        break;
+      case 'add-subtask':
+        setParentTaskId(task.id!);
+        setShowEnhancedModal(true);
+        break;
+      case 'delete':
+        handleDeleteTask(task.id!);
+        break;
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await TaskApiService.deleteTask(taskId);
+      fetchTasks();
+      setSuccessMessage("Task deleted successfully");
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      setError("Failed to delete task");
+    }
+  };
+
   const handleSubmitTask = async (taskData: TaskData) => {
     try {
       setIsSubmittingTask(true);
       if (editingTask) {
-        await TaskApiService.updateTask(editingTask.id!, taskData);
+        // Exclude id from update data since it's part of the primary key
+        const { id, ...updateData } = taskData;
+        await TaskApiService.updateTask(editingTask.id!, updateData);
         setSuccessMessage("Task updated successfully");
       } else {
         await TaskApiService.createTask(taskData);
@@ -133,7 +179,7 @@ export default function TasksPageEnhanced({
   }, [successMessage]);
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-100 overflow-x-hidden">
       {successMessage && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
           {successMessage}
@@ -146,10 +192,10 @@ export default function TasksPageEnhanced({
       )}
 
       {/* Header */}
-      <div className="bg-blue-100 border-b border-slate-200 shadow-sm">
+      <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
+            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
               <ListChecks className="w-6 h-6" />
             </div>
             <div>
@@ -159,6 +205,26 @@ export default function TasksPageEnhanced({
           </div>
           {/* Actions (responsive) */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Desktop search/filters */}
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+              <input type="text" placeholder="Search tasks..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
+            </div>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
+              <option value="All">All Status</option>
+              <option value="To Do">To Do</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Review">Review</option>
+              <option value="Done">Done</option>
+              <option value="Blocked">Blocked</option>
+            </select>
+            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
+              <option value="All">All Priority</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
             {/* View Toggle Buttons */}
             <div className="flex items-center bg-white rounded-lg border border-slate-300 p-1">
               <button
@@ -202,7 +268,7 @@ export default function TasksPageEnhanced({
                   setParentTaskId(null);
                   setShowEnhancedModal(true);
                 }}
-              className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl"
+              className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl"
               >
               <Plus size={18} className="group-hover:rotate-90 transition-transform duration-200" />
               Create Task
@@ -210,6 +276,33 @@ export default function TasksPageEnhanced({
           </div>
           {/* Mobile actions */}
           <div className="flex md:hidden items-center gap-2">
+            {/* Mobile search */}
+            <div className="relative flex-1 max-w-28">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                className="pl-7 pr-2 py-2 border border-slate-300 rounded-md text-xl focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent w-full" 
+              />
+            </div>
+            {/* Mobile filters */}
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
+              <option value="All">Status</option>
+              <option value="To Do">To Do</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Review">Review</option>
+              <option value="Done">Done</option>
+              <option value="Blocked">Blocked</option>
+            </select>
+            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
+              <option value="All">Priority</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
             {/* Mobile View Toggle */}
             <div className="flex items-center bg-white rounded-lg border border-slate-300 p-1">
               <button
@@ -252,7 +345,7 @@ export default function TasksPageEnhanced({
                 setParentTaskId(null);
                 setShowEnhancedModal(true);
               }}
-              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-base"
+              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-base"
             >
               <Plus size={16} />
               Create
@@ -262,11 +355,11 @@ export default function TasksPageEnhanced({
           </div>
 
            {isLoading ? (
-        <div className="flex justify-center items-center mt-10">
+        <div className="flex justify-center items-center mt-10 overflow-x-hidden">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
              </div>
       ) : filteredTasks.length === 0 ? (
-        <div className="text-center text-gray-500 mt-10">
+        <div className="text-center text-gray-500 mt-10 overflow-x-hidden">
           No tasks found. Create a new one!
                        </div>
       ) : viewMode === "list" ? (
@@ -293,21 +386,10 @@ export default function TasksPageEnhanced({
           selectedTaskId={null}
         />
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 p-1 overflow-x-hidden">
           {filteredTasks.map((task, index) => {
-            // Colorful themes for task cards - matching project card design
-            const taskThemes = [
-              { bg: 'bg-blue-100', avatar: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
-              { bg: 'bg-green-100', avatar: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' },
-              { bg: 'bg-purple-100', avatar: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
-              { bg: 'bg-yellow-100', avatar: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-200' },
-              { bg: 'bg-pink-100', avatar: 'bg-pink-100', text: 'text-pink-700', border: 'border-pink-200' },
-              { bg: 'bg-indigo-100', avatar: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-200' },
-              { bg: 'bg-cyan-100', avatar: 'bg-cyan-100', text: 'text-cyan-700', border: 'border-cyan-200' },
-              { bg: 'bg-rose-100', avatar: 'bg-rose-100', text: 'text-rose-700', border: 'border-rose-200' }
-            ];
-
-            const theme = taskThemes[index % taskThemes.length];
+            // Consistent light gradient theme for all task cards
+            const theme = { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', avatar: 'bg-gradient-to-br from-blue-100 to-blue-200', text: 'text-blue-700', border: 'border-blue-200' };
             const getInitials = (title: string) => {
               return title
                 .split(' ')
@@ -323,15 +405,21 @@ export default function TasksPageEnhanced({
             return (
                      <div
                        key={task.id}
-                className={`${theme.bg} ${theme.border} rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 group relative cursor-pointer p-4 h-32`}
-                       onClick={() => handleTaskSelect(task as any)}
+                className={`${theme.bg} ${theme.border} rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 group relative cursor-pointer p-3 h-16`}
+                       onClick={(e) => {
+                         // Don't trigger task selection if clicking on the menu button
+                         if (e.target instanceof HTMLElement && e.target.closest('button[data-menu-button]')) {
+                           return;
+                         }
+                         handleTaskSelect(task as any);
+                       }}
                      >
                 {/* Task Header with Avatar and Menu - Exact same layout as project cards */}
                 <div className="flex items-center justify-between h-full">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {/* Task Avatar - Same size and style as project cards */}
-                    <div className={`w-10 h-10 ${theme.avatar} rounded-full flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0`}>
-                      <span className={`text-sm font-bold ${theme.text}`}>
+                    <div className={`w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0`}>
+                      <span className={`text-sm font-bold text-white`}>
                         {getInitials(task.title || 'Task')}
                            </span>
                          </div>
@@ -341,8 +429,8 @@ export default function TasksPageEnhanced({
                       <h3 className={`text-lg font-bold text-gray-900 truncate group-hover:underline transition-colors`}>
                         {task.title || 'Untitled Task'}
                       </h3>
-                      <p className="text-base text-gray-600 truncate mt-1">
-                        {subtaskCount} {subtaskCount === 1 ? 'subtask' : 'subtasks'}
+                      <p className="text-sm text-gray-600 truncate">
+                        {subtaskCount} {subtaskCount === 1 ? 'task' : 'tasks'}
                       </p>
                     </div>
                   </div>
@@ -352,12 +440,43 @@ export default function TasksPageEnhanced({
                          <button
                            onClick={(e) => {
                              e.stopPropagation();
-                        // Handle menu toggle here if needed
+                             e.preventDefault();
+                             e.nativeEvent.stopImmediatePropagation();
+                             console.log('Grid menu clicked for task:', task.id);
+                             setOpenMenuId(openMenuId === task.id ? null : task.id);
                            }}
-                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors hover:scale-110"
+                           onMouseDown={(e) => {
+                             e.stopPropagation();
+                             e.nativeEvent.stopImmediatePropagation();
+                           }}
+                      className="relative z-10 p-1 text-gray-400 hover:text-gray-600 transition-colors hover:scale-110"
+                      data-menu-button="true"
                          >
-                      <MoreHorizontal className="w-4 h-4" />
+                      <MoreHorizontal className="w-5 h-5" />
                          </button>
+
+                         {/* Dropdown Menu */}
+                         {openMenuId === task.id && (
+                           <div 
+                             className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-[9999] animate-in slide-in-from-top-2 duration-200"
+                             onClick={(e) => e.stopPropagation()}
+                           >
+                             <div className="py-1">
+                               <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'view'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                 <Eye size={14} />View Details
+                               </button>
+                               <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'edit'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                 <Edit size={14} />Edit
+                               </button>
+                               <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'add-subtask'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                 <Plus size={14} />Add Subtask
+                               </button>
+                               <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'delete'); }} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                 <Trash2 size={14} />Delete
+                               </button>
+                             </div>
+                           </div>
+                         )}
                        </div>
                          </div>
                        </div>

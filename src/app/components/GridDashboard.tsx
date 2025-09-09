@@ -164,28 +164,28 @@ const QuickActionsWidget = ({ onOpenTab }: any) => (
     <div className="grid grid-cols-2 gap-2">
       <button
         onClick={() => onOpenTab?.('create-project')}
-        className="flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+        className="flex items-center gap-2 p-2 text-base text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
       >
         <Plus size={14} />
         New Project
       </button>
       <button
         onClick={() => onOpenTab?.('create-task')}
-        className="flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+        className="flex items-center gap-2 p-2 text-base text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
       >
         <Plus size={14} />
         Add Task
       </button>
       <button
         onClick={() => onOpenTab?.('create-team')}
-        className="flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+        className="flex items-center gap-2 p-2 text-base text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
       >
         <Plus size={14} />
         Add Team
       </button>
       <button
         onClick={() => onOpenTab?.('create-sprint')}
-        className="flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+        className="flex items-center gap-2 p-2 text-base text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
       >
         <Plus size={14} />
         New Sprint

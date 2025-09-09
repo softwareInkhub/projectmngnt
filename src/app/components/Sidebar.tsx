@@ -93,8 +93,8 @@ export default function Sidebar({
                 <span className="text-white text-sm font-bold">N</span>
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">Navigation</h2>
-                <p className="text-xs text-gray-500">Menu</p>
+                <h2 className="text-base font-semibold text-gray-900">Navigation</h2>
+                <p className="text-sm text-gray-500">Menu</p>
               </div>
             </div>
             <button 
@@ -146,7 +146,7 @@ export default function Sidebar({
                     <Icon size={16} className={isActive ? "text-white" : "text-gray-600"} />
                   </div>
                   <div className="flex-1 text-left">
-                    <span className={`text-sm font-medium transition-colors duration-300 ${
+                    <span className={`text-lg font-medium transition-colors duration-300 ${
                       isActive ? "text-white" : "text-gray-700"
                     }`}>
                       {item.label}
@@ -169,8 +169,8 @@ export default function Sidebar({
                 <span className="text-white text-sm font-bold">U</span>
               </div>
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900">Profile</div>
-                <div className="text-xs text-gray-500">User</div>
+                <div className="text-lg font-medium text-gray-900">Profile</div>
+                <div className="text-base text-gray-500">User</div>
               </div>
               <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors mobile-haptic">
                 <Settings size={14} className="text-gray-500" />
@@ -187,7 +187,7 @@ export default function Sidebar({
                 <LogOut size={16} />
               </div>
               <div className="flex-1 text-left">
-                <span className="text-sm font-medium">Sign Out</span>
+                <span className="text-lg font-medium">Sign Out</span>
               </div>
             </button>
           </div>
@@ -260,7 +260,7 @@ export default function Sidebar({
                 )}
               </div>
               {isExpanded && (
-                <span className="text-sm font-medium truncate transition-all duration-300">
+                <span className="text-lg font-medium truncate transition-all duration-300">
                   {item.label}
                 </span>
               )}
@@ -276,11 +276,11 @@ export default function Sidebar({
 
       {/* User Avatar */}
       <div className="mt-4 mb-2 flex flex-col items-center">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center text-base font-bold text-white shadow-lg">
           B
         </div>
         {isExpanded && (
-          <span className="text-xs text-neutral-500 mt-1">User</span>
+          <span className="text-base text-neutral-500 mt-1">User</span>
         )}
       </div>
 
@@ -311,7 +311,7 @@ export default function Sidebar({
           />
         </div>
         {isExpanded && (
-          <span className="text-sm font-medium truncate transition-all duration-300">
+          <span className="text-lg font-medium truncate transition-all duration-300">
             Logout
           </span>
         )}

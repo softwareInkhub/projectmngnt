@@ -66,19 +66,19 @@ const statusIcons = {
 };
 
 const priorityColors = {
-  "High": "bg-red-50 text-red-700 border-red-200",
-  "Medium": "bg-yellow-50 text-yellow-700 border-yellow-200",
-  "Low": "bg-green-50 text-green-700 border-green-200",
-  "Critical": "bg-red-100 text-red-800 border-red-300"
+  "High": "bg-blue-100 text-blue-800 border-blue-300",
+  "Medium": "bg-blue-50 text-blue-700 border-blue-200",
+  "Low": "bg-blue-50 text-blue-700 border-blue-200",
+  "Critical": "bg-blue-100 text-blue-800 border-blue-300"
 };
 
 const levelColors = [
   "border-l-blue-500 bg-gradient-to-r from-blue-50 to-white",
-  "border-l-green-500 bg-gradient-to-r from-green-50 to-white", 
-  "border-l-purple-500 bg-gradient-to-r from-purple-50 to-white",
-  "border-l-orange-500 bg-gradient-to-r from-orange-50 to-white",
-  "border-l-pink-500 bg-gradient-to-r from-pink-50 to-white",
-  "border-l-indigo-500 bg-gradient-to-r from-indigo-50 to-white"
+  "border-l-blue-400 bg-gradient-to-r from-blue-50 to-white", 
+  "border-l-blue-300 bg-gradient-to-r from-blue-50 to-white",
+  "border-l-blue-200 bg-gradient-to-r from-blue-50 to-white",
+  "border-l-blue-100 bg-gradient-to-r from-blue-50 to-white",
+  "border-l-blue-200 bg-gradient-to-r from-blue-50 to-white"
 ];
 
 const TaskNode: React.FC<TaskNodeProps> = ({
@@ -150,13 +150,13 @@ const TaskNode: React.FC<TaskNodeProps> = ({
             
             <motion.div
               className={`
-                group relative flex flex-col p-1.5 sm:p-3 bg-white border border-slate-200 rounded-lg
-                hover:border-slate-300 hover:shadow-lg transition-all duration-300 cursor-pointer
+                group relative flex flex-col p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg
+                hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer
                 ${isSelected ? 'ring-2 ring-blue-500 border-blue-300 shadow-xl scale-105' : ''}
                 ${isCompleted ? 'opacity-75 bg-slate-50' : ''}
                 ${levelColor}
                 border-l-4
-                w-28 h-16 sm:w-48 sm:h-32
+                w-32 h-12 sm:w-56 sm:h-16
                 shadow-md
                 backdrop-blur-sm
                 overflow-hidden
@@ -174,25 +174,25 @@ const TaskNode: React.FC<TaskNodeProps> = ({
               }}
               whileTap={{ scale: 0.98 }}
             >
-              {/* Top Section - Status and Actions */}
-              <div className="flex items-center justify-between mb-0.5 sm:mb-2">
-                {/* Status Checkbox */}
-                <motion.button
-                  onClick={handleStatusToggle}
-                  className="w-2.5 h-2.5 sm:w-4 sm:h-4 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors rounded-sm hover:bg-slate-100 z-10"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <StatusIcon className={`w-2.5 h-2.5 sm:w-4 sm:h-4 ${isCompleted ? 'text-green-600' : 'text-slate-400'}`} />
-                </motion.button>
-
-                {/* Action Buttons and Expand Toggle */}
-                <div className="flex items-center gap-0.5 sm:gap-1">
+              {/* Top Section - Task Name and Action Buttons */}
+              <div className="flex items-center justify-between gap-1 mb-1">
+                {/* Task Name - Top Left */}
+                <div className="flex-1">
+                  <h4 
+                    className={`font-bold leading-tight ${isCompleted ? 'line-through text-slate-500' : 'text-slate-900'} text-base sm:text-xl truncate`}
+                    title={task.title}
+                  >
+                    {task.title}
+                  </h4>
+                </div>
+                
+                {/* Action Buttons - Top Right */}
+                <div className="flex items-center gap-1">
                   {/* Expand/Collapse Toggle */}
                   {hasChildren && (
                     <motion.button
                       onClick={handleToggleExpand}
-                      className="w-3 h-3 sm:w-6 sm:h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 transition-all duration-200 rounded-md hover:bg-blue-50 z-10"
+                      className="w-3 h-3 sm:w-4 sm:h-4 flex items-center justify-center text-slate-400 hover:text-blue-500 transition-all duration-200 rounded hover:bg-blue-50 z-10"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       title={isExpanded ? "Collapse subtasks" : "Expand subtasks"}
@@ -201,92 +201,49 @@ const TaskNode: React.FC<TaskNodeProps> = ({
                         animate={{ rotate: isExpanded ? 180 : 0 }}
                         transition={{ duration: 0.2, ease: "easeInOut" }}
                       >
-                        <ChevronDown className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
+                        <ChevronDown className="w-2 h-2 sm:w-3 sm:h-3" />
                       </motion.div>
                     </motion.button>
                   )}
-              
-              {/* Action Buttons */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <motion.button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddSubtask(task.id!);
-                  }}
-                      className="p-0.5 sm:p-1 hover:bg-blue-100 rounded transition-colors"
-                      title="Add subtask"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Plus className="w-2 h-2 sm:w-3 sm:h-3 text-blue-600" />
-                    </motion.button>
-                    <motion.button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditTask(task);
-                  }}
-                      className="p-0.5 sm:p-1 hover:bg-slate-100 rounded transition-colors"
-                      title="Edit task"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Edit className="w-2 h-2 sm:w-3 sm:h-3 text-slate-600" />
-                    </motion.button>
-                    <motion.button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                        onDeleteTask(task.id!);
-                      }}
-                      className="p-0.5 sm:p-1 hover:bg-red-100 rounded transition-colors"
-                      title="Delete task"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Trash2 className="w-2 h-2 sm:w-3 sm:h-3 text-red-600" />
-                    </motion.button>
-              </div>
-            </div>
-              </div>
-              
-              {/* Middle Section - Task Title and Priority */}
-              <div className="flex-1 flex flex-col justify-center mb-0.5 sm:mb-2">
-                <h4 
-                  className={`font-semibold leading-tight mb-0.5 sm:mb-1 ${isCompleted ? 'line-through text-slate-500' : 'text-slate-900'} text-[10px] sm:text-sm`}
-                  title={task.title}
-                >
-                  {truncateText(task.title, window.innerWidth < 640 ? 12 : 20)}
-                </h4>
-                
-                {task.priority && (
-                  <span className={`px-1 py-0.5 sm:px-2 sm:py-0.5 rounded-full text-[8px] sm:text-xs font-medium border ${priorityColors[task.priority as keyof typeof priorityColors] || 'bg-slate-50 text-slate-700 border-slate-200'}`}>
-                    {task.priority}
-                  </span>
-                )}
-              </div>
-              
-              {/* Bottom Section - Assignee, Due Date, and Subtask Count */}
-              <div className="space-y-0.5 sm:space-y-1">
-                {task.assignee && (
-                  <div className="flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-xs text-slate-500">
-                    <User className="w-2 h-2 sm:w-3 sm:h-3 flex-shrink-0" />
-                    <span className="truncate" title={task.assignee}>
-                      {truncateText(task.assignee, window.innerWidth < 640 ? 8 : 15)}
-                    </span>
-                  </div>
-                )}
-                {task.dueDate && (
-                  <div className="flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-xs text-slate-500">
-                    <Calendar className="w-2 h-2 sm:w-3 sm:h-3 flex-shrink-0" />
-                    <span className="text-[8px] sm:text-xs">{task.dueDate}</span>
-                  </div>
-                )}
-                {hasChildren && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-[8px] sm:text-xs text-slate-400 font-medium bg-slate-100 px-1 py-0.5 sm:px-2 sm:py-0.5 rounded-full">
-                      {task.children!.length} subtasks
-                    </span>
-                  </div>
-                )}
+            
+                  {/* Action Buttons */}
+                  <motion.button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddSubtask(task.id!);
+                    }}
+                    className="p-0.5 hover:bg-blue-100 rounded transition-colors opacity-80 hover:opacity-100"
+                    title="Add subtask"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-600" />
+                  </motion.button>
+                  <motion.button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditTask(task);
+                    }}
+                    className="p-0.5 hover:bg-slate-100 rounded transition-colors opacity-80 hover:opacity-100"
+                    title="Edit task"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Edit className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-600" />
+                  </motion.button>
+                  <motion.button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteTask(task.id!);
+                    }}
+                    className="p-0.5 hover:bg-red-100 rounded transition-colors opacity-80 hover:opacity-100"
+                    title="Delete task"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-600" />
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -401,9 +358,9 @@ export default function TaskTreeView({
         {/* Compact Enhanced Header */}
         <div className="mb-2 flex-shrink-0">
           <div className="flex items-center justify-between mb-1.5">
-            <div>
-              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-0.5">Task Tree</h2>
-              <p className="text-xs sm:text-sm text-slate-600">Vertical tree view with indentation</p>
+            <div className="text-center flex-1">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-0.5">Task Tree</h2>
+              <p className="text-sm sm:text-base text-slate-600">Vertical tree view with indentation</p>
             </div>
             <div className="flex items-center gap-1">
               {/* Landscape Toggle Button - Mobile Only */}
@@ -446,67 +403,6 @@ export default function TaskTreeView({
             </div>
           </div>
 
-          {/* Compact Enhanced Search and Filter Bar - Mobile: Top Right, Web: Normal */}
-          <div className="sm:flex flex-col sm:flex-row items-center gap-1.5 bg-white rounded-lg p-2.5 shadow-sm border border-slate-100">
-            {/* Mobile: Compact search only */}
-            <div className="sm:hidden relative w-32">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-6 pr-2 py-1 border border-slate-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-transparent text-xs"
-              />
-            </div>
-            
-            {/* Web: Full search and filters */}
-            <div className="hidden sm:flex flex-col sm:flex-row items-center gap-1.5 w-full">
-              <div className="flex-1 relative w-full">
-                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search tasks..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-8 sm:pl-10 pr-2 py-1.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-1.5 w-full sm:w-auto">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-2 py-1.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
-                >
-                  <option value="All">All Status</option>
-                  <option value="To Do">To Do</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Done">Done</option>
-                  <option value="On Hold">On Hold</option>
-                </select>
-                <select
-                  value={filterPriority}
-                  onChange={(e) => setFilterPriority(e.target.value)}
-                  className="px-2 py-1.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
-                >
-                  <option value="All">All Priority</option>
-                  <option value="High">High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                  <option value="Critical">Critical</option>
-                </select>
-                <motion.button
-                  onClick={clearFilters}
-                  className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors flex items-center gap-1 justify-center text-xs sm:text-sm font-medium"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Filter className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Clear
-                </motion.button>
-              </div>
-            </div>
-          </div>
         </div>
         
         {/* Task Tree Container */}
