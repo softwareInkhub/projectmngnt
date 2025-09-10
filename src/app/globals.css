@@ -1040,6 +1040,97 @@ body {
   outline-offset: 2px;
 }
 
+/* Dotted gridlines for resizable tables - only show on hover */
+.resizable-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.resizable-table thead th,
+.resizable-table tbody td {
+  border-right: 1px dashed transparent; /* Hidden by default */
+  transition: border-color 0.2s ease;
+}
+
+.resizable-table tbody td {
+  border-bottom: 1px dashed transparent; /* Hidden by default */
+  transition: border-color 0.2s ease;
+}
+
+.resizable-table thead th:last-child,
+.resizable-table tbody td:last-child {
+  border-right: none;
+}
+
+.resizable-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Show dotted lines on table hover */
+.resizable-table:hover thead th,
+.resizable-table:hover tbody td {
+  border-right-color: #cbd5e1; /* Show vertical dotted lines */
+}
+
+.resizable-table:hover tbody td {
+  border-bottom-color: #cbd5e1; /* Show horizontal dotted lines */
+}
+
+/* Enhanced resizing functionality */
+.resizable-table.resizing {
+  user-select: none;
+  pointer-events: none;
+}
+
+.resizable-table.resizing * {
+  pointer-events: none;
+}
+
+/* Resize handle styles */
+.resize-handle {
+  position: absolute;
+  background: #cbd5e1;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.resize-handle:hover {
+  background: #3b82f6;
+  opacity: 1 !important;
+}
+
+.resize-handle.column-resize {
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  cursor: col-resize;
+}
+
+.resize-handle.row-resize {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  cursor: row-resize;
+}
+
+/* Active resizing state */
+.resizing .resize-handle {
+  background: #3b82f6 !important;
+  opacity: 1 !important;
+}
+
+/* Improved resize handle visibility */
+.resize-handle {
+  opacity: 0.3;
+}
+
+.resize-handle:hover,
+.resizing .resize-handle {
+  opacity: 1;
+}
+
 /* Custom Button Styles */
 .btn-primary {
   @apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200;

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronRight, 
@@ -19,6 +20,13 @@ import {
   Eye
 } from 'lucide-react';
 import { TaskTreeNode } from '../utils/taskApi';
+import ResizableTable, { 
+  ResizableTableHeader, 
+  ResizableTableHeaderCell, 
+  ResizableTableBody, 
+  ResizableTableCell 
+} from './ResizableTable';
+import EditableTableCell from './EditableTableCell';
 
 interface TaskListViewProps {
   tasks: TaskTreeNode[];
@@ -27,6 +35,7 @@ interface TaskListViewProps {
   onEditTask: (task: TaskTreeNode) => void;
   onDeleteTask: (taskId: string) => void;
   onToggleStatus: (taskId: string, newStatus: string) => Promise<void>;
+  onUpdateTaskField?: (taskId: string, field: keyof TaskTreeNode, value: string | number) => Promise<boolean>;
   selectedTaskId?: string | null;
 }
 
@@ -75,12 +84,15 @@ export default function TaskListView({
   onEditTask,
   onDeleteTask,
   onToggleStatus,
+  onUpdateTaskField,
   selectedTaskId
 }: TaskListViewProps) {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const [hoveredTask, setHoveredTask] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   useEffect(() => {
     const checkMobile = () => {
@@ -96,10 +108,23 @@ export default function TaskListView({
   useEffect(() => {
     const handleClickOutside = () => {
       setOpenMenuId(null);
+      setDropdownPosition(null);
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  // Calculate dropdown position
+  const calculateDropdownPosition = (buttonElement: HTMLButtonElement) => {
+    const rect = buttonElement.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    return {
+      top: rect.bottom + scrollTop + 4, // 4px gap
+      left: rect.right + scrollLeft - 160 // 160px is dropdown width, align to right edge
+    };
+  };
 
   const toggleExpanded = (taskId: string) => {
     const newExpanded = new Set(expandedTasks);
@@ -156,7 +181,7 @@ export default function TaskListView({
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="w-full space-y-3 px-4 ml-6 overflow-x-hidden">
+      <div className="w-full space-y-3 px-4 ml-6 overflow-x-hidden overflow-y-visible">
         {flattenedTasks.map((task, index) => {
           const theme = rowTheme;
           const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Square;
@@ -227,31 +252,90 @@ export default function TaskListView({
                    {/* Three-dot Menu */}
                    <div className="relative">
                      <button
+                       ref={(el) => {
+                         if (task.id) {
+                           buttonRefs.current[task.id] = el;
+                         }
+                       }}
                        onClick={(e) => {
                          e.stopPropagation();
                          e.preventDefault();
-                         e.nativeEvent.stopImmediatePropagation();
-                         console.log('Mobile menu clicked for task:', task.id);
-                         setOpenMenuId(openMenuId === task.id ? null : (task.id || null));
+                         console.log('Menu clicked for task:', task.id);
+                         
+                         if (openMenuId === task.id) {
+                           setOpenMenuId(null);
+                           setDropdownPosition(null);
+                         } else {
+                           setOpenMenuId(task.id || null);
+                           if (task.id && buttonRefs.current[task.id]) {
+                             const position = calculateDropdownPosition(buttonRefs.current[task.id]!);
+                             setDropdownPosition(position);
+                           }
+                         }
                        }}
-                       onMouseDown={(e) => {
-                         e.stopPropagation();
-                       }}
-                       className="p-1 text-gray-400 hover:text-gray-600 transition-colors hover:scale-110 relative z-10"
+                       className="p-1 text-gray-400 hover:text-gray-600 transition-colors hover:scale-110 relative z-20"
                      >
                        <MoreHorizontal className="w-4 h-4" />
                      </button>
 
-                     {/* Dropdown Menu */}
-                     {openMenuId === task.id && (
-                       <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-[9999] animate-in slide-in-from-top-2 duration-200">
+                     {/* Dropdown Menu - Portal */}
+                     {openMenuId === task.id && dropdownPosition && createPortal(
+                       <div 
+                         className="fixed w-40 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] animate-in slide-in-from-top-2 duration-200"
+                         style={{
+                           top: `${dropdownPosition.top}px`,
+                           left: `${dropdownPosition.left}px`
+                         }}
+                         onClick={(e) => e.stopPropagation()}
+                       >
                          <div className="py-1">
-                           <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'view'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Eye size={14} />View Details</button>
-                           <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'edit'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Edit size={14} />Edit</button>
-                           <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'add-subtask'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"><Plus size={14} />Add Subtask</button>
-                           <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'delete'); }} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} />Delete</button>
+                           <button 
+                             onClick={(e) => { 
+                               e.stopPropagation(); 
+                               setOpenMenuId(null);
+                               setDropdownPosition(null);
+                               handleMenuAction(task, 'view'); 
+                             }} 
+                             className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                           >
+                             <Eye size={14} />View Details
+                           </button>
+                           <button 
+                             onClick={(e) => { 
+                               e.stopPropagation(); 
+                               setOpenMenuId(null);
+                               setDropdownPosition(null);
+                               handleMenuAction(task, 'edit'); 
+                             }} 
+                             className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                           >
+                             <Edit size={14} />Edit
+                           </button>
+                           <button 
+                             onClick={(e) => { 
+                               e.stopPropagation(); 
+                               setOpenMenuId(null);
+                               setDropdownPosition(null);
+                               handleMenuAction(task, 'add-subtask'); 
+                             }} 
+                             className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                           >
+                             <Plus size={14} />Add Subtask
+                           </button>
+                           <button 
+                             onClick={(e) => { 
+                               e.stopPropagation(); 
+                               setOpenMenuId(null);
+                               setDropdownPosition(null);
+                               handleMenuAction(task, 'delete'); 
+                             }} 
+                             className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                           >
+                             <Trash2 size={14} />Delete
+                           </button>
                          </div>
-                       </div>
+                       </div>,
+                       document.body
                      )}
                    </div>
 
@@ -287,41 +371,56 @@ export default function TaskListView({
 
   // Desktop Layout - Table View
   return (
-    <div className="w-full ml-2 overflow-x-hidden">
+    <div className="w-full ml-2 overflow-x-hidden overflow-y-visible">
       {/* Table */}
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gradient-to-r from-blue-100 to-blue-200">
-              <th className="text-left px-2 py-1.5 w-16 text-lg font-bold text-slate-900">ID</th>
-              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Task Name</th>
-              <th className="text-left px-3 py-1.5 w-12 text-lg font-bold text-slate-900">%</th>
-              <th className="text-left px-2 py-1.5 text-lg font-bold text-slate-900">Assignee</th>
-              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Status</th>
-              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Priority</th>
-              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Due Date</th>
-              <th className="text-left px-3 py-1.5 text-lg font-bold text-slate-900">Progress</th>
-              <th className="text-left px-2 py-1.5 text-lg font-bold text-slate-900">Tags</th>
-              <th className="text-right px-2 py-1.5 w-10 text-lg font-bold text-slate-900">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="text-lg overflow-visible">
-        {flattenedTasks.map((task, index) => {
-          const theme = rowTheme;
-          const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Square;
-          const isCompleted = task.status === 'Done';
+        <ResizableTable 
+          defaultColumnWidths={{
+            id: 80,
+            name: 300,
+            progress: 60,
+            assignee: 150,
+            status: 120,
+            priority: 100,
+            dueDate: 120,
+            progressBar: 150,
+            tags: 150,
+            actions: 100
+          }}
+          defaultRowHeight={55}
+        >
+          <table className="w-full resizable-table">
+            <ResizableTableHeader>
+              <tr>
+                <ResizableTableHeaderCell columnKey="id" className="text-lg font-bold text-slate-900">ID</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="name" className="text-lg font-bold text-slate-900">Task Name</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="progress" className="text-lg font-bold text-slate-900">%</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="assignee" className="text-lg font-bold text-slate-900">Assignee</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="status" className="text-lg font-bold text-slate-900">Status</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="priority" className="text-lg font-bold text-slate-900">Priority</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="dueDate" className="text-lg font-bold text-slate-900">Due Date</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="progressBar" className="text-lg font-bold text-slate-900">Progress</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="tags" className="text-lg font-bold text-slate-900">Tags</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="actions" className="text-right text-lg font-bold text-slate-900">Actions</ResizableTableHeaderCell>
+              </tr>
+            </ResizableTableHeader>
+            <ResizableTableBody>
+              {flattenedTasks.map((task, index) => {
+                const theme = rowTheme;
+                const StatusIcon = statusIcons[task.status as keyof typeof statusIcons] || Square;
+                const isCompleted = task.status === 'Done';
 
-          return (
-            <tr
-              key={task.id}
-              className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}
-              onClick={() => onTaskSelect(task)}
-            >
-              {/* ID */}
-              <td className="px-2 py-2 text-slate-600 align-middle text-lg">{task.id?.slice(-8) || 'N/A'}</td>
+                return (
+                  <tr
+                    key={task.id}
+                    className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}
+                    onClick={() => onTaskSelect(task)}
+                  >
+                    {/* ID */}
+                    <ResizableTableCell columnKey="id" className="text-slate-600 text-lg">{task.id?.slice(-8) || 'N/A'}</ResizableTableCell>
               
-              {/* Task Name */}
-              <td className="px-3 py-2 align-middle">
+                    {/* Task Name */}
+                    <ResizableTableCell columnKey="name" className="align-middle">
                 <div className="flex items-center gap-3">
                   {/* Hierarchy Indicator */}
                   {task.level > 0 && (
@@ -334,9 +433,31 @@ export default function TaskListView({
                   )}
                   {/* Task Title */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-slate-900 font-semibold text-2xl">{task.title || 'Untitled Task'}</div>
+                    <div 
+                      className="text-slate-900 font-semibold text-2xl editable-cell"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <EditableTableCell
+                        value={task.title || 'Untitled Task'}
+                        onSave={(newValue) => onUpdateTaskField?.(task.id || '', 'title', newValue) || Promise.resolve(false)}
+                        type="text"
+                        className="text-slate-900 font-semibold text-2xl"
+                        placeholder="Task title"
+                      />
+                    </div>
                     {task.description && (
-                      <div className="text-lg text-slate-500 line-clamp-1">{task.description}</div>
+                      <div 
+                        className="text-lg text-slate-500 line-clamp-1 editable-cell"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <EditableTableCell
+                          value={task.description || ''}
+                          onSave={(newValue) => onUpdateTaskField?.(task.id || '', 'description', newValue) || Promise.resolve(false)}
+                          type="text"
+                          className="text-lg text-slate-500"
+                          placeholder="Task description"
+                        />
+                      </div>
                     )}
                   </div>
 
@@ -369,81 +490,120 @@ export default function TaskListView({
                     <StatusIcon className={`w-4 h-4 ${isCompleted ? 'text-emerald-500' : 'text-slate-400'}`} />
                   </button>
                 </div>
-              </td>
+                    </ResizableTableCell>
 
-              {/* Progress Percentage */}
-              <td className="px-3 py-2 text-slate-900 font-semibold align-middle text-2xl">{isCompleted ? '100' : '0'}%</td>
+                    {/* Progress Percentage */}
+                    <ResizableTableCell columnKey="progress" className="text-slate-900 font-semibold text-2xl">{isCompleted ? '100' : '0'}%</ResizableTableCell>
               
-              {/* Assignee */}
-              <td className="px-2 py-2 align-middle">
-                {task.assignee && (
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-base flex items-center justify-center font-bold">
-                      {getInitials(task.assignee)}
-                    </div>
-                    <span className="text-lg text-slate-700">{task.assignee}</span>
-                  </div>
-                )}
-              </td>
+                    {/* Assignee */}
+                    <ResizableTableCell columnKey="assignee" className="align-middle">
+                      {task.assignee && (
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-base flex items-center justify-center font-bold flex-shrink-0">
+                            {getInitials(task.assignee)}
+                          </div>
+                          <div 
+                            className="text-lg text-slate-700 truncate editable-cell"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <EditableTableCell
+                              value={task.assignee || ''}
+                              onSave={(newValue) => onUpdateTaskField?.(task.id || '', 'assignee', newValue) || Promise.resolve(false)}
+                              type="text"
+                              className="text-lg text-slate-700 truncate"
+                              placeholder="Assignee"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </ResizableTableCell>
 
-              {/* Status */}
-              <td className="px-3 py-2 align-middle">
-                <span className={`px-2 py-1 rounded-full text-lg font-medium ${
-                  statusColors[task.status as keyof typeof statusColors] || 'bg-slate-200 text-slate-700'
-                }`}>
-                  {task.status}
-                </span>
-              </td>
+                    {/* Status */}
+                    <ResizableTableCell columnKey="status" className="align-middle">
+                      <div 
+                        className="editable-cell"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <EditableTableCell
+                          value={task.status || 'To Do'}
+                          onSave={(newValue) => onUpdateTaskField?.(task.id || '', 'status', newValue) || Promise.resolve(false)}
+                          type="select"
+                          options={['To Do', 'In Progress', 'Review', 'Done', 'Blocked', 'On Hold']}
+                          className={`px-2 py-1 rounded-full text-lg font-medium ${
+                            statusColors[task.status as keyof typeof statusColors] || 'bg-slate-200 text-slate-700'
+                          }`}
+                        />
+                      </div>
+                    </ResizableTableCell>
 
-              {/* Priority */}
-              <td className="px-3 py-2 align-middle">
-                {task.priority && (
-                  <span className={`px-2 py-1 rounded-full text-lg font-medium ${
-                    priorityColors[task.priority as keyof typeof priorityColors] || 'bg-slate-200 text-slate-700'
-                  }`}>
-                    {task.priority}
-                  </span>
-                )}
-              </td>
+                    {/* Priority */}
+                    <ResizableTableCell columnKey="priority" className="align-middle">
+                      <div 
+                        className="editable-cell"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <EditableTableCell
+                          value={task.priority || 'Medium'}
+                          onSave={(newValue) => onUpdateTaskField?.(task.id || '', 'priority', newValue) || Promise.resolve(false)}
+                          type="select"
+                          options={['Low', 'Medium', 'High', 'Critical']}
+                          className={`px-2 py-1 rounded-full text-lg font-medium ${
+                            priorityColors[task.priority as keyof typeof priorityColors] || 'bg-slate-200 text-slate-700'
+                          }`}
+                        />
+                      </div>
+                    </ResizableTableCell>
 
-              {/* Due Date */}
-              <td className="px-3 py-2 text-slate-700 align-middle text-lg">{task.dueDate || 'No date'}</td>
+                    {/* Due Date */}
+                    <ResizableTableCell columnKey="dueDate" className="text-slate-700 text-lg">
+                      <div 
+                        className="editable-cell"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <EditableTableCell
+                          value={task.dueDate || ''}
+                          onSave={(newValue) => onUpdateTaskField?.(task.id || '', 'dueDate', newValue) || Promise.resolve(false)}
+                          type="date"
+                          className="text-slate-700 text-lg"
+                        />
+                      </div>
+                    </ResizableTableCell>
 
-              {/* Progress Bar */}
-              <td className="px-3 py-2 align-middle">
-                <div className="flex items-center gap-2">
-                  <div className="w-32 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${isCompleted ? 100 : 0}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-lg text-slate-700">{isCompleted ? '100' : '0'}</span>
-                </div>
-              </td>
+                    {/* Progress Bar */}
+                    <ResizableTableCell columnKey="progressBar" className="align-middle">
+                      <div className="flex items-center gap-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${isCompleted ? 100 : 0}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm text-gray-600 flex-shrink-0">{isCompleted ? '100' : '0'}%</span>
+                      </div>
+                    </ResizableTableCell>
 
-              {/* Tags */}
-              <td className="px-2 py-2 align-middle">
-                {task.tags && Array.isArray(task.tags) && task.tags.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {(task.tags as string[]).slice(0, 2).map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-base font-medium">
-                        {tag}
-                      </span>
-                    ))}
-                    {(task.tags as string[]).length > 2 && (
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-base font-medium">
-                        +{(task.tags as string[]).length - 2}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-lg text-slate-500">No tags</span>
-                )}
-              </td>
+                    {/* Tags */}
+                    <ResizableTableCell columnKey="tags" className="align-middle">
+                      {task.tags && Array.isArray(task.tags) && task.tags.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {(task.tags as string[]).slice(0, 2).map((tag, idx) => (
+                            <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-base font-medium flex-shrink-0">
+                              {tag}
+                            </span>
+                          ))}
+                          {(task.tags as string[]).length > 2 && (
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-base font-medium flex-shrink-0">
+                              +{(task.tags as string[]).length - 2}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-lg text-slate-500">No tags</span>
+                      )}
+                    </ResizableTableCell>
 
-              {/* Actions */}
-              <td className="px-2 py-2 align-middle">
+                    {/* Actions */}
+                    <ResizableTableCell columnKey="actions" className="align-middle">
                 <div className="relative flex justify-end">
                   <button
                     onClick={(e) => {
@@ -473,12 +633,13 @@ export default function TaskListView({
                     </div>
                   )}
                 </div>
-              </td>
-            </tr>
-          );
-        })}
-          </tbody>
-        </table>
+                    </ResizableTableCell>
+                  </tr>
+                );
+              })}
+            </ResizableTableBody>
+          </table>
+        </ResizableTable>
       </div>
 
       {/* Empty State */}

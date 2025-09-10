@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import {
   CheckCircle,
   AlertCircle,
@@ -27,12 +28,15 @@ import {
   TaskApiService,
   transformTaskToUI,
   buildTaskTree,
+  flattenTaskTree,
   TaskTreeNode,
   TaskData,
 } from "../utils/taskApi";
 import TaskTreeView from "./TaskTreeView";
 import TaskListView from "./TaskListView";
 import EnhancedTaskModal from "./EnhancedTaskModal";
+import UniversalDetailsModal from "./UniversalDetailsModal";
+import { useTaskUpdates } from "../hooks/useTaskUpdates";
 
 const initialTasks: any[] = [];
 const statuses = ["To Do", "In Progress", "Review", "Done", "Blocked"];
@@ -59,24 +63,65 @@ export default function TasksPageEnhanced({
   const [parentTaskId, setParentTaskId] = useState<string | null>(null);
   const [isSubmittingTask, setIsSubmittingTask] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [detailsModal, setDetailsModal] = useState({
+    isOpen: false,
+    itemType: 'task' as 'task' | 'project',
+    itemId: ''
+  });
+  const [notification, setNotification] = useState<string | null>(null);
+
+  // Task updates hook with fallback
+  const { updateTaskField, isUpdating, retryFailedUpdates } = useTaskUpdates({
+    onUpdate: (updatedTask) => {
+      setTasks(prev => prev.map(t => t.id === updatedTask.id ? transformTaskToUI(updatedTask) : t));
+      setTaskTree(prev => {
+        const flatTasks = flattenTaskTree(prev);
+        const updatedFlatTasks = flatTasks.map(t => t.id === updatedTask.id ? updatedTask : t);
+        return buildTaskTree(updatedFlatTasks);
+      });
+      setError(null); // Clear any previous errors
+    },
+    onError: (error) => {
+      console.error('Task update error:', error);
+      setError(error);
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
+    },
+    onLocalSave: (message) => {
+      console.log('Task saved locally:', message);
+      setNotification(message);
+      setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+    }
+  });
 
   const fetchTasks = async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      
       const response = await TaskApiService.getTasks();
+      console.log('Tasks fetched from API:', response);
+      
       if (response.success) {
-        const tasksData = (response as any).items || response.data || [];
+        const tasksData = response.data || [];
         const uiTasks = tasksData.map((item: TaskData) =>
           transformTaskToUI(item)
         );
-          setTasks(uiTasks);
-          const tree = buildTaskTree(tasksData);
-          setTaskTree(tree);
+        setTasks(uiTasks);
+        const tree = buildTaskTree(tasksData);
+        setTaskTree(tree);
       } else {
-        setError("Failed to load tasks");
+        console.error('Failed to fetch tasks:', response.error);
+        setError('Failed to fetch tasks');
       }
-    } catch (err) {
-      setError("Failed to load tasks");
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      setError('Error fetching tasks');
     } finally {
       setIsLoading(false);
     }
@@ -86,10 +131,23 @@ export default function TasksPageEnhanced({
     fetchTasks();
   }, []);
 
+  // Calculate dropdown position
+  const calculateDropdownPosition = (buttonElement: HTMLButtonElement) => {
+    const rect = buttonElement.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    return {
+      top: rect.bottom + scrollTop + 4, // 4px gap
+      left: rect.right + scrollLeft - 160 // 160px is dropdown width, align to right edge
+    };
+  };
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
       setOpenMenuId(null);
+      setDropdownPosition(null);
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
@@ -104,8 +162,34 @@ export default function TasksPageEnhanced({
   );
 
   const handleTaskSelect = (task: TaskTreeNode) => {
-    if (!task.id || task.id.trim() === "") return;
-    router.push(`/tasks/${task.id}`);
+    console.log('=== TASK DETAILS MODAL DEBUG ===');
+    console.log('Opening details modal for task:', task.id);
+    console.log('Task type:', typeof task.id);
+    console.log('Task ID length:', task.id?.length);
+    console.log('Is task ID empty?', !task.id || task.id.trim() === '');
+    console.log('Current tasks:', tasks.map(t => ({ id: t.id, title: t.title })));
+    
+    // Ensure we have a valid task ID
+    if (!task.id || task.id.trim() === '') {
+      console.error('Invalid task ID:', task.id);
+      return;
+    }
+    
+    // Open the Universal Details Modal
+    setDetailsModal({
+      isOpen: true,
+      itemType: 'task',
+      itemId: task.id
+    });
+  };
+
+  // Close Universal Details Modal
+  const closeDetailsModal = () => {
+    setDetailsModal({
+      isOpen: false,
+      itemType: 'task',
+      itemId: ''
+    });
   };
 
   const handleMenuAction = (task: TaskTreeNode, action: string) => {
@@ -187,9 +271,36 @@ export default function TasksPageEnhanced({
       )}
       {error && (
         <div className="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
-          {error}
+          <div className="flex items-center justify-between gap-4">
+            <span>{error}</span>
+            <div className="flex gap-2">
+              <button 
+                onClick={fetchTasks}
+                className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+              >
+                Retry Fetch
+              </button>
+              <button 
+                onClick={retryFailedUpdates}
+                className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+              >
+                Retry Updates
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Local Save Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-md">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            <span className="text-sm font-medium">{notification}</span>
+          </div>
+        </div>
+      )}
+      
 
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 shadow-sm">
@@ -383,10 +494,18 @@ export default function TasksPageEnhanced({
             await TaskApiService.updateTask(taskId, { status });
             fetchTasks();
           }}
+          onUpdateTaskField={(taskId: string, field: keyof TaskTreeNode, value: string | number) => {
+            // Only allow updating fields that exist in TaskData
+            const allowedFields: (keyof TaskData)[] = ['title', 'description', 'assignee', 'status', 'priority', 'dueDate', 'progress'];
+            if (allowedFields.includes(field as keyof TaskData)) {
+              return updateTaskField(taskId, field as keyof TaskData, value);
+            }
+            return Promise.resolve(false);
+          }}
           selectedTaskId={null}
         />
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 p-1 overflow-x-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 p-1 overflow-x-hidden" style={{ isolation: 'auto' }}>
           {filteredTasks.map((task, index) => {
             // Consistent light gradient theme for all task cards
             const theme = { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', avatar: 'bg-gradient-to-br from-blue-100 to-blue-200', text: 'text-blue-700', border: 'border-blue-200' };
@@ -438,12 +557,27 @@ export default function TasksPageEnhanced({
                   {/* Three-dot Menu - Same position as project cards */}
                   <div className="relative flex-shrink-0">
                          <button
+                           ref={(el) => {
+                             if (task.id) {
+                               buttonRefs.current[task.id] = el;
+                             }
+                           }}
                            onClick={(e) => {
                              e.stopPropagation();
                              e.preventDefault();
                              e.nativeEvent.stopImmediatePropagation();
                              console.log('Grid menu clicked for task:', task.id);
-                             setOpenMenuId(openMenuId === task.id ? null : task.id);
+                             
+                             if (openMenuId === task.id) {
+                               setOpenMenuId(null);
+                               setDropdownPosition(null);
+                             } else {
+                               setOpenMenuId(task.id || null);
+                               if (task.id && buttonRefs.current[task.id]) {
+                                 const position = calculateDropdownPosition(buttonRefs.current[task.id]!);
+                                 setDropdownPosition(position);
+                               }
+                             }
                            }}
                            onMouseDown={(e) => {
                              e.stopPropagation();
@@ -455,27 +589,64 @@ export default function TasksPageEnhanced({
                       <MoreHorizontal className="w-5 h-5" />
                          </button>
 
-                         {/* Dropdown Menu */}
-                         {openMenuId === task.id && (
+                         {/* Dropdown Menu - Portal */}
+                         {openMenuId === task.id && dropdownPosition && createPortal(
                            <div 
-                             className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-[9999] animate-in slide-in-from-top-2 duration-200"
+                             className="fixed w-40 bg-white rounded-lg shadow-xl border border-gray-200 z-[99999] animate-in slide-in-from-top-2 duration-200"
+                             style={{
+                               top: `${dropdownPosition.top}px`,
+                               left: `${dropdownPosition.left}px`
+                             }}
                              onClick={(e) => e.stopPropagation()}
                            >
                              <div className="py-1">
-                               <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'view'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                               <button 
+                                 onClick={(e) => { 
+                                   e.stopPropagation(); 
+                                   setOpenMenuId(null);
+                                   setDropdownPosition(null);
+                                   handleMenuAction(task, 'view'); 
+                                 }} 
+                                 className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                               >
                                  <Eye size={14} />View Details
                                </button>
-                               <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'edit'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                               <button 
+                                 onClick={(e) => { 
+                                   e.stopPropagation(); 
+                                   setOpenMenuId(null);
+                                   setDropdownPosition(null);
+                                   handleMenuAction(task, 'edit'); 
+                                 }} 
+                                 className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                               >
                                  <Edit size={14} />Edit
                                </button>
-                               <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'add-subtask'); }} className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                               <button 
+                                 onClick={(e) => { 
+                                   e.stopPropagation(); 
+                                   setOpenMenuId(null);
+                                   setDropdownPosition(null);
+                                   handleMenuAction(task, 'add-subtask'); 
+                                 }} 
+                                 className="w-full px-3 py-2 text-left text-base text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                               >
                                  <Plus size={14} />Add Subtask
                                </button>
-                               <button onClick={(e) => { e.stopPropagation(); handleMenuAction(task, 'delete'); }} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                               <button 
+                                 onClick={(e) => { 
+                                   e.stopPropagation(); 
+                                   setOpenMenuId(null);
+                                   setDropdownPosition(null);
+                                   handleMenuAction(task, 'delete'); 
+                                 }} 
+                                 className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                               >
                                  <Trash2 size={14} />Delete
                                </button>
                              </div>
-                           </div>
+                           </div>,
+                           document.body
                          )}
                        </div>
                          </div>
@@ -519,6 +690,16 @@ export default function TasksPageEnhanced({
           parentTaskId={parentTaskId}
           allTasks={tasks}
           isLoading={isSubmittingTask}
+        />
+      )}
+
+      {/* Universal Details Modal */}
+      {detailsModal.isOpen && (
+        <UniversalDetailsModal
+          isOpen={detailsModal.isOpen}
+          onClose={closeDetailsModal}
+          itemType={detailsModal.itemType}
+          itemId={detailsModal.itemId}
         />
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import GridLayoutWrapper from './GridLayoutWrapper';
+import UniversalDetailsModal from './UniversalDetailsModal';
 import { 
   CheckSquare, 
   Calendar, 
@@ -36,8 +37,11 @@ import {
 } from 'lucide-react';
 
 // Task card component
-const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate }: any) => (
-  <div className="bg-white rounded-lg border border-gray-200 p-4 h-full hover:shadow-md transition-shadow">
+const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate, onTaskClick }: any) => (
+  <div 
+    className="bg-white rounded-lg border border-gray-200 p-4 h-full hover:shadow-md transition-shadow cursor-pointer"
+    onClick={() => onTaskClick && onTaskClick(task)}
+  >
     <div className="flex items-start justify-between mb-3">
       <div className="flex items-center gap-2">
         <div className={`w-2 h-2 rounded-full ${
@@ -265,6 +269,11 @@ export default function GridTasksPage({ onOpenTab }: { onOpenTab?: (type: string
   const [isGridMode, setIsGridMode] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [detailsModal, setDetailsModal] = useState({
+    isOpen: false,
+    itemType: 'task' as 'task' | 'project',
+    itemId: ''
+  });
 
   // Filter tasks based on status and search
   const filteredTasks = tasks.filter(task => {
@@ -282,6 +291,36 @@ export default function GridTasksPage({ onOpenTab }: { onOpenTab?: (type: string
 
   const handleDeleteTask = (task: any) => {
     setTasks(tasks.filter(t => t.id !== task.id));
+  };
+
+  const handleTaskClick = (task: any) => {
+    console.log('=== TASK DETAILS MODAL DEBUG ===');
+    console.log('Opening details modal for task:', task.id);
+    console.log('Task type:', typeof task.id);
+    console.log('Task ID length:', task.id?.length);
+    console.log('Is task ID empty?', !task.id || task.id.toString().trim() === '');
+    
+    // Ensure we have a valid task ID
+    if (!task.id || task.id.toString().trim() === '') {
+      console.error('Invalid task ID:', task.id);
+      return;
+    }
+    
+    // Open the Universal Details Modal
+    setDetailsModal({
+      isOpen: true,
+      itemType: 'task',
+      itemId: task.id.toString()
+    });
+  };
+
+  // Close Universal Details Modal
+  const closeDetailsModal = () => {
+    setDetailsModal({
+      isOpen: false,
+      itemType: 'task',
+      itemId: ''
+    });
   };
 
   const handleArchiveTask = (task: any) => {
@@ -384,6 +423,7 @@ export default function GridTasksPage({ onOpenTab }: { onOpenTab?: (type: string
                 onDelete={handleDeleteTask}
                 onArchive={handleArchiveTask}
                 onDuplicate={handleDuplicateTask}
+                onTaskClick={handleTaskClick}
               />
             </div>
           ))}
@@ -399,6 +439,7 @@ export default function GridTasksPage({ onOpenTab }: { onOpenTab?: (type: string
                 onDelete={handleDeleteTask}
                 onArchive={handleArchiveTask}
                 onDuplicate={handleDuplicateTask}
+                onTaskClick={handleTaskClick}
               />
             ))}
           </div>
@@ -412,6 +453,16 @@ export default function GridTasksPage({ onOpenTab }: { onOpenTab?: (type: string
             </div>
           )}
         </div>
+      )}
+
+      {/* Universal Details Modal */}
+      {detailsModal.isOpen && (
+        <UniversalDetailsModal
+          isOpen={detailsModal.isOpen}
+          onClose={closeDetailsModal}
+          itemType={detailsModal.itemType}
+          itemId={detailsModal.itemId}
+        />
       )}
     </div>
   );
