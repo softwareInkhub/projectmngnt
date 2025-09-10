@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import UniversalDetailsModal from "./UniversalDetailsModal";
+import ResizableTable, { 
+  ResizableTableHeader, 
+  ResizableTableHeaderCell, 
+  ResizableTableBody, 
+  ResizableTableCell 
+} from "./ResizableTable";
 import { 
   Users, 
   Plus, 
@@ -1455,70 +1461,85 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
             </div>
           ) : (
             <div className="mx-2 md:mx-0 overflow-visible">
-              <table className="min-w-full bg-white border border-slate-200 rounded-xl shadow-sm">
-                <thead className="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 text-lg border-b border-slate-300">
-                  <tr>
-                    <th className="text-left px-2 py-1.5 w-16">ID</th>
-                    <th className="text-left px-3 py-1.5">Team Name</th>
-                    <th className="text-left px-3 py-1.5 w-12">%</th>
-                    <th className="text-left px-2 py-1.5">Project</th>
-                    <th className="text-left px-3 py-1.5">Members</th>
-                    <th className="text-left px-3 py-1.5">Health</th>
-                    <th className="text-left px-3 py-1.5">Budget</th>
-                    <th className="text-left px-3 py-1.5">Start Date</th>
-                    <th className="text-left px-2 py-1.5">Tags</th>
-                    <th className="text-right px-2 py-1.5 w-10">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-lg overflow-visible">
-                  {uniqueTeams.map((team, idx) => {
-                    const theme = { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' };
-                    return (
-                      <tr key={`${team.id}-list-${idx}`} className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`} onClick={() => handleTeamClick(team)}>
-                        <td className="px-2 py-2 text-slate-600 align-middle text-lg">{team.id || '-'}</td>
-                        <td className="px-3 py-2 align-middle">
-                          <div className="text-slate-900 font-semibold text-2xl">{team.name}</div>
-                          <div className="text-lg text-slate-500 line-clamp-1">{team.description || 'No description'}</div>
-                        </td>
-                        <td className="px-3 py-2 text-slate-900 font-semibold align-middle text-2xl">{team.performance || 0}%</td>
-                        <td className="px-2 py-2 align-middle">
-                          <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 text-white text-base flex items-center justify-center font-bold">
-                              {getInitials(team.project || '')}
+              <ResizableTable 
+                defaultColumnWidths={{
+                  id: 80,
+                  name: 250,
+                  progress: 60,
+                  project: 150,
+                  members: 120,
+                  health: 100,
+                  budget: 100,
+                  startDate: 120,
+                  tags: 150,
+                  actions: 100
+                }}
+                defaultRowHeight={55}
+              >
+                <table className="min-w-full bg-white border border-slate-200 rounded-xl shadow-sm resizable-table">
+                  <ResizableTableHeader>
+                    <tr>
+                      <ResizableTableHeaderCell columnKey="id" className="text-lg font-bold text-slate-900">ID</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="name" className="text-lg font-bold text-slate-900">Team Name</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="progress" className="text-lg font-bold text-slate-900">%</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="project" className="text-lg font-bold text-slate-900">Project</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="members" className="text-lg font-bold text-slate-900">Members</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="health" className="text-lg font-bold text-slate-900">Health</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="budget" className="text-lg font-bold text-slate-900">Budget</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="startDate" className="text-lg font-bold text-slate-900">Start Date</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="tags" className="text-lg font-bold text-slate-900">Tags</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="actions" className="text-right text-lg font-bold text-slate-900">Actions</ResizableTableHeaderCell>
+                    </tr>
+                  </ResizableTableHeader>
+                  <ResizableTableBody>
+                    {uniqueTeams.map((team, idx) => {
+                      const theme = { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' };
+                      return (
+                        <tr key={`${team.id}-list-${idx}`} className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`} onClick={() => handleTeamClick(team)}>
+                          <ResizableTableCell columnKey="id" className="text-slate-600 text-lg">{team.id || '-'}</ResizableTableCell>
+                          <ResizableTableCell columnKey="name" className="align-middle">
+                            <div className="text-slate-900 font-semibold text-2xl truncate">{team.name}</div>
+                            <div className="text-lg text-slate-500 line-clamp-1 truncate">{team.description || 'No description'}</div>
+                          </ResizableTableCell>
+                          <ResizableTableCell columnKey="progress" className="text-slate-900 font-semibold text-2xl">{team.performance || 0}%</ResizableTableCell>
+                          <ResizableTableCell columnKey="project" className="align-middle">
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 text-white text-base flex items-center justify-center font-bold flex-shrink-0">
+                                {getInitials(team.project || '')}
+                              </div>
+                              <span className="text-slate-700 text-lg truncate">{team.project || '—'}</span>
                             </div>
-                            <span className="text-slate-700 text-lg">{team.project || '—'}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 align-middle">
-                          <div className="flex items-center gap-2 w-32">
-                            <div className="w-full bg-gradient-to-r from-slate-200 to-slate-300 rounded-full h-2">
-                              <div className="bg-gradient-to-r from-blue-300 to-blue-400 h-2 rounded-full" style={{ width: `${(Array.isArray(team.members) ? team.members.length : 0) / 10 * 100}%` }}></div>
+                          </ResizableTableCell>
+                          <ResizableTableCell columnKey="members" className="align-middle">
+                            <div className="flex items-center gap-2">
+                              <div className="w-full bg-gradient-to-r from-slate-200 to-slate-300 rounded-full h-2">
+                                <div className="bg-gradient-to-r from-blue-300 to-blue-400 h-2 rounded-full" style={{ width: `${(Array.isArray(team.members) ? team.members.length : 0) / 10 * 100}%` }}></div>
+                              </div>
+                              <span className="text-lg text-slate-600 flex-shrink-0">{Array.isArray(team.members) ? team.members.length : 0}</span>
                             </div>
-                            <span className="text-lg text-slate-600">{Array.isArray(team.members) ? team.members.length : 0}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 align-middle">
-                          <span className={`px-2 py-1 rounded-full text-lg font-medium ${
-                            team.health === 'excellent' ? 'bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-700 border border-emerald-300' :
-                            team.health === 'good' ? 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 border border-blue-300' :
-                            team.health === 'fair' ? 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-700 border border-yellow-300' :
-                            'bg-gradient-to-r from-red-100 to-red-200 text-red-700 border border-red-300'
-                          }`}>{team.health || '—'}</span>
-                        </td>
-                        <td className="px-3 py-2 align-middle">
-                          <span className="text-lg text-slate-600 font-medium">{team.budget || '—'}</span>
-                        </td>
-                        <td className="px-3 py-2 text-slate-600 align-middle text-lg whitespace-nowrap">{team.startDate || '—'}</td>
-                        <td className="px-2 py-2 align-middle">
-                          <div className="flex flex-nowrap gap-1.5 max-w-[200px] overflow-hidden">
-                            {team.tags && team.tags.length > 0 ? team.tags.slice(0, 2).map((tag, idx) => (
-                              <span key={idx} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">{tag}</span>
-                            )) : (
-                              <span className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">No tags</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-2 py-2 align-middle text-right relative menu-container overflow-visible">
+                          </ResizableTableCell>
+                          <ResizableTableCell columnKey="health" className="align-middle">
+                            <span className={`px-2 py-1 rounded-full text-lg font-medium ${
+                              team.health === 'excellent' ? 'bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-700 border border-emerald-300' :
+                              team.health === 'good' ? 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 border border-blue-300' :
+                              team.health === 'fair' ? 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-700 border border-yellow-300' :
+                              'bg-gradient-to-r from-red-100 to-red-200 text-red-700 border border-red-300'
+                            }`}>{team.health || '—'}</span>
+                          </ResizableTableCell>
+                          <ResizableTableCell columnKey="budget" className="align-middle">
+                            <span className="text-lg text-slate-600 font-medium">{team.budget || '—'}</span>
+                          </ResizableTableCell>
+                          <ResizableTableCell columnKey="startDate" className="text-slate-600 text-lg">{team.startDate || '—'}</ResizableTableCell>
+                          <ResizableTableCell columnKey="tags" className="align-middle">
+                            <div className="flex flex-nowrap gap-1.5 overflow-hidden">
+                              {team.tags && team.tags.length > 0 ? team.tags.slice(0, 2).map((tag, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">{tag}</span>
+                              )) : (
+                                <span className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">No tags</span>
+                              )}
+                            </div>
+                          </ResizableTableCell>
+                          <ResizableTableCell columnKey="actions" className="align-middle text-right relative menu-container overflow-visible">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1564,12 +1585,13 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                               </button>
                             </div>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          </ResizableTableCell>
+                        </tr>
+                      );
+                    })}
+                  </ResizableTableBody>
+                </table>
+              </ResizableTable>
             </div>
           )}
         </div>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
-const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "https://projectmngnt.vercel.app/authPage";
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";  
 
 
 export default function AuthPage() {
@@ -19,7 +19,7 @@ export default function AuthPage() {
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); 
   const [oauthLoading, setOauthLoading] = useState(false);
   const router = useRouter();
 

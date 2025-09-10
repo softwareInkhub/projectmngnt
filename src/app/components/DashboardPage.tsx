@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import GridLayoutWrapper from "./GridLayoutWrapper";
-import { FolderKanban, ListChecks, Users, Calendar, BarChart2, Activity, Plus, TrendingUp, Clock, CheckCircle, UserPlus, FolderPlus, Bell, AlertCircle, Star, Target, Zap, Award, TrendingDown, Eye, MessageSquare, Download, Filter, Grid3X3, User, FolderOpen } from "lucide-react";
+import { FolderKanban, ListChecks, Users, Calendar, BarChart2, Activity, Plus, TrendingUp, Clock, CheckCircle, UserPlus, FolderPlus, Bell, AlertCircle, Star, Target, Zap, Award, TrendingDown, Eye, MessageSquare, Download, Filter, Grid3X3, User, FolderOpen, Search, Settings } from "lucide-react";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
 import { TaskApiService, TaskData } from "../utils/taskApi";
 import { ProjectApiService, ProjectData } from "../utils/projectApi";
@@ -407,203 +407,214 @@ export default function DashboardPage({ open, onClose, onOpenTab }: { open: bool
 
   // Desktop layout
   return (
-    <div className="min-h-screen bg-slate-100">
-      {/* Header */}
-      <div className="bg-blue-100 border-b border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
-              <BarChart2 className="w-6 h-6" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300">
+      {/* Data-Driven Analytics Header */}
+      <div className="bg-gradient-to-r from-white via-slate-50 to-white border-b border-slate-200/50 shadow-2xl">
+        <div className="w-full px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                <BarChart2 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Project Analytics Dashboard</h1>
+                <p className="text-slate-600 text-sm">Real-time metrics and data-driven insights</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 leading-tight">Dashboard</h1>
-              <p className="text-slate-600 mt-1 text-xl">
-                {currentUser ? `Welcome back, ${currentUser.name?.split(' ')[0] || currentUser.email}!` : 'Welcome back!'} Here's what's happening today.
-              </p>
+            <div className="flex items-center gap-3">
+              <button className="p-2 bg-slate-100/50 hover:bg-slate-200/50 text-slate-600 hover:text-slate-900 rounded-lg transition-all duration-300">
+                <Bell className="w-5 h-5" />
+              </button>
+              <button className="p-2 bg-slate-100/50 hover:bg-slate-200/50 text-slate-600 hover:text-slate-900 rounded-lg transition-all duration-300">
+                <Settings className="w-5 h-5" />
+              </button>
             </div>
-          </div>
-          
-          {/* Actions (responsive) */}
-          <div className="hidden md:flex items-center gap-3">
-            <button className="hidden md:flex items-center gap-2 px-2 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md text-xl">
-              <Download size={18} />
-              Export
-            </button>
-            <button className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl" onClick={() => onOpenTab("create-project", "Create Project")}>
-              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-200" />
-              New Project
-            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="w-full px-6 py-6">
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, idx) => (
-            <div key={idx} className="card hover-lift">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
-                  <stat.icon size={24} className="text-white" />
-                </div>
-                <span className={`text-sm font-medium ${
-                  stat.trendUp ? 'text-emerald-600' : 'text-neutral-500'
-                }`}>
-                  {stat.trend}
-                </span>
-              </div>
-              <h3 className="text-2xl font-bold text-neutral-900 mb-1">{stat.value}</h3>
-              <p className="text-neutral-600 text-sm mb-2">{stat.label}</p>
-              <p className="text-neutral-500 text-xs">{stat.description}</p>
+        {/* Real-time Metrics */}
+        <div className="bg-gradient-to-br from-white via-blue-100/50 to-indigo-100/30 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-8 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+              <BarChart2 className="w-5 h-5 text-white" />
             </div>
-          ))}
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Recent Activity */}
-          <div className="lg:col-span-2">
-            <div className="card">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-neutral-900">Recent Activity</h2>
-                <button className="btn-secondary text-sm">
-                  View All
-                </button>
-              </div>
-              <div className="space-y-4">
-                {recentActivity.map((activity, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-lg hover:bg-neutral-50 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-medium text-blue-600">{activity.avatar}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-neutral-900">{activity.user}</p>
-                      <p className="text-sm text-neutral-600">
-                        {activity.action} <span className="font-medium">{activity.target}</span>
-                      </p>
-                      <p className="text-xs text-neutral-500 mt-1">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <h2 className="text-2xl font-bold text-slate-900">Real-time Metrics</h2>
           </div>
-
-          {/* Quick Stats */}
-          <div className="space-y-6">
-            <div className="card">
-              <h3 className="text-lg font-semibold text-neutral-900 mb-4">Quick Stats</h3>
-              <div className="space-y-3">
-                {quickStats.map((stat, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-neutral-50">
-                    <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}>
-                      <stat.icon size={16} className={stat.color} />
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {stats.map((stat, idx) => {
+              const cardColors = [
+                'bg-gradient-to-br from-blue-100/90 to-blue-200/60 border-blue-300/70',
+                'bg-gradient-to-br from-emerald-100/90 to-emerald-200/60 border-emerald-300/70',
+                'bg-gradient-to-br from-purple-100/90 to-purple-200/60 border-purple-300/70',
+                'bg-gradient-to-br from-orange-100/90 to-orange-200/60 border-orange-300/70'
+              ];
+              
+              return (
+                <div key={idx} className={`group relative overflow-hidden ${cardColors[idx]} backdrop-blur-sm rounded-xl border hover:shadow-lg transition-all duration-300 p-6`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <stat.icon size={20} className="text-white" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-neutral-900">{stat.label}</p>
-                      <p className="text-lg font-bold text-neutral-900">{stat.value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Notifications */}
-            <div className="card">
-              <h3 className="text-lg font-semibold text-neutral-900 mb-4">Notifications</h3>
-              <div className="space-y-3">
-                {notifications.map((notification, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-neutral-50">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      notification.type === 'success' ? 'bg-emerald-100' :
-                      notification.type === 'warning' ? 'bg-yellow-100' :
-                      'bg-blue-100'
+                    <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                      stat.trendUp ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
                     }`}>
-                      <notification.icon size={12} className={
-                        notification.type === 'success' ? 'text-emerald-600' :
-                        notification.type === 'warning' ? 'text-yellow-600' :
-                        'text-blue-600'
-                      } />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-neutral-900">{notification.message}</p>
-                      <p className="text-xs text-neutral-500 mt-1">{notification.time}</p>
-                    </div>
+                      {stat.trend}
+                    </span>
                   </div>
-                ))}
+                  <h3 className="text-3xl font-bold text-slate-900 mb-2">{stat.value}</h3>
+                  <p className="text-slate-700 text-sm font-semibold mb-1">{stat.label}</p>
+                  <p className="text-slate-500 text-xs">{stat.description}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Performance Overview */}
+        <div className="bg-gradient-to-br from-white via-emerald-100/50 to-teal-100/30 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-8 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900">Performance Overview</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="p-6 bg-gradient-to-br from-emerald-100/90 to-emerald-200/60 rounded-xl border border-emerald-300/70">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xs text-slate-500 font-medium">vs Last Month</span>
+              </div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-2">85.2%</h3>
+              <p className="text-slate-700 text-sm font-semibold mb-1">Efficiency</p>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span className="text-emerald-600 text-sm font-medium">+5.2%</span>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-gradient-to-br from-blue-100/90 to-blue-200/60 rounded-xl border border-blue-300/70">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Star className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xs text-slate-500 font-medium">vs Last Month</span>
+              </div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-2">92.1%</h3>
+              <p className="text-slate-700 text-sm font-semibold mb-1">Quality</p>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span className="text-emerald-600 text-sm font-medium">+2.1%</span>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-gradient-to-br from-yellow-100/90 to-yellow-200/60 rounded-xl border border-yellow-300/70">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center shadow-lg">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xs text-slate-500 font-medium">vs Last Month</span>
+              </div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-2">78.5%</h3>
+              <p className="text-slate-700 text-sm font-semibold mb-1">Budget</p>
+              <div className="flex items-center gap-2">
+                <TrendingDown className="w-4 h-4 text-red-500" />
+                <span className="text-red-600 text-sm font-medium">-1.5%</span>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-gradient-to-br from-purple-100/90 to-purple-200/60 rounded-xl border border-purple-300/70">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xs text-slate-500 font-medium">vs Last Month</span>
+              </div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-2">96.3%</h3>
+              <p className="text-slate-700 text-sm font-semibold mb-1">Satisfaction</p>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span className="text-emerald-600 text-sm font-medium">+3.3%</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Project Progress */}
-        <div className="card mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-neutral-900">Project Progress</h2>
-            <button className="btn-secondary text-sm">
-              View All Projects
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {projectProgress.map((project, idx) => (
-              <div key={idx} className="p-4 border border-neutral-200 rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-neutral-900">{project.name}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    project.status === 'Almost Done' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
-                  }`}>
-                    {project.status}
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm text-neutral-600">
-                    <span>Progress</span>
-                    <span>{project.progress}%</span>
-                  </div>
-                  <div className="w-full bg-neutral-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full ${project.color}`}
-                      style={{ width: `${project.progress}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-sm text-neutral-600">
-                    <span>{project.team}</span>
-                    <span>Due: {project.deadline}</span>
-                  </div>
-                  <div className="text-sm text-neutral-600">
-                    Budget: {project.budget}
-                  </div>
+        {/* Action Items and Critical Path */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Action Items */}
+          <div className="bg-gradient-to-br from-white via-orange-100/50 to-red-100/30 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
+                <Target className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Action Items</h2>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-blue-100/90 to-blue-200/60 rounded-xl border border-blue-300/70">
+                <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
+                <div>
+                  <h3 className="text-slate-900 font-semibold mb-1">Review deliverables</h3>
+                  <p className="text-slate-600 text-sm">Complete quality assessment for Q4 projects</p>
                 </div>
               </div>
-            ))}
+              <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-emerald-100/90 to-emerald-200/60 rounded-xl border border-emerald-300/70">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 mt-2"></div>
+                <div>
+                  <h3 className="text-slate-900 font-semibold mb-1">Update timeline</h3>
+                  <p className="text-slate-600 text-sm">Revise project schedules based on current progress</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-purple-100/90 to-purple-200/60 rounded-xl border border-purple-300/70">
+                <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
+                <div>
+                  <h3 className="text-slate-900 font-semibold mb-1">Schedule meeting</h3>
+                  <p className="text-slate-600 text-sm">Plan weekly team sync for project updates</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Critical Path */}
+          <div className="bg-gradient-to-br from-white via-indigo-100/50 to-purple-100/30 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <Calendar className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Critical Path</h2>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-emerald-100/90 to-emerald-200/60 rounded-xl border border-emerald-300/70">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 mt-2"></div>
+                <div>
+                  <h3 className="text-slate-900 font-semibold mb-1">Phase 1 - Due Dec 15</h3>
+                  <p className="text-slate-600 text-sm">Initial development and testing phase</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-blue-100/90 to-blue-200/60 rounded-xl border border-blue-300/70">
+                <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
+                <div>
+                  <h3 className="text-slate-900 font-semibold mb-1">Phase 2 - Due Dec 22</h3>
+                  <p className="text-slate-600 text-sm">Integration and user acceptance testing</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-purple-100/90 to-purple-200/60 rounded-xl border border-purple-300/70">
+                <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
+                <div>
+                  <h3 className="text-slate-900 font-semibold mb-1">Phase 3 - Due Dec 30</h3>
+                  <p className="text-slate-600 text-sm">Final deployment and documentation</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Team Members */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-neutral-900">Team Members</h2>
-            <button className="btn-secondary text-sm">
-              View All Members
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {teamMembers.map((member, idx) => (
-              <div key={idx} className="p-4 border border-neutral-200 rounded-lg text-center">
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
-                  <span className="text-lg font-medium text-blue-600">{member.avatar}</span>
-                </div>
-                <h3 className="font-medium text-neutral-900 mb-1">{member.name}</h3>
-                <p className="text-sm text-neutral-600 mb-2">{member.role}</p>
-                <div className="flex items-center justify-center gap-4 text-xs text-neutral-500">
-                  <span>{member.tasks} tasks</span>
-                  <span>{member.projects} projects</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

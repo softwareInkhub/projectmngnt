@@ -4,6 +4,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, TrendingUp, Users, DollarSign, Target } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import ResizableTable, { 
+  ResizableTableHeader, 
+  ResizableTableHeaderCell, 
+  ResizableTableBody, 
+  ResizableTableCell 
+} from '../../components/ResizableTable';
 
 // Mock data for analytics
 const monthlyData = [
@@ -191,50 +197,60 @@ export default function AdminAnalyticsPage() {
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Team Performance</h3>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Velocity</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {teamPerformanceData.map((team, index) => (
-                <motion.tr
-                  key={team.team}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + index * 0.1 }}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{team.team}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${team.performance}%` }}
-                        />
+          <ResizableTable 
+            defaultColumnWidths={{
+              team: 150,
+              performance: 200,
+              velocity: 120,
+              health: 100
+            }}
+            defaultRowHeight={50}
+          >
+            <table className="w-full resizable-table">
+              <ResizableTableHeader>
+                <tr>
+                  <ResizableTableHeaderCell columnKey="team" className="text-xs font-medium text-gray-500 uppercase tracking-wider">Team</ResizableTableHeaderCell>
+                  <ResizableTableHeaderCell columnKey="performance" className="text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</ResizableTableHeaderCell>
+                  <ResizableTableHeaderCell columnKey="velocity" className="text-xs font-medium text-gray-500 uppercase tracking-wider">Velocity</ResizableTableHeaderCell>
+                  <ResizableTableHeaderCell columnKey="health" className="text-xs font-medium text-gray-500 uppercase tracking-wider">Health</ResizableTableHeaderCell>
+                </tr>
+              </ResizableTableHeader>
+              <ResizableTableBody>
+                {teamPerformanceData.map((team, index) => (
+                  <motion.tr
+                    key={team.team}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <ResizableTableCell columnKey="team" className="text-sm font-medium text-gray-900">{team.team}</ResizableTableCell>
+                    <ResizableTableCell columnKey="performance">
+                      <div className="flex items-center">
+                        <div className="w-full bg-gray-200 rounded-full h-2 mr-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${team.performance}%` }}
+                          />
+                        </div>
+                        <span className="text-sm text-gray-600 flex-shrink-0">{team.performance}%</span>
                       </div>
-                      <span className="text-sm text-gray-600">{team.performance}%</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{team.velocity} pts/sprint</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      team.health === 'excellent' ? 'bg-emerald-100 text-emerald-800' :
-                      team.health === 'good' ? 'bg-blue-100 text-blue-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {team.health}
-                    </span>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+                    </ResizableTableCell>
+                    <ResizableTableCell columnKey="velocity" className="text-sm text-gray-600">{team.velocity} pts/sprint</ResizableTableCell>
+                    <ResizableTableCell columnKey="health">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        team.health === 'excellent' ? 'bg-emerald-100 text-emerald-800' :
+                        team.health === 'good' ? 'bg-blue-100 text-blue-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {team.health}
+                      </span>
+                    </ResizableTableCell>
+                  </motion.tr>
+                ))}
+              </ResizableTableBody>
+            </table>
+          </ResizableTable>
         </div>
       </motion.div>
     </div>

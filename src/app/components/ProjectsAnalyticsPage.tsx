@@ -1,9 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ProjectApiService, ProjectData } from "../utils/projectApi";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
 import UniversalDetailsModal from "./UniversalDetailsModal";
+import EditableTableCell from "./EditableTableCell";
+import { useProjectUpdates } from "../hooks/useProjectUpdates";
 import { 
   X, 
   FolderOpen, 
@@ -122,6 +125,29 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
   const [companies, setCompanies] = useState<CompanyData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<string | null>(null);
+  
+  // Project updates hook with fallback
+  const { updateProjectField, isUpdating, retryFailedUpdates } = useProjectUpdates({
+    onUpdate: (updatedProject) => {
+      setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+      setError(null); // Clear any previous errors
+    },
+    onError: (error) => {
+      console.error('Project update error:', error);
+      setError(error);
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
+    },
+    onLocalSave: (message) => {
+      console.log('Project saved locally:', message);
+      setNotification(message);
+      setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+    }
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("All");
@@ -143,6 +169,8 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   
   // Universal Details Modal state
   const [detailsModal, setDetailsModal] = useState({
@@ -150,6 +178,28 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     itemType: 'project' as 'project' | 'task' | 'team' | 'company',
     itemId: ''
   });
+
+  // Resizable columns and rows state
+  const [columnWidths, setColumnWidths] = useState({
+    id: 120,
+    name: 250,
+    progress: 80,
+    owner: 150,
+    status: 120,
+    tasks: 120,
+    phases: 100,
+    issues: 100,
+    startDate: 120,
+    endDate: 120,
+    tags: 150,
+    actions: 80
+  });
+  const [rowHeight, setRowHeight] = useState(60); // Default row height
+  const [isResizing, setIsResizing] = useState<string | null>(null);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartY, setResizeStartY] = useState(0);
+  const [resizeStartWidth, setResizeStartWidth] = useState(0);
+  const [resizeStartHeight, setResizeStartHeight] = useState(0);
 
 
   const statuses = ["Planning", "Active", "Completed", "On Hold", "Cancelled"];
@@ -171,10 +221,11 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
       setError(null);
       
       const response = await ProjectApiService.getProjects();
+      console.log('Projects fetched from API:', response);
       
       if (response.success) {
-        const projectsData = response.items || response.data || [];
-        console.log('Projects fetched from API:', projectsData);
+        const projectsData = response.data || [];
+        console.log('Projects data:', projectsData);
         setProjects(Array.isArray(projectsData) ? projectsData as ProjectData[] : []);
       } else {
         console.error('Failed to fetch projects:', response.error);
@@ -368,7 +419,30 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
 
   const closeMenu = () => {
     setOpenMenuId(null);
+    setDropdownPosition(null);
   };
+
+  // Calculate dropdown position
+  const calculateDropdownPosition = (buttonElement: HTMLButtonElement) => {
+    const rect = buttonElement.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    return {
+      top: rect.bottom + scrollTop + 4, // 4px gap
+      left: rect.right + scrollLeft - 192 // 192px is dropdown width, align to right edge
+    };
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+      setDropdownPosition(null);
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // Project action functions
   const handleEditProject = (project: ProjectData) => {
@@ -525,8 +599,86 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     });
   };
 
+  // Resizable columns and rows handlers
+  const handleMouseDown = (e: React.MouseEvent, resizeType: string, key?: string) => {
+    e.preventDefault();
+    setIsResizing(resizeType);
+    setResizeStartX(e.clientX);
+    setResizeStartY(e.clientY);
+    
+    if (resizeType.startsWith('column-') && key) {
+      setResizeStartWidth(columnWidths[key as keyof typeof columnWidths]);
+    } else if (resizeType === 'row') {
+      setResizeStartHeight(rowHeight);
+    }
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    if (isResizing.startsWith('column-')) {
+      const columnKey = isResizing.replace('column-', '');
+      const deltaX = e.clientX - resizeStartX;
+      const newWidth = Math.max(80, resizeStartWidth + deltaX); // Minimum width of 80px
+      
+      setColumnWidths(prev => ({
+        ...prev,
+        [columnKey]: newWidth
+      }));
+    } else if (isResizing === 'row') {
+      const deltaY = e.clientY - resizeStartY;
+      const newHeight = Math.max(50, resizeStartHeight + deltaY); // Minimum height of 50px
+      setRowHeight(newHeight);
+    }
+  }, [isResizing, resizeStartX, resizeStartY, resizeStartWidth, resizeStartHeight]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(null);
+  }, []);
+
+  // Add event listeners for mouse move and up
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      // Set appropriate cursor based on resize type
+      if (isResizing.startsWith('column-')) {
+        document.body.style.cursor = 'col-resize';
+      } else if (isResizing === 'row') {
+        document.body.style.cursor = 'row-resize';
+      }
+      
+      document.body.style.userSelect = 'none';
+      document.body.style.pointerEvents = 'none';
+    } else {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.body.style.pointerEvents = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.body.style.pointerEvents = '';
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
   return (
     <div className="min-h-screen bg-slate-100">
+      {/* Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-md">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            <span className="text-sm font-medium">{notification}</span>
+          </div>
+        </div>
+      )}
+      
+      
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 px-3 md:px-8 py-1 md:py-2">
@@ -954,13 +1106,21 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-4" />
-                <p className="text-red-600">{error}</p>
-                <button 
-                  onClick={fetchProjects}
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Retry
-                </button>
+                <p className="text-red-600 mb-4">{error}</p>
+                <div className="flex gap-3 justify-center">
+                  <button 
+                    onClick={fetchProjects}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Retry Fetch
+                  </button>
+                  <button 
+                    onClick={retryFailedUpdates}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Retry Updates
+                  </button>
+                </div>
           </div>
             </div>
           ) : filteredProjects.length === 0 ? (
@@ -985,72 +1145,324 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               {/* Projects Grid/List */}
               {viewMode === "list" ? (
                 <div className="mx-2 md:mx-0 overflow-visible">
-                  <table className="min-w-full bg-white border border-slate-200 rounded-xl shadow-sm">
-                    <thead className="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 text-lg border-b border-slate-300">
-                      <tr>
-                        <th className="text-left px-2 py-1.5 w-16">ID</th>
-                        <th className="text-left px-3 py-1.5">Project Name</th>
-                        <th className="text-left px-3 py-1.5 w-12">%</th>
-                        <th className="text-left px-2 py-1.5">Owner</th>
-                        <th className="text-left px-3 py-1.5">Status</th>
-                        <th className="text-left px-3 py-1.5">Tasks</th>
-                        <th className="text-left px-3 py-1.5">Phases</th>
-                        <th className="text-left px-3 py-1.5">Issues</th>
-                        <th className="text-left px-3 py-1.5">Start Date</th>
-                        <th className="text-left px-3 py-1.5">End Date</th>
-                        <th className="text-left px-2 py-1.5">Tags</th>
-                        <th className="text-right px-2 py-1.5 w-10">Actions</th>
+                  <div className="relative">
+                    {/* Resize indicator */}
+                    {isResizing && (
+                      <div className="fixed top-4 right-4 bg-blue-600 text-white px-3 py-2 rounded-lg shadow-lg z-50 text-sm font-medium">
+                        {isResizing.startsWith('column-') ? 'Resizing Column' : 'Resizing Row'}
+                      </div>
+                    )}
+                    {/* Row resize handle */}
+                    <div 
+                      className="resize-handle row-resize"
+                      onMouseDown={(e) => handleMouseDown(e, 'row')}
+                    />
+                    <table className={`min-w-full bg-white border border-slate-200 rounded-xl shadow-sm resizable-table ${isResizing ? 'resizing' : ''}`}>
+                      <thead className="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 text-lg border-b border-slate-300 relative">
+                        <tr>
+                        <th 
+                          className="text-left px-2 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.id}px` }}
+                        >
+                          ID
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-id', 'id')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-3 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.name}px` }}
+                        >
+                          Project Name
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-name', 'name')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-3 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.progress}px` }}
+                        >
+                          %
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-progress', 'progress')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-2 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.owner}px` }}
+                        >
+                          Owner
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-owner', 'owner')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-3 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.status}px` }}
+                        >
+                          Status
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-status', 'status')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-3 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.tasks}px` }}
+                        >
+                          Tasks
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-tasks', 'tasks')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-3 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.phases}px` }}
+                        >
+                          Phases
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-phases', 'phases')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-3 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.issues}px` }}
+                        >
+                          Issues
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-issues', 'issues')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-3 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.startDate}px` }}
+                        >
+                          Start Date
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-startDate', 'startDate')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-3 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.endDate}px` }}
+                        >
+                          End Date
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-endDate', 'endDate')}
+                          />
+                        </th>
+                        <th 
+                          className="text-left px-2 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.tags}px` }}
+                        >
+                          Tags
+                          <div 
+                            className="resize-handle column-resize"
+                            onMouseDown={(e) => handleMouseDown(e, 'column-tags', 'tags')}
+                          />
+                        </th>
+                        <th 
+                          className="text-right px-2 py-1.5 relative select-none"
+                          style={{ width: `${columnWidths.actions}px` }}
+                        >
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="text-lg overflow-visible">
                       {filteredProjects.map((project, idx) => {
                         const theme = { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' };
                         return (
-                        <tr key={project.id} className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`} onClick={() => handleProjectClick(project.id || '')}>
-                          <td className="px-2 py-2 text-slate-600 align-middle text-lg">{project.id || '-'}</td>
-                          <td className="px-3 py-2 align-middle">
-                            <div className="text-slate-900 font-semibold text-2xl">{project.name}</div>
-                            <div className="text-lg text-slate-500 line-clamp-1">{project.description}</div>
+                        <tr 
+                          key={project.id} 
+                          className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`} 
+                          onClick={(e) => {
+                            // Only handle row click if not clicking on an editable cell
+                            if (!(e.target as HTMLElement).closest('.editable-cell')) {
+                              handleProjectClick(project.id || '');
+                            }
+                          }}
+                          style={{ height: `${rowHeight}px` }}
+                        >
+                          <td 
+                            className="px-2 py-2 text-slate-600 align-middle text-lg overflow-hidden"
+                            style={{ width: `${columnWidths.id}px` }}
+                          >
+                            {project.id || '-'}
                           </td>
-                          <td className="px-3 py-2 text-slate-900 font-semibold align-middle text-2xl">{project.progress || 0}%</td>
-                          <td className="px-2 py-2 align-middle">
-                            <div className="flex items-center gap-2">
-                                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-base flex items-center justify-center font-bold">
-                                {getInitials(project.company || project.assignee || '')}
-                              </div>
-                              <span className="text-slate-700 text-lg">{project.company || project.assignee || '—'}</span>
+                          <td 
+                            className="px-3 py-2 align-middle overflow-hidden"
+                            style={{ width: `${columnWidths.name}px` }}
+                          >
+                            <div 
+                              className="text-slate-900 font-semibold text-2xl truncate editable-cell"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <EditableTableCell
+                                value={project.name || 'Untitled Project'}
+                                onSave={(newValue) => updateProjectField(project.id || '', 'name', newValue)}
+                                type="text"
+                                className="text-slate-900 font-semibold text-2xl"
+                                placeholder="Project name"
+                              />
+                            </div>
+                            <div 
+                              className="text-lg text-slate-500 line-clamp-1 truncate editable-cell"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <EditableTableCell
+                                value={project.description || ''}
+                                onSave={(newValue) => updateProjectField(project.id || '', 'description', newValue)}
+                                type="text"
+                                className="text-lg text-slate-500"
+                                placeholder="Project description"
+                              />
                             </div>
                           </td>
-                          <td className="px-3 py-2 align-middle">
-                            <span className={`px-2 py-1 rounded-full text-lg font-medium ${statusPillClass(project.status || '')}`}>{project.status || '—'}</span>
+                          <td 
+                            className="px-3 py-2 text-slate-900 font-semibold align-middle text-2xl overflow-hidden"
+                            style={{ width: `${columnWidths.progress}px` }}
+                          >
+                            <div 
+                              className="editable-cell"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <EditableTableCell
+                                value={project.progress || 0}
+                                onSave={(newValue) => updateProjectField(project.id || '', 'progress', newValue)}
+                                type="number"
+                                className="text-slate-900 font-semibold text-2xl"
+                                placeholder="0"
+                              />%
+                            </div>
                           </td>
-                          <td className="px-3 py-2 align-middle">
-                            <div className="flex items-center gap-2 w-32">
+                          <td 
+                            className="px-2 py-2 align-middle overflow-hidden"
+                            style={{ width: `${columnWidths.owner}px` }}
+                          >
+                            <div 
+                              className="flex items-center gap-2 editable-cell"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-base flex items-center justify-center font-bold flex-shrink-0">
+                                {getInitials(project.company || project.assignee || '')}
+                              </div>
+                              <EditableTableCell
+                                value={project.company || project.assignee || ''}
+                                onSave={(newValue) => updateProjectField(project.id || '', 'company', newValue)}
+                                type="text"
+                                className="text-slate-700 text-lg truncate"
+                                placeholder="Company/Assignee"
+                              />
+                            </div>
+                          </td>
+                          <td 
+                            className="px-3 py-2 align-middle overflow-hidden"
+                            style={{ width: `${columnWidths.status}px` }}
+                          >
+                            <div 
+                              className="editable-cell"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <EditableTableCell
+                                value={project.status || 'Planning'}
+                                onSave={(newValue) => updateProjectField(project.id || '', 'status', newValue)}
+                                type="select"
+                                options={['Planning', 'Active', 'In Progress', 'Completed', 'On Hold', 'Cancelled']}
+                                className={`px-2 py-1 rounded-full text-lg font-medium ${statusPillClass(project.status || '')}`}
+                              />
+                            </div>
+                          </td>
+                          <td 
+                            className="px-3 py-2 align-middle overflow-hidden"
+                            style={{ width: `${columnWidths.tasks}px` }}
+                          >
+                            <div 
+                              className="flex items-center gap-2 editable-cell"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                                 <div className="w-full bg-gradient-to-r from-slate-200 to-slate-300 rounded-full h-2">
                                   <div className="bg-gradient-to-r from-slate-600 to-slate-700 h-2 rounded-full" style={{ width: `${project.progress || 0}%` }}></div>
                               </div>
-                              <span className="text-lg text-slate-600">{project.tasks || 0}</span>
+                              <EditableTableCell
+                                value={project.tasks || 0}
+                                onSave={(newValue) => updateProjectField(project.id || '', 'tasks', newValue)}
+                                type="number"
+                                className="text-lg text-slate-600 flex-shrink-0"
+                                placeholder="0"
+                              />
                             </div>
                           </td>
-                          <td className="px-3 py-2 align-middle">
+                          <td 
+                            className="px-3 py-2 align-middle overflow-hidden"
+                            style={{ width: `${columnWidths.phases}px` }}
+                          >
                             <span className="text-lg text-slate-600 font-medium">No Phases</span>
                           </td>
-                          <td className="px-3 py-2 align-middle">
+                          <td 
+                            className="px-3 py-2 align-middle overflow-hidden"
+                            style={{ width: `${columnWidths.issues}px` }}
+                          >
                             <span className="text-lg text-slate-600 font-medium">No Issues</span>
                           </td>
-                          <td className="px-3 py-2 text-slate-600 align-middle text-lg whitespace-nowrap">{formatDate(project.startDate)}</td>
-                          <td className="px-3 py-2 text-slate-600 align-middle text-lg whitespace-nowrap">{formatDate(project.endDate)}</td>
-                          <td className="px-2 py-2 align-middle">
-                            <div className="flex flex-nowrap gap-1.5 max-w-[200px] overflow-hidden">
+                          <td 
+                            className="px-3 py-2 text-slate-600 align-middle text-lg whitespace-nowrap overflow-hidden"
+                            style={{ width: `${columnWidths.startDate}px` }}
+                          >
+                            <div 
+                              className="editable-cell"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <EditableTableCell
+                                value={project.startDate || ''}
+                                onSave={(newValue) => updateProjectField(project.id || '', 'startDate', newValue)}
+                                type="date"
+                                className="text-slate-600 text-lg"
+                              />
+                            </div>
+                          </td>
+                          <td 
+                            className="px-3 py-2 text-slate-600 align-middle text-lg whitespace-nowrap overflow-hidden"
+                            style={{ width: `${columnWidths.endDate}px` }}
+                          >
+                            <div 
+                              className="editable-cell"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <EditableTableCell
+                                value={project.endDate || ''}
+                                onSave={(newValue) => updateProjectField(project.id || '', 'endDate', newValue)}
+                                type="date"
+                                className="text-slate-600 text-lg"
+                              />
+                            </div>
+                          </td>
+                          <td 
+                            className="px-2 py-2 align-middle overflow-hidden"
+                            style={{ width: `${columnWidths.tags}px` }}
+                          >
+                            <div className="flex flex-nowrap gap-1.5 overflow-hidden">
                               {parseTags(project.tags).slice(0, 2).map((tag, idx) => (
-                                <span key={idx} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">{tag}</span>
+                                <span key={idx} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">{tag}</span>
                               ))}
                               {parseTags(project.tags).length > 2 && (
-                                <span className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">+{parseTags(project.tags).length - 2}</span>
+                                <span className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">+{parseTags(project.tags).length - 2}</span>
                               )}
                             </div>
                           </td>
-                          <td className="px-2 py-2 align-middle text-right relative menu-container overflow-visible">
+                          <td 
+                            className="px-2 py-2 align-middle text-right relative menu-container overflow-visible"
+                            style={{ width: `${columnWidths.actions}px` }}
+                          >
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1090,9 +1502,10 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                       );})}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               ) : (
-                <div className="grid gap-2 md:gap-3 mx-2 md:mx-0 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+                <div className="grid gap-2 md:gap-3 mx-2 md:mx-0 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 overflow-visible">
                     {filteredProjects.map((project, idx) => {
                       const theme = { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', border: 'border-blue-200', hoverBg: 'hover:from-blue-100 hover:to-blue-200', hoverBorder: 'hover:border-blue-300' };
                     
@@ -1114,9 +1527,24 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
 
                       <div className="absolute top-0.5 right-0.5 menu-container">
                         <button
+                          ref={(el) => {
+                            if (project.id) {
+                              buttonRefs.current[project.id] = el;
+                            }
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleMenu(project.id || '');
+                            
+                            if (openMenuId === project.id) {
+                              setOpenMenuId(null);
+                              setDropdownPosition(null);
+                            } else {
+                              setOpenMenuId(project.id || '');
+                              if (project.id && buttonRefs.current[project.id]) {
+                                const position = calculateDropdownPosition(buttonRefs.current[project.id]!);
+                                setDropdownPosition(position);
+                              }
+                            }
                           }}
                           className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
                           aria-label="Open menu"
@@ -1124,14 +1552,23 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                           <MoreHorizontal size={16} />
                         </button>
 
-                        {openMenuId === project.id && (
+                        {openMenuId === project.id && dropdownPosition && createPortal(
                           <div
-                            className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-20 animate-in slide-in-from-top-2 duration-200"
+                            className="fixed w-48 bg-white rounded-lg shadow-xl border border-slate-200 z-[9999] animate-in slide-in-from-top-2 duration-200"
+                            style={{
+                              top: `${dropdownPosition.top}px`,
+                              left: `${dropdownPosition.left}px`
+                            }}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div className="py-1">
                               <button
-                                onClick={() => handleEditProject(project)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuId(null);
+                                  setDropdownPosition(null);
+                                  handleEditProject(project);
+                                }}
                                 className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 flex items-center gap-2"
                               >
                                 <Edit size={16} />
@@ -1139,14 +1576,20 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                               </button>
                               <div className="border-t border-slate-200 my-1"></div>
                               <button
-                                onClick={() => handleDeleteProject(project)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuId(null);
+                                  setDropdownPosition(null);
+                                  handleDeleteProject(project);
+                                }}
                                 className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 flex items-center gap-2"
                               >
                                 <Trash2 size={16} />
                                 Delete
                               </button>
                             </div>
-                          </div>
+                          </div>,
+                          document.body
                         )}
                       </div>
                     </div>
