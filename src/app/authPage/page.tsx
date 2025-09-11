@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
-const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";  
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
 
 
 export default function AuthPage() {
@@ -24,9 +24,16 @@ export default function AuthPage() {
   const router = useRouter();
 
 
-  // Check if user is already logged in
+  // Check if user is already logged in (but not during OAuth callback)
   useEffect(() => {
     const checkAuthStatus = () => {
+      // Don't redirect if we're processing an OAuth callback
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('code')) {
+        console.log('🔍 OAuth callback detected, skipping auth check');
+        return;
+      }
+
       const accessToken = localStorage.getItem('access_token');
       const idToken = localStorage.getItem('id_token');
       
@@ -88,16 +95,6 @@ export default function AuthPage() {
 
   // Handle OAuth callback
   useEffect(() => {
-    // Check if we're on localhost but should be on deployed URL
-    if (window.location.hostname === 'localhost' && window.location.search.includes('code=')) {
-      console.log('OAuth callback detected on localhost, redirecting to deployed URL');
-      const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-      const currentUrl = new URL(window.location.href);
-      const newUrl = `${deployedUrl}/authPage${currentUrl.search}`;
-      window.location.href = newUrl;
-      return;
-    }
-
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
@@ -109,6 +106,8 @@ export default function AuthPage() {
     }
    
     if (code) {
+      console.log('🔄 Processing OAuth callback with code:', code.substring(0, 10) + '...');
+      
       // For password change flow, we might not have a state parameter
       // or it might not match due to Cognito's redirect behavior
       const savedState = sessionStorage.getItem('oauth_state');
@@ -130,7 +129,12 @@ export default function AuthPage() {
           state: state || savedState || 'password-change-flow' // Use available state or fallback
         })
       })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(tokens => {
         if (tokens.error) {
           throw new Error(tokens.error);
@@ -153,7 +157,7 @@ export default function AuthPage() {
         // Clean up
         sessionStorage.removeItem('oauth_state');
        
-        // Clear URL parameters
+        // Clear URL parameters immediately to prevent re-processing
         window.history.replaceState({}, document.title, window.location.pathname);
        
         console.log('✅ Redirecting to main app...');
@@ -164,9 +168,11 @@ export default function AuthPage() {
         console.error('Token exchange failed:', error);
         setMessage('Login failed. Please try again.');
         sessionStorage.removeItem('oauth_state');
+        // Clear URL parameters on error too
+        window.history.replaceState({}, document.title, window.location.pathname);
       });
     }
-  }, [router]);
+  }, []); // Remove router dependency to prevent re-runs
 
 
   // Handle email login/signup
@@ -392,10 +398,19 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <div className="text-center">
+          <div className="mb-8">
+            <h1 className="text-6xl font-semibold text-gray-800 tracking-wide">
+              BRMH
+            </h1>
+            <h2 className="text-2xl font-medium text-gray-600 tracking-wider">
+              PROJECT MANAGEMENT
+            </h2>
+            <div className="mt-4 w-20 h-1 bg-blue-600 mx-auto"></div>
+          </div>
+          <h3 className="text-2xl font-semibold text-gray-900">
             {isLogin ? 'Sign in to your account' : 'Create your account'}
-          </h2>
+          </h3>
         </div>
        
         {/* Authentication Mode Selector */}

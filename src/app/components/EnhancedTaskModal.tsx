@@ -167,7 +167,7 @@ export default function EnhancedTaskModal({
 
     // Convert subtasks text to JSON format
     let subtasksJson = "";
-    if (formData.subtasks.trim()) {
+    if (formData.subtasks && typeof formData.subtasks === 'string' && formData.subtasks.trim()) {
       const subtasksArray = formData.subtasks
         .split('\n')
         .map(line => line.trim())
@@ -218,27 +218,24 @@ export default function EnhancedTaskModal({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6"
+      className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-6"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-slate-900">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">
           {editingTask ? 'Edit Task' : 'Create New Task'}
-        </h2>
-        <button
-          onClick={onClose}
-          className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          <X className="w-4 h-4 text-slate-500" />
-        </button>
+        </h1>
+        <p className="text-slate-600">
+          {editingTask ? 'Update task details and settings' : 'Set up a new task with all the essential details'}
+        </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Error Messages */}
         {errors.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <ul className="text-red-700 text-xs space-y-0.5">
+            <ul className="text-red-700  space-y-0.5">
               {errors.map((error, index) => (
                 <li key={index}>• {error}</li>
               ))}
@@ -248,7 +245,7 @@ export default function EnhancedTaskModal({
 
         {/* Parent Task Selection */}
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-slate-700">
+          <label className="block text-sm font-medium mb-1">
             Parent Task
           </label>
           <div className="relative">
@@ -257,7 +254,7 @@ export default function EnhancedTaskModal({
               onClick={() => setShowParentSelector(!showParentSelector)}
               className="w-full flex items-center justify-between p-2 border border-slate-300 rounded-lg bg-white hover:border-slate-400 transition-colors"
             >
-              <span className="text-xs text-slate-900">
+              <span className=" text-slate-900">
                 {getParentTaskTitle(selectedParentId)}
               </span>
               {showParentSelector ? (
@@ -282,7 +279,7 @@ export default function EnhancedTaskModal({
                         setSelectedParentId(null);
                         setShowParentSelector(false);
                       }}
-                      className={`w-full text-left p-1.5 rounded-md text-xs hover:bg-slate-100 transition-colors ${
+                      className={`w-full text-left p-1.5 rounded-md  hover:bg-slate-100 transition-colors ${
                         selectedParentId === null ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
                       }`}
                     >
@@ -300,7 +297,7 @@ export default function EnhancedTaskModal({
                           setSelectedParentId(task.id!);
                           setShowParentSelector(false);
                         }}
-                        className={`w-full text-left p-1.5 rounded-md text-xs hover:bg-slate-100 transition-colors ${
+                        className={`w-full text-left p-1.5 rounded-md  hover:bg-slate-100 transition-colors ${
                           selectedParentId === task.id ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
                         }`}
                       >
@@ -319,55 +316,55 @@ export default function EnhancedTaskModal({
 
         {/* Title */}
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-slate-700">
+          <label className="block text-sm font-medium mb-1">
             Task Title *
           </label>
           <input
             type="text"
             value={formData.title}
             onChange={(e) => handleInputChange('title', e.target.value)}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+            className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
             placeholder="Enter task title"
           />
         </div>
 
         {/* Description */}
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-slate-700">
+          <label className="block text-sm font-medium mb-1">
             Description
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => handleInputChange('description', e.target.value)}
             rows={2}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+            className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
             placeholder="Enter task description"
           />
         </div>
 
         {/* Project and Assignee */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-700">
+            <label className="block text-sm font-medium mb-1">
               Project *
             </label>
             <input
               type="text"
               value={formData.project}
               onChange={(e) => handleInputChange('project', e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+              className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
               placeholder="Enter project name"
             />
           </div>
           
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-700">
+            <label className="block text-sm font-medium mb-1">
               Assignee *
             </label>
             <select
               value={formData.assignee}
               onChange={(e) => handleInputChange('assignee', e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+              className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
             >
               {assignees.map((assignee) => (
                 <option key={assignee} value={assignee}>
@@ -379,15 +376,15 @@ export default function EnhancedTaskModal({
         </div>
 
         {/* Status and Priority */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-700">
+            <label className="block text-sm font-medium mb-1">
               Status *
             </label>
             <select
               value={formData.status}
               onChange={(e) => handleInputChange('status', e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+              className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
             >
               {statuses.map((status) => (
                 <option key={status} value={status}>
@@ -398,13 +395,13 @@ export default function EnhancedTaskModal({
           </div>
           
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-700">
+            <label className="block text-sm font-medium mb-1">
               Priority
             </label>
             <select
               value={formData.priority}
               onChange={(e) => handleInputChange('priority', e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+              className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
             >
               {priorities.map((priority) => (
                 <option key={priority} value={priority}>
@@ -416,42 +413,42 @@ export default function EnhancedTaskModal({
         </div>
 
         {/* Dates */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-700">
+            <label className="block text-sm font-medium mb-1">
               Start Date
             </label>
             <input
               type="date"
               value={formData.startDate}
               onChange={(e) => handleInputChange('startDate', e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+              className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
             />
           </div>
           
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-700">
+            <label className="block text-sm font-medium mb-1">
               Due Date
             </label>
             <input
               type="date"
               value={formData.dueDate}
               onChange={(e) => handleInputChange('dueDate', e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+              className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
             />
           </div>
         </div>
 
         {/* Estimated Hours */}
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-slate-700">
+          <label className="block text-sm font-medium mb-1">
             Estimated Hours
           </label>
           <input
             type="number"
             value={formData.estimatedHours || ''}
             onChange={(e) => handleInputChange('estimatedHours', e.target.value ? parseFloat(e.target.value) : 0)}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+            className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
             placeholder="Enter estimated hours"
             min="0"
             step="0.5"
@@ -460,62 +457,62 @@ export default function EnhancedTaskModal({
 
                  {/* Tags */}
          <div className="space-y-1">
-           <label className="block text-xs font-medium text-slate-700">
+           <label className="block text-sm font-medium mb-1">
              Tags
            </label>
            <input
              type="text"
              value={formData.tags}
              onChange={(e) => handleInputChange('tags', e.target.value)}
-             className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+             className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
              placeholder="Enter tags (comma separated)"
            />
          </div>
 
          {/* Subtasks */}
          <div className="space-y-1">
-           <label className="block text-xs font-medium text-slate-700">
+           <label className="block text-sm font-medium mb-1">
              Subtasks
            </label>
            <textarea
              value={formData.subtasks}
              onChange={(e) => handleInputChange('subtasks', e.target.value)}
              rows={2}
-             className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+             className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
              placeholder="Enter subtask names, one per line:&#10;Subtask 1&#10;Subtask 2&#10;Subtask 3"
            />
-           <p className="text-xs text-slate-500">
+           <p className=" text-slate-500">
              Enter each subtask on a new line. These will be displayed as individual subtasks in the tree view.
            </p>
          </div>
 
          {/* Comments */}
          <div className="space-y-1">
-           <label className="block text-xs font-medium text-slate-700">
+           <label className="block text-sm font-medium mb-1">
              Comments
            </label>
            <textarea
              value={formData.comments}
              onChange={(e) => handleInputChange('comments', e.target.value)}
              rows={2}
-             className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+             className="w-full p-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 "
              placeholder="Enter additional comments or notes"
            />
          </div>
 
          {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+        <div className="flex justify-end space-x-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+            className="px-4 py-2 border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 text-sm"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
           >
             {isLoading ? (
               <>

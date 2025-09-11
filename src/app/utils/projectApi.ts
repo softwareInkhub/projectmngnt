@@ -19,7 +19,8 @@ export interface ProjectData {
   team: string;
   assignee: string;
   progress: number;
-  tasks: number;
+  tasks: string; // Changed from number to string to store JSON array of task IDs
+  taskList?: string[]; // Alternative field for storing task IDs array
   tags: string;
   notes?: string;
   createdAt?: string;
@@ -74,7 +75,7 @@ export function transformProjectToUI(project: ProjectData): ProjectWithUI {
       team: '',
       assignee: '',
       progress: 0,
-      tasks: 0,
+      tasks: '[]',
       tags: [],
       notes: '',
       createdAt: new Date().toISOString(),
@@ -107,7 +108,7 @@ export function transformProjectToUI(project: ProjectData): ProjectWithUI {
     team: project.team || '',
     assignee: project.assignee || '',
     progress: project.progress || 0,
-    tasks: project.tasks || 0,
+    tasks: project.tasks || '[]',
     tags: tags,
     notes: project.notes || '',
     createdAt: project.createdAt || new Date().toISOString(),
