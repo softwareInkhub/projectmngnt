@@ -7,6 +7,7 @@ import { UserProvider } from './contexts/UserContext';
 import { validateToken } from './utils/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI ;
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);

@@ -6,6 +6,21 @@ import { TaskApiService, TaskData, transformTaskToUI, TaskWithUI } from "../util
 import { TeamApiService, TeamData, transformTeamToUI, TeamWithUI } from "../utils/teamApi";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
 
+// Helper function to safely parse project tasks
+const parseProjectTasks = (tasksString: string | number | undefined): string[] => {
+  if (!tasksString) return [];
+  if (typeof tasksString === 'number') return []; // Handle legacy number format
+  if (typeof tasksString !== 'string') return [];
+  
+  try {
+    const parsed = JSON.parse(tasksString);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Failed to parse project tasks:', error);
+    return [];
+  }
+};
+
 interface UniversalDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -31,12 +46,39 @@ export default function UniversalDetailsModal({ isOpen, onClose, itemType, itemI
     try {
       switch (itemType) {
         case 'project':
-          // Fetch project tasks
+          // Fetch project tasks from the project's task list
+          console.log('🔍 UniversalDetailsModal: Fetching tasks for project:', itemData.id, itemData.name);
+          console.log('🔍 Project tasks field:', itemData.tasks);
+          
           const tasksResponse = await TaskApiService.getTasks();
+          console.log('🔍 All tasks from API:', tasksResponse.data?.length || 0, 'tasks');
+          
           if (tasksResponse.success && tasksResponse.data) {
-            const projectTasks = (tasksResponse.data as any[]).filter((task: any) => 
-              task.project === itemData.id || task.project === itemData.name
-            );
+            let projectTasks = [];
+            
+            // First, try to get tasks from the project's tasks field (JSON array of task IDs)
+            const taskIds = parseProjectTasks(itemData.tasks);
+            console.log('🔍 Parsed task IDs:', taskIds);
+            
+            if (taskIds.length > 0) {
+              projectTasks = (tasksResponse.data as any[]).filter((task: any) => 
+                task.id && taskIds.includes(task.id)
+              );
+              console.log('🔍 Tasks found by ID match:', projectTasks.length);
+            }
+            
+            // Fallback: if no tasks found in project's task list, use the old filtering method
+            if (projectTasks.length === 0) {
+              projectTasks = (tasksResponse.data as any[]).filter((task: any) => 
+                task.project === itemData.id || 
+                task.project === itemData.name ||
+                task.projectId === itemData.id ||
+                task.projectId === itemData.name
+              );
+              console.log('🔍 Tasks found by project field match:', projectTasks.length);
+            }
+            
+            console.log('🔍 Final project tasks to display:', projectTasks.length);
             setRelatedItems(projectTasks);
           }
           break;
@@ -85,7 +127,9 @@ export default function UniversalDetailsModal({ isOpen, onClose, itemType, itemI
       let response;
       switch (itemType) {
         case 'project':
+          console.log('🔍 UniversalDetailsModal: Fetching project data for ID:', itemId);
           response = await ProjectApiService.getProject(itemId);
+          console.log('🔍 Project data fetched:', response);
           break;
         case 'task':
           response = await TaskApiService.getTaskById(itemId);
@@ -437,30 +481,47 @@ export default function UniversalDetailsModal({ isOpen, onClose, itemType, itemI
       <div className="space-y-8">
         {/* Raw Data Section - Clean professional design */}
         <div>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center">
-                <FileText size={16} className="text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800">Database Fields</h3>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center">
+              <FileText size={16} className="text-white" />
             </div>
-            <button
-              onClick={copyToClipboard}
-              className="flex items-center gap-2 px-4 py-2 text-base font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
-            >
-              {copied ? <CheckSquare size={18} /> : <Copy size={18} />}
-              {copied ? 'Copied!' : 'Copy Data'}
-            </button>
           </div>
           
           <div className="space-y-0">
             {getOrganizedFields(item).map(([key, val], index) => (
-              <div key={key} className={`flex items-start gap-4 py-3 ${index % 2 === 0 ? 'bg-slate-50' : 'bg-white'} border-b border-slate-100 last:border-b-0`}>
+              <div key={key} className={`flex items-start gap-4 py-2 ${index % 2 === 0 ? 'bg-slate-50' : 'bg-white'} border-b border-slate-100 last:border-b-0`}>
                 <div className="min-w-36">
-                  <span className="text-base font-bold text-slate-600 uppercase tracking-wide">{toTitle(key)}</span>
+                  <span className="asana-label text-lg font-semibold text-slate-600 uppercase tracking-wide">{toTitle(key)}</span>
                 </div>
                 <div className="flex-1">
-                  <span className="text-slate-800 font-mono text-base font-semibold leading-relaxed">{formatValue(val)}</span>
+                  {(key.toLowerCase() === 'tasks' || key.toLowerCase() === 'task') && itemType === 'project' ? (
+                    <div className="space-y-1">
+                      {relatedItems.length > 0 ? (
+                        <>
+                          {relatedItems.slice(0, 3).map((task, index) => (
+                            <div key={task.id || index} className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${
+                                task.status === 'Completed' ? 'bg-green-400' :
+                                task.status === 'In Progress' ? 'bg-yellow-400' :
+                                task.status === 'Pending' ? 'bg-slate-300' :
+                                'bg-gray-400'
+                              }`}></div>
+                              <span className="text-slate-800 font-medium text-base truncate">{task.title || 'Untitled Task'}</span>
+                            </div>
+                          ))}
+                          {relatedItems.length > 3 && (
+                            <div className="text-sm text-slate-500">
+                              +{relatedItems.length - 3} more tasks
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-slate-800 font-medium text-base">No tasks assigned</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="asana-body text-slate-800 text-lg font-medium leading-relaxed">{formatValue(val)}</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -516,9 +577,32 @@ export default function UniversalDetailsModal({ isOpen, onClose, itemType, itemI
                         ></div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-start gap-3">
                       <span className="text-base font-semibold text-slate-500 w-24">Tasks</span>
-                      <span className="text-slate-800 font-semibold text-base">{item.tasksCompleted || 0} / {item.totalTasks || 0}</span>
+                      <div className="flex-1">
+                        {relatedItems.length > 0 ? (
+                          <div className="space-y-1">
+                            {relatedItems.slice(0, 3).map((task, index) => (
+                              <div key={task.id || index} className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  task.status === 'Completed' ? 'bg-green-400' :
+                                  task.status === 'In Progress' ? 'bg-yellow-400' :
+                                  task.status === 'Pending' ? 'bg-slate-300' :
+                                  'bg-gray-400'
+                                }`}></div>
+                                <span className="text-slate-800 font-medium text-base truncate">{task.title || 'Untitled Task'}</span>
+                              </div>
+                            ))}
+                            {relatedItems.length > 3 && (
+                              <div className="text-sm text-slate-500">
+                                +{relatedItems.length - 3} more tasks
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-800 font-semibold text-base">No tasks assigned</span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-base font-semibold text-slate-500 w-24">Description</span>
@@ -751,8 +835,8 @@ export default function UniversalDetailsModal({ isOpen, onClose, itemType, itemI
                   {getItemIcon()}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-blue-900">{getItemTitle()}</h2>
-                  <p className="text-blue-700 text-base">View and manage details</p>
+                  <h2 className="asana-heading text-3xl text-blue-900">{getItemTitle()}</h2>
+                  <p className="asana-body text-blue-700 text-lg">View and manage details</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -794,16 +878,16 @@ export default function UniversalDetailsModal({ isOpen, onClose, itemType, itemI
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-5 py-4 border-t border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-2 text-base text-gray-600">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Last updated: {item?.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : 'Unknown'}</span>
+              <span className="asana-caption">Last updated: {item?.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : 'Unknown'}</span>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-base font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                className="asana-label px-4 py-2 text-base text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
               >
                 Close
               </button>
-              <button className="px-4 py-2 text-base font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+              <button className="asana-label px-4 py-2 text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
                 <Edit size={18} className="inline mr-2" />
                 Edit
               </button>

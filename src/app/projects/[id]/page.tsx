@@ -62,7 +62,7 @@ interface Project {
   priority: string;
   endDate: string;
   team: string;
-  tasks: number;
+  tasks: string;
   budget: string;
   tags: string[];
   company: string;
@@ -171,7 +171,7 @@ export default function ProjectDetailPage() {
           priority: 'Medium',
           endDate: '2024-12-31',
           team: 'Demo Team, Test User, Sample Member',
-          tasks: 12,
+          tasks: '[]',
           budget: '$50,000',
           tags: ['demo', 'test', 'sample'],
           company: 'Demo Company',

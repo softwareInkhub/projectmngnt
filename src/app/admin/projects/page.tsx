@@ -25,7 +25,7 @@ export default function AdminProjectsPage() {
     team: '',
     assignee: '',
     progress: 0,
-    tasks: 0,
+    tasks: '[]',
     tags: ''
   });
 
@@ -76,7 +76,7 @@ export default function AdminProjectsPage() {
           team: '',
           assignee: '',
           progress: 0,
-          tasks: 0,
+          tasks: '[]',
           tags: ''
         });
         fetchData();
@@ -106,7 +106,7 @@ export default function AdminProjectsPage() {
           team: '',
           assignee: '',
           progress: 0,
-          tasks: 0,
+          tasks: '[]',
           tags: ''
         });
         fetchData();
@@ -439,7 +439,7 @@ export default function AdminProjectsPage() {
                     team: '',
                     assignee: '',
                     progress: 0,
-                    tasks: 0,
+                    tasks: '[]',
                     tags: ''
                   });
                 }}

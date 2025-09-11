@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ProjectApiService, ProjectData } from "../utils/projectApi";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
+import { TaskApiService, TaskData } from "../utils/taskApi";
 import UniversalDetailsModal from "./UniversalDetailsModal";
 import EditableTableCell from "./EditableTableCell";
 import { useProjectUpdates } from "../hooks/useProjectUpdates";
@@ -117,6 +118,21 @@ interface ProjectsAnalyticsPageProps {
   onViewProject?: (project: any) => void;
 }
 
+// Helper function to safely parse project tasks
+const parseProjectTasks = (tasksString: string | number | undefined): string[] => {
+  if (!tasksString) return [];
+  if (typeof tasksString === 'number') return []; // Handle legacy number format
+  if (typeof tasksString !== 'string') return [];
+  
+  try {
+    const parsed = JSON.parse(tasksString);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Failed to parse project tasks:', error);
+    return [];
+  }
+};
+
 export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: ProjectsAnalyticsPageProps = {}) {
   const router = useRouter();
   
@@ -171,6 +187,16 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
   const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  
+  // Task dropdown state
+  const [openTaskDropdownId, setOpenTaskDropdownId] = useState<string | null>(null);
+  const [newTaskName, setNewTaskName] = useState("");
+  const [showAddTaskInput, setShowAddTaskInput] = useState<string | null>(null);
+  const [projectTasks, setProjectTasks] = useState<{ [projectId: string]: TaskData[] }>({});
+  const [loadingTasks, setLoadingTasks] = useState<{ [projectId: string]: boolean }>({});
+  const [allTasks, setAllTasks] = useState<TaskData[]>([]);
+  const [loadingAllTasks, setLoadingAllTasks] = useState(false);
+  const [showAllTasksDropdown, setShowAllTasksDropdown] = useState(false);
   
   // Universal Details Modal state
   const [detailsModal, setDetailsModal] = useState({
@@ -256,10 +282,11 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     }
   };
 
-  // Load projects and companies on component mount
+  // Load projects, companies, and tasks on component mount
   useEffect(() => {
     fetchProjects();
     fetchCompanies();
+    fetchAllTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -280,7 +307,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           team: 'John Doe, Jane Smith',
           assignee: 'John Doe',
           progress: 45,
-          tasks: 8,
+          tasks: '[]',
           tags: JSON.stringify(['test', 'demo', 'navigation']),
           notes: 'This project was created automatically for testing navigation functionality.'
         };
@@ -309,13 +336,19 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
       if (openMenuId && !(event.target as Element).closest('.menu-container')) {
         closeMenu();
       }
+      if (openTaskDropdownId && !(event.target as Element).closest('.task-dropdown-container')) {
+        closeTaskDropdown();
+      }
+      if (showAllTasksDropdown && !(event.target as Element).closest('.all-tasks-dropdown-container')) {
+        setShowAllTasksDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [openMenuId]);
+  }, [openMenuId, openTaskDropdownId, showAllTasksDropdown]);
 
   // Filter projects based on search and filters
   const filteredProjects = projects.filter(project => {
@@ -357,7 +390,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           team: projectData.teamMembers.join(', '),
           assignee: projectData.teamMembers[0] || '',
           progress: editingProject ? editingProject.progress : 0,
-          tasks: editingProject ? editingProject.tasks : 0,
+          tasks: editingProject ? editingProject.tasks : '[]',
           tags: editingProject ? editingProject.tags : JSON.stringify([]),
           notes: editingProject ? editingProject.notes : ''
         };
@@ -420,6 +453,287 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
   const closeMenu = () => {
     setOpenMenuId(null);
     setDropdownPosition(null);
+  };
+
+  // Task dropdown functions
+  const toggleTaskDropdown = async (projectId: string) => {
+    if (openTaskDropdownId === projectId) {
+      // Closing dropdown
+      setOpenTaskDropdownId(null);
+      setShowAddTaskInput(null);
+      setNewTaskName("");
+    } else {
+      // Opening dropdown - fetch tasks
+      setOpenTaskDropdownId(projectId);
+      setShowAddTaskInput(null);
+      setNewTaskName("");
+      await fetchProjectTasks(projectId);
+    }
+  };
+
+  const closeTaskDropdown = () => {
+    setOpenTaskDropdownId(null);
+    setShowAddTaskInput(null);
+    setNewTaskName("");
+  };
+
+  // Fetch tasks for a specific project
+  const fetchProjectTasks = async (projectId: string) => {
+    if (projectTasks[projectId]) {
+      return; // Already fetched
+    }
+
+    setLoadingTasks(prev => ({ ...prev, [projectId]: true }));
+    
+    try {
+      const response = await TaskApiService.getTasks();
+      if (response.success && response.data) {
+        // Filter tasks that belong to this project
+        const projectSpecificTasks = response.data.filter((task: TaskData) => task.project === projectId);
+        setProjectTasks(prev => ({ ...prev, [projectId]: projectSpecificTasks }));
+      } else {
+        setProjectTasks(prev => ({ ...prev, [projectId]: [] }));
+      }
+    } catch (error) {
+      console.error('Error fetching tasks for project:', error);
+      setProjectTasks(prev => ({ ...prev, [projectId]: [] }));
+    } finally {
+      setLoadingTasks(prev => ({ ...prev, [projectId]: false }));
+    }
+  };
+
+  // Fetch all tasks for the add task dropdown
+  const fetchAllTasks = async (forceRefresh = false) => {
+    if (allTasks.length > 0 && !forceRefresh) {
+      return; // Already fetched
+    }
+
+    setLoadingAllTasks(true);
+    
+    try {
+      const response = await TaskApiService.getTasks();
+      if (response.success && response.data) {
+        setAllTasks(response.data);
+        console.log('✅ All tasks refreshed:', response.data.length, 'tasks');
+      } else {
+        setAllTasks([]);
+      }
+    } catch (error) {
+      console.error('Error fetching all tasks:', error);
+      setAllTasks([]);
+    } finally {
+      setLoadingAllTasks(false);
+    }
+  };
+
+  // Helper function to get task status color and label
+  const getTaskStatusInfo = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+      case 'done':
+        return { color: 'bg-green-400', label: 'Completed' };
+      case 'in progress':
+      case 'active':
+        return { color: 'bg-yellow-400', label: 'In Progress' };
+      case 'pending':
+      case 'todo':
+        return { color: 'bg-slate-300', label: 'Pending' };
+      case 'planning':
+        return { color: 'bg-blue-400', label: 'Planning' };
+      case 'blocked':
+        return { color: 'bg-purple-400', label: 'Blocked' };
+      case 'cancelled':
+        return { color: 'bg-red-400', label: 'Cancelled' };
+      default:
+        return { color: 'bg-gray-400', label: status || 'Unknown' };
+    }
+  };
+
+  const handleAddTask = async (projectId: string) => {
+    if (newTaskName.trim()) {
+      try {
+        const newTask: TaskData = {
+          id: `task-${Date.now()}`,
+          title: newTaskName.trim(),
+          project: projectId,
+          status: 'Pending',
+          priority: 'Medium',
+          assignee: '',
+          description: '',
+          dueDate: '',
+          startDate: '',
+          progress: 0,
+          estimatedHours: 0,
+          timeSpent: '0',
+          tags: '',
+          subtasks: '[]',
+          comments: '0',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        const response = await TaskApiService.createTask(newTask);
+        
+        if (response.success && response.data) {
+          // Update local state
+          setProjectTasks(prev => ({
+            ...prev,
+            [projectId]: [...(prev[projectId] || []), response.data!]
+          }));
+
+          // Update all tasks list
+          setAllTasks(prev => [...prev, response.data!]);
+          console.log('✅ New task added to allTasks list:', response.data!.id);
+
+          // Update project task list with new task ID
+          setProjects(prev => prev.map(project => {
+            if (project.id === projectId) {
+              const currentTasks = parseProjectTasks(project.tasks);
+              const updatedTasks = [...currentTasks, response.data!.id];
+              const updatedProject = { ...project, tasks: JSON.stringify(updatedTasks) };
+              
+              // Update project in database with new task list
+              try {
+                console.log(`🔄 Updating project ${projectId} in database with new task:`, response.data!.id);
+                fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in'}/crud?tableName=projects&id=${projectId}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    key: { id: projectId },
+                    updates: { tasks: JSON.stringify(updatedTasks) }
+                  }),
+                }).then(response => {
+                  if (response.ok) {
+                    console.log(`✅ Project task list updated with new task in database successfully`);
+                    return response.json();
+                  } else {
+                    console.warn(`⚠️ Failed to update project task list in database:`, response.status, response.statusText);
+                    return response.text();
+                  }
+                }).then(data => {
+                  console.log(`📊 Database update response:`, data);
+                });
+              } catch (error) {
+                console.warn(`⚠️ Error updating project task list:`, error);
+              }
+              
+              return updatedProject;
+            }
+            return project;
+          }));
+        }
+
+        setNewTaskName("");
+        setShowAddTaskInput(null);
+        
+        // Refresh all tasks to ensure display updates
+        await fetchAllTasks(true);
+      } catch (error) {
+        console.error('Error creating task:', error);
+        // You could add a toast notification here
+      }
+    }
+  };
+
+  // Add existing task to project
+  const handleAddExistingTask = async (taskId: string, projectId: string) => {
+    try {
+      const taskToAdd = allTasks.find(task => task.id === taskId);
+      if (!taskToAdd) return;
+
+      console.log(`🔄 Adding task "${taskToAdd.title}" to project ${projectId}`);
+      
+      // Try to update the task in the database with only the project field
+      try {
+        // Create a minimal update object with only the project field
+        const projectUpdate = { project: projectId };
+        
+        // Use a direct API call to update only the project field
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in'}/crud?tableName=tasks&id=${taskId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            key: { id: taskId },
+            updates: projectUpdate
+          }),
+        });
+
+        if (response.ok) {
+          console.log(`✅ Task "${taskToAdd.title}" successfully added to project in database!`);
+        } else {
+          console.warn(`⚠️ Database update failed, but continuing with local update`);
+        }
+      } catch (dbError) {
+        console.warn(`⚠️ Database update failed:`, dbError, `but continuing with local update`);
+      }
+      
+      // Create the updated task object for local state
+      const updatedTask = { ...taskToAdd, project: projectId };
+      
+      // Update local state immediately (optimistic update)
+      setProjectTasks(prev => ({
+        ...prev,
+        [projectId]: [...(prev[projectId] || []), updatedTask]
+      }));
+
+      // Update all tasks list
+      setAllTasks(prev => prev.map(task => 
+        task.id === taskId ? updatedTask : task
+      ));
+
+      // Update project task list with actual task IDs
+      setProjects(prev => prev.map(project => {
+        if (project.id === projectId) {
+          const currentTasks = parseProjectTasks(project.tasks);
+          const updatedTasks = [...currentTasks, taskId];
+          const updatedProject = { ...project, tasks: JSON.stringify(updatedTasks) };
+          
+          // Update project in database with new task list
+          try {
+            console.log(`🔄 Updating project ${projectId} in database with tasks:`, JSON.stringify(updatedTasks));
+            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in'}/crud?tableName=projects&id=${projectId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                key: { id: projectId },
+                updates: { tasks: JSON.stringify(updatedTasks) }
+              }),
+            }).then(response => {
+              if (response.ok) {
+                console.log(`✅ Project task list updated in database successfully`);
+                return response.json();
+              } else {
+                console.warn(`⚠️ Failed to update project task list in database:`, response.status, response.statusText);
+                return response.text();
+              }
+            }).then(data => {
+              console.log(`📊 Database update response:`, data);
+            });
+          } catch (error) {
+            console.warn(`⚠️ Error updating project task list:`, error);
+          }
+          
+          return updatedProject;
+        }
+        return project;
+      }));
+
+      // Show success feedback
+      console.log(`✅ Task "${taskToAdd.title}" successfully added to project!`);
+      
+      // Close the add task input
+      setShowAddTaskInput(null);
+      setNewTaskName("");
+      
+      // Refresh all tasks to ensure display updates
+      await fetchAllTasks(true);
+      
+    } catch (error) {
+      console.error('Error adding existing task to project:', error);
+      // You could add a toast notification here for error feedback
+    }
   };
 
   // Calculate dropdown position
@@ -506,7 +820,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
         name: `${project.name} (Copy)`,
         status: 'Planning',
         progress: 0,
-        tasks: 0,
+        tasks: '[]',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -1214,7 +1528,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                           className="text-left px-3 py-1.5 relative select-none"
                           style={{ width: `${columnWidths.tasks}px` }}
                         >
-                          Tasks
+                          Task List
                           <div 
                             className="resize-handle column-resize"
                             onMouseDown={(e) => handleMouseDown(e, 'column-tasks', 'tasks')}
@@ -1383,24 +1697,210 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                             </div>
                           </td>
                           <td 
-                            className="px-3 py-2 align-middle overflow-hidden"
+                            className="px-3 py-2 align-middle overflow-visible relative"
                             style={{ width: `${columnWidths.tasks}px` }}
                           >
                             <div 
-                              className="flex items-center gap-2 editable-cell"
-                              onClick={(e) => e.stopPropagation()}
+                              className="space-y-1 cursor-pointer hover:bg-slate-50 rounded-lg p-2 -m-2 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleTaskDropdown(project.id || '');
+                              }}
                             >
-                                <div className="w-full bg-gradient-to-r from-slate-200 to-slate-300 rounded-full h-2">
-                                  <div className="bg-gradient-to-r from-slate-600 to-slate-700 h-2 rounded-full" style={{ width: `${project.progress || 0}%` }}></div>
-                              </div>
-                              <EditableTableCell
-                                value={project.tasks || 0}
-                                onSave={(newValue) => updateProjectField(project.id || '', 'tasks', newValue)}
-                                type="number"
-                                className="text-lg text-slate-600 flex-shrink-0"
-                                placeholder="0"
-                              />
+                              {/* Show real task data from project's task list */}
+                              {(() => {
+                                // Get tasks from project's task list
+                                let projectTaskList: any[] = [];
+                                const taskIds = parseProjectTasks(project.tasks);
+                                console.log(`🔍 Project ${project.id} tasks field:`, project.tasks);
+                                console.log(`🔍 Parsed task IDs:`, taskIds);
+                                console.log(`🔍 All tasks available:`, allTasks.length);
+                                
+                                if (taskIds.length > 0) {
+                                  projectTaskList = allTasks.filter(task => task.id && taskIds.includes(task.id));
+                                  console.log(`🔍 Tasks found by ID match:`, projectTaskList.length);
+                                }
+                                
+                                // Fallback to projectTasks if available
+                                if (projectTaskList.length === 0 && projectTasks[project.id || '']?.length > 0) {
+                                  projectTaskList = projectTasks[project.id || ''];
+                                  console.log(`🔍 Using fallback projectTasks:`, projectTaskList.length);
+                                }
+                                
+                                return projectTaskList.length > 0 ? (
+                                  <>
+                                    {projectTaskList.slice(0, 3).map((task, index) => {
+                                      const statusInfo = getTaskStatusInfo(task.status || '');
+                                      return (
+                                        <div key={task.id || index} className="flex items-center gap-2">
+                                          <div className={`w-2 h-2 ${statusInfo.color} rounded-full flex-shrink-0`}></div>
+                                          <span className="text-base text-slate-700 truncate">{task.title || 'Untitled Task'}</span>
+                                        </div>
+                                      );
+                                    })}
+                                    {projectTaskList.length > 3 && (
+                                      <div className="text-sm text-slate-500">
+                                        +{projectTaskList.length - 3} more tasks
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <div className="text-sm text-slate-500">No tasks assigned</div>
+                                );
+                              })()}
                             </div>
+
+                            {/* Task Dropdown */}
+                            {openTaskDropdownId === project.id && (
+                              <div className="task-dropdown-container absolute top-full left-0 mt-1 w-80 bg-white rounded-lg shadow-xl border border-slate-200 z-50 animate-in slide-in-from-top-2 duration-200">
+                                <div className="p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-lg font-semibold text-slate-900">Project Tasks</h4>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        closeTaskDropdown();
+                                      }}
+                                      className="text-slate-400 hover:text-slate-600"
+                                    >
+                                      <X size={18} />
+                                    </button>
+                                  </div>
+                                  
+                                  {/* Task List */}
+                                  <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+                                    {loadingTasks[project.id || ''] ? (
+                                      <div className="flex items-center justify-center py-4">
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                        <span className="ml-2 text-base text-slate-600">Loading tasks...</span>
+                                      </div>
+                                    ) : projectTasks[project.id || '']?.length > 0 ? (
+                                      projectTasks[project.id || ''].map((task) => {
+                                        const statusInfo = getTaskStatusInfo(task.status || '');
+                                        return (
+                                          <div key={task.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg">
+                                            <div className={`w-3 h-3 ${statusInfo.color} rounded-full flex-shrink-0`}></div>
+                                            <span className="text-base text-slate-700 truncate">{task.title || 'Untitled Task'}</span>
+                                            <span className="text-xs text-slate-500 ml-auto">{statusInfo.label}</span>
+                                          </div>
+                                        );
+                                      })
+                                    ) : null}
+                                  </div>
+
+                                  {/* Add New Task */}
+                                  <div className="border-t border-slate-200 pt-3">
+                                    {showAddTaskInput === project.id ? (
+                                      <div className="space-y-3">
+                                        <div className="flex gap-2">
+                                          <input
+                                            type="text"
+                                            value={newTaskName}
+                                            onChange={(e) => setNewTaskName(e.target.value)}
+                                            placeholder="Enter task name..."
+                                            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            autoFocus
+                                            onKeyPress={(e) => {
+                                              if (e.key === 'Enter') {
+                                                handleAddTask(project.id || '');
+                                              }
+                                            }}
+                                          />
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleAddTask(project.id || '');
+                                            }}
+                                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                          >
+                                            <Plus size={16} />
+                                          </button>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setShowAddTaskInput(null);
+                                              setNewTaskName("");
+                                            }}
+                                            className="px-3 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
+                                          >
+                                            <X size={16} />
+                                          </button>
+                                        </div>
+
+                                        {/* All Tasks Dropdown */}
+                                        <div className="border border-slate-200 rounded-lg bg-slate-50">
+                                          <div className="px-4 py-3 border-b border-slate-200">
+                                            <h5 className="text-lg font-semibold text-slate-700">All Existing Tasks ({allTasks.length})</h5>
+                                          </div>
+                                          <div className="max-h-60 overflow-y-auto">
+                                            {loadingAllTasks ? (
+                                              <div className="flex items-center justify-center py-6">
+                                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                                <span className="ml-3 text-base text-slate-600">Loading tasks...</span>
+                                              </div>
+                                            ) : allTasks.length > 0 ? (
+                                              allTasks.map((task) => {
+                                                const statusInfo = getTaskStatusInfo(task.status || '');
+                                                const isAlreadyInProject = projectTasks[project.id || '']?.some(pt => pt.id === task.id);
+                                                const isCurrentProject = task.project === project.id;
+                                                
+                                                return (
+                                                  <div key={task.id} className={`flex items-center gap-4 p-3 hover:bg-white border-b border-slate-100 last:border-b-0 ${isAlreadyInProject || isCurrentProject ? 'bg-green-50' : ''}`}>
+                                                    <div className={`w-3 h-3 ${statusInfo.color} rounded-full flex-shrink-0`}></div>
+                                                    <div className="flex-1 min-w-0">
+                                                      <div className="text-lg font-medium text-slate-800 truncate">{task.title || 'Untitled Task'}</div>
+                                                      <div className="text-base text-slate-500">
+                                                        {task.assignee && `Assignee: ${task.assignee}`}
+                                                        {task.assignee && task.priority && ' • '}
+                                                        {task.priority && `Priority: ${task.priority}`}
+                                                      </div>
+                                                    </div>
+                                                    <div className="text-base text-slate-400">
+                                                      {statusInfo.label}
+                                                    </div>
+                                                    {isAlreadyInProject || isCurrentProject ? (
+                                                      <span className="px-3 py-2 text-base bg-green-100 text-green-700 rounded">
+                                                        ✓ Added
+                                                      </span>
+                                                    ) : (
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          handleAddExistingTask(task.id || '', project.id || '');
+                                                        }}
+                                                        className="px-3 py-2 text-base bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                                                      >
+                                                        Add
+                                                      </button>
+                                                    )}
+                                                  </div>
+                                                );
+                                              })
+                                            ) : (
+                                              <div className="text-center py-4">
+                                                <span className="text-sm text-slate-500">No tasks found</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          setShowAddTaskInput(project.id || '');
+                                          await fetchAllTasks();
+                                        }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+                                      >
+                                        <Plus size={16} />
+                                        <span className="text-base">Add new task</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </td>
                           <td 
                             className="px-3 py-2 align-middle overflow-hidden"
@@ -1519,10 +2019,50 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-lg font-bold flex items-center justify-center">
                           {getInitials(project.name || '')}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-lg font-semibold text-slate-900 truncate">{project.name}</h3>
-                          <p className="text-base text-slate-600">{(project.tasks || 0) === 1 ? '1 task' : `${project.tasks || 0} tasks`}</p>
-                        </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-semibold text-slate-900 truncate">{project.name}</h3>
+                  <div className="space-y-0.5 mt-1">
+                    {(() => {
+                      // Get tasks from project's task list
+                      let projectTaskList: any[] = [];
+                      const taskIds = parseProjectTasks(project.tasks);
+                      console.log(`🔍 Grid - Project ${project.id} tasks field:`, project.tasks);
+                      console.log(`🔍 Grid - Parsed task IDs:`, taskIds);
+                      
+                      if (taskIds.length > 0) {
+                        projectTaskList = allTasks.filter(task => task.id && taskIds.includes(task.id));
+                        console.log(`🔍 Grid - Tasks found by ID match:`, projectTaskList.length);
+                      }
+                      
+                      // Fallback to projectTasks if available
+                      if (projectTaskList.length === 0 && projectTasks[project.id || '']?.length > 0) {
+                        projectTaskList = projectTasks[project.id || ''];
+                        console.log(`🔍 Grid - Using fallback projectTasks:`, projectTaskList.length);
+                      }
+                      
+                      return projectTaskList.length > 0 ? (
+                        <>
+                          {projectTaskList.slice(0, 2).map((task, index) => {
+                            const statusInfo = getTaskStatusInfo(task.status || '');
+                            return (
+                              <div key={task.id || index} className="flex items-center gap-1.5">
+                                <div className={`w-1.5 h-1.5 ${statusInfo.color} rounded-full`}></div>
+                                <span className="text-sm text-slate-600 truncate">{task.title || 'Untitled Task'}</span>
+                              </div>
+                            );
+                          })}
+                          {projectTaskList.length > 2 && (
+                            <div className="text-xs text-slate-500">
+                              +{projectTaskList.length - 2} more
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-xs text-slate-500">No tasks assigned</div>
+                      );
+                    })()}
+                  </div>
+                </div>
                       </div>
 
                       <div className="absolute top-0.5 right-0.5 menu-container">

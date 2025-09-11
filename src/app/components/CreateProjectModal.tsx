@@ -123,7 +123,7 @@ export default function CreateProjectModal({ isOpen, onClose, onCreate }: Create
         team,
         assignee: "",
         progress: 0,
-        tasks: 0,
+        tasks: '[]',
         tags: JSON.stringify(tags),
         notes
       };

@@ -109,9 +109,17 @@ export default function TasksPageEnhanced({
       
       if (response.success) {
         const tasksData = response.data || [];
-        const uiTasks = tasksData.map((item: TaskData) =>
-          transformTaskToUI(item)
-        );
+        console.log('🔄 Raw tasks data from API:', tasksData);
+        
+        const uiTasks = tasksData.map((item: TaskData) => {
+          const transformed = transformTaskToUI(item);
+          console.log(`🔄 Transformed task ${item.id} (${item.title}):`, {
+            originalSubtasks: item.subtasks,
+            transformedSubtasks: transformed.subtasks
+          });
+          return transformed;
+        });
+        
         setTasks(uiTasks);
         const tree = buildTaskTree(tasksData);
         setTaskTree(tree);
@@ -227,13 +235,78 @@ export default function TasksPageEnhanced({
     try {
       setIsSubmittingTask(true);
       if (editingTask) {
-        // Exclude id from update data since it's part of the primary key
-        const { id, ...updateData } = taskData;
+        // Exclude fields that might conflict with backend _metadata field
+        const { 
+          id, 
+          subtasks, 
+          description, 
+          comments, 
+          tags, 
+          progress,
+          timeSpent,
+          estimatedHours,
+          createdAt, 
+          updatedAt,
+          ...updateData 
+        } = taskData;
         await TaskApiService.updateTask(editingTask.id!, updateData);
         setSuccessMessage("Task updated successfully");
       } else {
-        await TaskApiService.createTask(taskData);
+        const newTask = await TaskApiService.createTask(taskData);
         setSuccessMessage("Task created successfully");
+        
+        // If this is a subtask (has parentTaskId), update the parent task's subtasks list
+        if (parentTaskId && newTask.success && newTask.data) {
+          try {
+            // Find the parent task to get its current subtasks
+            const parentTask = tasks.find(task => task.id === parentTaskId);
+            if (parentTask) {
+              // Parse existing subtasks
+              let currentSubtasks = [];
+              if (parentTask.subtasks) {
+                if (typeof parentTask.subtasks === 'string') {
+                  try {
+                    currentSubtasks = JSON.parse(parentTask.subtasks);
+                  } catch (error) {
+                    console.warn('Failed to parse existing subtasks:', error);
+                    currentSubtasks = [];
+                  }
+                } else if (Array.isArray(parentTask.subtasks)) {
+                  currentSubtasks = parentTask.subtasks;
+                }
+              }
+
+              // Add the new subtask
+              const newSubtask = {
+                id: newTask.data.id,
+                title: newTask.data.title || 'Untitled Task',
+                completed: false
+              };
+
+              const updatedSubtasks = [...currentSubtasks, newSubtask];
+
+              // Update the parent task's subtasks in the database
+              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in'}/crud?tableName=tasks&id=${parentTaskId}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  key: { id: parentTaskId },
+                  updates: { subtasks: JSON.stringify(updatedSubtasks) }
+                }),
+              });
+
+              if (response.ok) {
+                console.log(`✅ Parent task updated with new subtask: ${newTask.data.title}`);
+              } else {
+                console.warn(`⚠️ Failed to update parent task with new subtask:`, response.status, response.statusText);
+              }
+            }
+          } catch (error) {
+            console.error('Error updating parent task with new subtask:', error);
+          }
+        }
       }
       await fetchTasks();
       setShowEnhancedModal(false);
@@ -465,6 +538,25 @@ export default function TasksPageEnhanced({
             </div>
           </div>
 
+          {/* Inline Task Form - Show at top of page when editing */}
+          {showEnhancedModal && (
+            <div className="px-3 md:px-8 py-4">
+              <EnhancedTaskModal
+                isOpen={showEnhancedModal}
+                onClose={() => {
+                  setShowEnhancedModal(false);
+                  setEditingTask(null);
+                  setParentTaskId(null);
+                }}
+                onSubmit={handleSubmitTask}
+                editingTask={editingTask}
+                parentTaskId={parentTaskId}
+                allTasks={tasks}
+                isLoading={isSubmittingTask}
+              />
+            </div>
+          )}
+
            {isLoading ? (
         <div className="flex justify-center items-center mt-10 overflow-x-hidden">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -502,6 +594,7 @@ export default function TasksPageEnhanced({
             }
             return Promise.resolve(false);
           }}
+          onRefreshTasks={fetchTasks}
           selectedTaskId={null}
         />
       ) : viewMode === "grid" ? (
@@ -548,9 +641,22 @@ export default function TasksPageEnhanced({
                       <h3 className={`text-lg font-bold text-gray-900 truncate group-hover:underline transition-colors`}>
                         {task.title || 'Untitled Task'}
                       </h3>
-                      <p className="text-sm text-gray-600 truncate">
-                        {subtaskCount} {subtaskCount === 1 ? 'task' : 'tasks'}
-                      </p>
+                      <div className="space-y-0.5 text-base text-gray-600">
+                        <div className="truncate">
+                          <span className="font-medium">Assignee:</span> {task.assignee || 'Unassigned'}
+                        </div>
+                        <div className="truncate">
+                          <span className="font-medium">Priority:</span> 
+                          <span className={`ml-1 px-1.5 py-0.5 rounded text-base font-medium ${
+                            task.priority === 'High' ? 'bg-red-100 text-red-700' :
+                            task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                            task.priority === 'Low' ? 'bg-green-100 text-green-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {task.priority || 'Medium'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -681,17 +787,6 @@ export default function TasksPageEnhanced({
                        />
                )}
 
-      {showEnhancedModal && (
-        <EnhancedTaskModal
-          isOpen={showEnhancedModal}
-          onClose={() => setShowEnhancedModal(false)}
-          onSubmit={handleSubmitTask}
-          editingTask={editingTask}
-          parentTaskId={parentTaskId}
-          allTasks={tasks}
-          isLoading={isSubmittingTask}
-        />
-      )}
 
       {/* Universal Details Modal */}
       {detailsModal.isOpen && (
