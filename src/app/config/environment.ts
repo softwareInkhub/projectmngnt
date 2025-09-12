@@ -19,6 +19,7 @@ export interface EnvironmentConfig {
     teams: string;
     sprints: string;
     stories: string;
+    users: string;
   };
   
   // Application Configuration
@@ -77,6 +78,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
       teams: process.env.NEXT_PUBLIC_DYNAMODB_TEAMS_TABLE || 'project-management-teams',
       sprints: process.env.NEXT_PUBLIC_DYNAMODB_SPRINTS_TABLE || 'project-management-sprints',
       stories: process.env.NEXT_PUBLIC_DYNAMODB_STORIES_TABLE || 'project-management-stories',
+      users: process.env.NEXT_PUBLIC_DYNAMODB_USERS_TABLE || 'project-management-users',
     },
     
     // Application Configuration

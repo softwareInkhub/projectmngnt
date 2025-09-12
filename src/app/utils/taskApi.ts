@@ -70,7 +70,15 @@ export class TaskApiService {
   }
 
   static async updateTask(id: string, task: Partial<TaskData>): Promise<ApiResponse<TaskData>> {
-    return apiService.updateItem<TaskData>(TABLE_NAMES.tasks, id, task);
+    // Strip any UI-only fields defensively in case callers pass TaskTreeNode-like objects
+    const { level, children, isExpanded, ...rest } = task as any;
+    const safeUpdates: Partial<TaskData> = { ...rest };
+    // Ensure id is not included in updates
+    if ((safeUpdates as any).id !== undefined) {
+      delete (safeUpdates as any).id;
+    }
+
+    return apiService.updateItem<TaskData>(TABLE_NAMES.tasks, id, safeUpdates);
   }
 
   static async deleteTask(id: string): Promise<ApiResponse<TaskData>> {

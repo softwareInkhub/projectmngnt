@@ -10,6 +10,7 @@ interface UserContextType {
   fetchCurrentUser: () => Promise<void>;
   updateCurrentUser: (userData: Partial<UserData>) => void;
   clearCurrentUser: () => void;
+  refreshUserData: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -39,9 +40,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setError(null);
 
       const token = localStorage.getItem('access_token');
+      const email = localStorage.getItem('user_email');
+      
+      console.log('🔄 fetchCurrentUser - token exists:', !!token);
+      console.log('🔄 fetchCurrentUser - email exists:', !!email, email);
+      console.log('🔄 fetchCurrentUser - API_BASE_URL:', API_BASE_URL);
       
       if (!token) {
-        console.log('No access token found - user not authenticated');
+        console.log('❌ No access token found');
         setCurrentUser(null);
         setLoading(false);
         return;
@@ -49,8 +55,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
       let userData = null;
 
-      // First, try to get user info from the auth/me endpoint
+      // First, try to get user info from the auth/me endpoint (Cognito)
       try {
+        console.log('🔄 Trying /auth/me endpoint...');
         const response = await fetch(`${API_BASE_URL}/auth/me`, {
           method: 'GET',
           headers: {
@@ -59,13 +66,55 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           },
         });
 
+        console.log('🔄 /auth/me response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('🔄 /auth/me response data:', data);
           userData = data.user || data;
-          console.log('✅ User data fetched from /auth/me');
+          
+          // If we got data from Cognito, use it directly
+          if (userData) {
+            console.log('✅ Got user data from Cognito /auth/me:', userData);
+            setCurrentUser(userData);
+            setLoading(false);
+            return;
+          }
+        } else {
+          const errorText = await response.text();
+          console.log('❌ /auth/me failed with status:', response.status, errorText);
         }
       } catch (authMeError) {
-        console.log('Auth /me endpoint not available, trying users endpoint...');
+        console.log('❌ /auth/me error:', authMeError);
+      }
+
+      // If /auth/me doesn't work, try to decode JWT token for user info
+      if (!userData) {
+        try {
+          const idToken = localStorage.getItem('id_token');
+          if (idToken) {
+            // Decode JWT token (simple base64 decode of payload)
+            const payload = JSON.parse(atob(idToken.split('.')[1]));
+            if (payload) {
+              userData = {
+                id: payload.sub || payload['cognito:username'] || 'cognito-user',
+                name: payload.name || payload.given_name || payload['cognito:username'] || 'User',
+                email: payload.email || email || '',
+                role: 'User',
+                status: 'Active',
+                department: 'Unknown',
+                joinDate: new Date(payload.iat * 1000).toISOString().split('T')[0],
+                lastActive: new Date().toISOString(),
+                phone: payload.phone_number || '',
+                companyId: '',
+                teamId: ''
+              };
+              console.log('✅ Got user data from JWT token:', userData);
+            }
+          }
+        } catch (jwtError) {
+          console.log('❌ JWT decode error:', jwtError);
+        }
       }
 
       // If /auth/me doesn't work, try to get user by email from localStorage
@@ -85,26 +134,44 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             if (usersResponse.ok) {
               const usersData = await usersResponse.json();
               
-              // Find user by email or phone number
+              // Find user by email or phone number (case insensitive)
               const user = usersData.users?.find((u: UserData) => 
-                u.email === email || u.phone === email
+                u.email?.toLowerCase() === email.toLowerCase() || 
+                u.phone === email ||
+                u.name?.toLowerCase() === email.split('@')[0].toLowerCase()
               );
               
               if (user) {
                 userData = user;
-                console.log('✅ User data fetched from /users by email/phone');
               }
             }
           } catch (usersError) {
-            console.log('Users endpoint not available');
+            // Silent error handling
           }
         }
       }
 
-      // If no user data found, don't redirect immediately - let main page handle it
+
+      // If still no user data found, create a minimal user object with available info
+      if (!userData && email) {
+        userData = {
+          id: 'temp-user',
+          name: 'User', // Use generic name instead of email prefix
+          email: email,
+          role: 'User',
+          status: 'Active',
+          department: 'Unknown',
+          joinDate: new Date().toISOString().split('T')[0],
+          lastActive: new Date().toISOString(),
+          phone: '',
+          companyId: '',
+          teamId: ''
+        };
+        console.log('✅ Created minimal user data from email:', userData);
+      }
+
+      // If still no user data found, don't redirect immediately - let main page handle it
       if (!userData) {
-        console.log('No user data found - but token exists, keeping user logged in');
-        // Don't clear tokens or redirect - let the main page handle authentication
         setCurrentUser(null);
         setLoading(false);
         return;
@@ -113,11 +180,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setCurrentUser(userData);
 
     } catch (err) {
-      console.error('Error fetching current user:', err);
       setError('Failed to fetch user data');
-      
-      // Don't clear tokens or redirect on error - let main page handle it
-      console.log('Error fetching user data, but keeping user logged in');
     } finally {
       setLoading(false);
     }
@@ -134,8 +197,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setError(null);
   };
 
+  const refreshUserData = () => {
+    fetchCurrentUser();
+  };
+
   // Fetch user data when component mounts
   useEffect(() => {
+    console.log('🔄 UserContext useEffect - calling fetchCurrentUser');
     fetchCurrentUser();
   }, []);
 
@@ -162,6 +230,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     fetchCurrentUser,
     updateCurrentUser,
     clearCurrentUser,
+    refreshUserData,
   };
 
   return (

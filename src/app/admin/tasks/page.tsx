@@ -239,15 +239,20 @@ export default function AdminTasksPage() {
       key: 'tags',
       label: 'Tags',
       sortable: false,
-      render: (value: string) => (
-        <div className="flex items-center text-sm text-gray-600">
-          <Tag size={14} className="mr-1" />
-          {value ? value.split(',').slice(0, 2).join(', ') : 'No tags'}
-          {value && value.split(',').length > 2 && (
-            <span className="text-xs text-gray-400 ml-1">+{value.split(',').length - 2}</span>
-          )}
-        </div>
-      )
+      render: (value: any) => {
+        const tagsString = typeof value === 'string' ? value : String(value || '');
+        const tags = tagsString ? tagsString.split(',').filter(tag => tag.trim()) : [];
+        
+        return (
+          <div className="flex items-center text-sm text-gray-600">
+            <Tag size={14} className="mr-1" />
+            {tags.length > 0 ? tags.slice(0, 2).join(', ') : 'No tags'}
+            {tags.length > 2 && (
+              <span className="text-xs text-gray-400 ml-1">+{tags.length - 2}</span>
+            )}
+          </div>
+        );
+      }
     }
   ];
 

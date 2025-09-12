@@ -159,12 +159,12 @@ export default function AdminProjectsPage() {
       sortable: true,
       render: (value: string, row: ProjectData) => (
         <div className="flex items-center">
-          <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-            <FolderOpen size={16} className="text-green-600" />
+          <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+            <FolderOpen size={24} className="text-green-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{value}</div>
-            <div className="text-sm text-gray-500">{row.company}</div>
+            <div className="font-medium text-gray-900 text-xl">{value}</div>
+            <div className="text-lg text-gray-500">{row.company}</div>
           </div>
         </div>
       )
@@ -174,7 +174,7 @@ export default function AdminProjectsPage() {
       label: 'Status',
       sortable: true,
       render: (value: string) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(value)}`}>
+        <span className={`px-4 py-2 text-base font-medium rounded-full ${getStatusColor(value)}`}>
           {value}
         </span>
       )
@@ -184,7 +184,7 @@ export default function AdminProjectsPage() {
       label: 'Priority',
       sortable: true,
       render: (value: string) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(value)}`}>
+        <span className={`px-4 py-2 text-base font-medium rounded-full ${getPriorityColor(value)}`}>
           {value}
         </span>
       )
@@ -201,7 +201,7 @@ export default function AdminProjectsPage() {
               style={{ width: `${value}%` }}
             />
           </div>
-          <span className="text-sm text-gray-600">{value}%</span>
+          <span className="text-lg text-gray-600">{value}%</span>
         </div>
       )
     },
@@ -210,8 +210,8 @@ export default function AdminProjectsPage() {
       label: 'Assignee',
       sortable: true,
       render: (value: string) => (
-        <div className="flex items-center text-sm text-gray-600">
-          <User size={14} className="mr-1" />
+        <div className="flex items-center text-lg text-gray-600">
+          <User size={18} className="mr-1" />
           {value || 'Unassigned'}
         </div>
       )
@@ -221,8 +221,8 @@ export default function AdminProjectsPage() {
       label: 'Due Date',
       sortable: true,
       render: (value: string) => (
-        <div className="flex items-center text-sm text-gray-600">
-          <Calendar size={14} className="mr-1" />
+        <div className="flex items-center text-lg text-gray-600">
+          <Calendar size={18} className="mr-1" />
           {value ? new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Not set'}
         </div>
       )
@@ -232,8 +232,8 @@ export default function AdminProjectsPage() {
       label: 'Budget',
       sortable: true,
       render: (value: string) => (
-        <div className="flex items-center text-sm text-gray-600">
-          <DollarSign size={14} className="mr-1" />
+        <div className="flex items-center text-lg text-gray-600">
+          <DollarSign size={18} className="mr-1" />
           {value || 'Not set'}
         </div>
       )
@@ -243,8 +243,8 @@ export default function AdminProjectsPage() {
       label: 'Tasks',
       sortable: true,
       render: (value: number) => (
-        <div className="flex items-center text-sm text-gray-600">
-          <Target size={14} className="mr-1" />
+        <div className="flex items-center text-lg text-gray-600">
+          <Target size={18} className="mr-1" />
           {value || 0}
         </div>
       )
@@ -268,8 +268,8 @@ export default function AdminProjectsPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-          <p className="text-gray-600 mt-1">Manage all projects in the system</p>
+          <h1 className="text-5xl font-bold text-gray-900">Projects</h1>
+          <p className="text-xl text-gray-600 mt-1">Manage all projects in the system</p>
         </div>
       </motion.div>
 
@@ -296,28 +296,28 @@ export default function AdminProjectsPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-3xl font-semibold text-gray-900 mb-4">
               {editingProject ? 'Edit Project' : 'Create New Project'}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Project Name *</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Company *</label>
                 <select
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                   required
                 >
                   <option value="">Select Company</option>
@@ -330,11 +330,11 @@ export default function AdminProjectsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 >
                   <option value="Planning">Planning</option>
                   <option value="Active">Active</option>
@@ -345,11 +345,11 @@ export default function AdminProjectsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Priority</label>
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 >
                   <option value="Low">Low</option>
                   <option value="Medium">Medium</option>
@@ -359,61 +359,61 @@ export default function AdminProjectsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Start Date</label>
                 <input
                   type="date"
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">End Date</label>
                 <input
                   type="date"
                   value={formData.endDate}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Assignee</label>
                 <input
                   type="text"
                   value={formData.assignee}
                   onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Budget</label>
                 <input
                   type="text"
                   value={formData.budget}
                   onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                   placeholder="e.g., $50,000"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Progress (%)</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Progress (%)</label>
                 <input
                   type="number"
                   min="0"
                   max="100"
                   value={formData.progress}
                   onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
             </div>
             
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-lg font-medium text-gray-700 mb-1">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -443,13 +443,13 @@ export default function AdminProjectsPage() {
                     tags: ''
                   });
                 }}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-lg font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={editingProject ? handleEditProject : handleCreateProject}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium"
               >
                 {editingProject ? 'Update Project' : 'Create Project'}
               </button>

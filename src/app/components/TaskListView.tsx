@@ -17,10 +17,9 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  Eye,
-  X
+  Eye
 } from 'lucide-react';
-import { TaskTreeNode, TaskApiService, TaskData } from '../utils/taskApi';
+import { TaskTreeNode } from '../utils/taskApi';
 import ResizableTable, { 
   ResizableTableHeader, 
   ResizableTableHeaderCell, 
@@ -37,7 +36,6 @@ interface TaskListViewProps {
   onDeleteTask: (taskId: string) => void;
   onToggleStatus: (taskId: string, newStatus: string) => Promise<void>;
   onUpdateTaskField?: (taskId: string, field: keyof TaskTreeNode, value: string | number) => Promise<boolean>;
-  onRefreshTasks?: () => void;
   selectedTaskId?: string | null;
 }
 
@@ -87,7 +85,6 @@ export default function TaskListView({
   onDeleteTask,
   onToggleStatus,
   onUpdateTaskField,
-  onRefreshTasks,
   selectedTaskId
 }: TaskListViewProps) {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
@@ -96,13 +93,6 @@ export default function TaskListView({
   const [isMobile, setIsMobile] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
-  
-  // Subtask dropdown state
-  const [openSubtaskDropdownId, setOpenSubtaskDropdownId] = useState<string | null>(null);
-  const [allTasks, setAllTasks] = useState<TaskData[]>([]);
-  const [loadingAllTasks, setLoadingAllTasks] = useState(false);
-  const [subtaskDropdownPosition, setSubtaskDropdownPosition] = useState<{ top: number; left: number } | null>(null);
-  const subtaskButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   useEffect(() => {
     const checkMobile = () => {
@@ -116,17 +106,9 @@ export default function TaskListView({
 
   // Close menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Check if click is on a subtask button or dropdown
-      const target = event.target as HTMLElement;
-      const isSubtaskButton = target.closest('[data-subtask-button]');
-      const isSubtaskDropdown = target.closest('[data-subtask-dropdown]');
-      
-      if (!isSubtaskButton && !isSubtaskDropdown) {
-        setOpenMenuId(null);
-        setDropdownPosition(null);
-        closeSubtaskDropdown();
-      }
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+      setDropdownPosition(null);
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
@@ -177,210 +159,6 @@ export default function TaskListView({
       case 'delete':
         onDeleteTask(task.id!);
         break;
-    }
-  };
-
-  // Fetch all tasks for subtask dropdown
-  const fetchAllTasks = async (forceRefresh = false) => {
-    if (allTasks.length > 0 && !forceRefresh) {
-      return; // Already fetched
-    }
-
-    setLoadingAllTasks(true);
-    
-    try {
-      const response = await TaskApiService.getTasks();
-      if (response.success && response.data) {
-        setAllTasks(response.data);
-        console.log('✅ All tasks fetched for subtask dropdown:', response.data.length, 'tasks');
-      } else {
-        setAllTasks([]);
-      }
-    } catch (error) {
-      console.error('Error fetching all tasks:', error);
-      setAllTasks([]);
-    } finally {
-      setLoadingAllTasks(false);
-    }
-  };
-
-  // Toggle subtask dropdown
-  const toggleSubtaskDropdown = (taskId: string) => {
-    if (openSubtaskDropdownId === taskId) {
-      setOpenSubtaskDropdownId(null);
-      setSubtaskDropdownPosition(null);
-    } else {
-      setOpenSubtaskDropdownId(taskId);
-      
-      // Fetch tasks in background
-      fetchAllTasks();
-      
-      // Calculate position for dropdown immediately
-      const buttonElement = subtaskButtonRefs.current[taskId];
-      
-      if (buttonElement) {
-        const rect = buttonElement.getBoundingClientRect();
-        
-        // Use viewport coordinates for proper positioning
-        setSubtaskDropdownPosition({
-          top: rect.bottom + 5,
-          left: rect.left
-        });
-      } else {
-        // Set a fallback position if button element not found
-        setSubtaskDropdownPosition({
-          top: 100,
-          left: 100
-        });
-      }
-    }
-  };
-
-  // Close subtask dropdown
-  const closeSubtaskDropdown = () => {
-    setOpenSubtaskDropdownId(null);
-    setSubtaskDropdownPosition(null);
-  };
-
-  // Handle adding existing task as subtask
-  const handleAddExistingTaskAsSubtask = async (taskId: string, parentTaskId: string) => {
-    console.log('🔄 handleAddExistingTaskAsSubtask called with:', { taskId, parentTaskId });
-    alert(`Adding task ${taskId} as subtask to parent ${parentTaskId}`);
-    try {
-      // Find the parent task to get its current subtasks
-      const parentTask = tasks.find(task => task.id === parentTaskId);
-      console.log('🔄 Parent task found:', !!parentTask, parentTask?.title);
-      if (!parentTask) {
-        console.error('❌ Parent task not found for ID:', parentTaskId);
-        return;
-      }
-
-      // Parse existing subtasks
-      let currentSubtasks = [];
-      if (parentTask.subtasks) {
-        if (typeof parentTask.subtasks === 'string') {
-          try {
-            currentSubtasks = JSON.parse(parentTask.subtasks);
-          } catch (error) {
-            console.warn('Failed to parse existing subtasks:', error);
-            currentSubtasks = [];
-          }
-        } else if (Array.isArray(parentTask.subtasks)) {
-          currentSubtasks = parentTask.subtasks;
-        }
-      }
-
-      // Check if task is already a subtask
-      const isAlreadySubtask = currentSubtasks.some((subtask: any) => 
-        (typeof subtask === 'object' && subtask.id === taskId) || 
-        (typeof subtask === 'string' && subtask === taskId)
-      );
-
-      if (isAlreadySubtask) {
-        console.log('Task is already a subtask');
-        closeSubtaskDropdown();
-        return;
-      }
-
-      // Find the task to add as subtask
-      const taskToAdd = allTasks.find(task => task.id === taskId);
-      if (!taskToAdd) {
-        console.error('Task to add not found');
-        return;
-      }
-
-      // Add the task as a subtask
-      const newSubtask = {
-        id: taskId,
-        title: taskToAdd.title || 'Untitled Task',
-        completed: false
-      };
-
-      const updatedSubtasks = [...currentSubtasks, newSubtask];
-
-      // Update the parent task's subtasks in the database
-      console.log(`🔄 Adding task "${taskToAdd.title}" as subtask to parent task ${parentTaskId}`);
-      console.log('🔄 Updated subtasks:', updatedSubtasks);
-      
-      // Try using a different approach - create a new task with updated subtasks
-      console.log('🔄 Using create/update approach to avoid conflicts');
-      
-      // First, get the current task data
-      const currentTaskResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in'}/crud?tableName=tasks&id=${parentTaskId}`);
-      const currentTaskData = await currentTaskResponse.json();
-      console.log('🔄 Current task data:', currentTaskData);
-      
-      // Create updated task data
-      const updatedTaskData = {
-        ...currentTaskData.data,
-        subtasks: JSON.stringify(updatedSubtasks)
-      };
-      
-      console.log('🔄 Updated task data:', updatedTaskData);
-      
-      // Use POST to create/update the task
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in'}/crud?tableName=tasks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedTaskData),
-      });
-
-      console.log('🔄 Direct API Response status:', response.status);
-      console.log('🔄 Direct API Response ok:', response.ok);
-      
-      // Log response body for debugging
-      try {
-        const responseBody = await response.text();
-        console.log('🔄 Direct API Response body:', responseBody);
-      } catch (e) {
-        console.log('🔄 Could not read response body:', e);
-      }
-
-      if (response.ok) {
-        console.log(`✅ Task "${taskToAdd.title}" successfully added as subtask!`);
-        alert(`✅ Successfully added "${taskToAdd.title}" as subtask!`);
-        
-        // Trigger a refresh of the tasks data to update the UI
-        // This will ensure the subtask appears in the column and UniversalDetailsModal
-        if (onRefreshTasks) {
-          console.log('🔄 Calling onRefreshTasks to update UI');
-          onRefreshTasks();
-        } else {
-          console.warn('⚠️ onRefreshTasks callback not provided');
-        }
-      } else {
-        const errorText = await response.text();
-        console.warn(`⚠️ Failed to add task as subtask:`, response.status, response.statusText, errorText);
-        alert(`❌ Failed to add subtask: ${response.status} ${response.statusText}`);
-      }
-
-      closeSubtaskDropdown();
-      
-    } catch (error) {
-      console.error('Error adding existing task as subtask:', error);
-      alert(`❌ Error adding subtask: ${error}`);
-    }
-  };
-
-  // Helper function to get task status info
-  const getTaskStatusInfo = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'completed':
-      case 'done':
-        return { color: 'bg-green-400', label: 'Done' };
-      case 'in progress':
-        return { color: 'bg-yellow-400', label: 'In Progress' };
-      case 'pending':
-      case 'to do':
-        return { color: 'bg-slate-300', label: 'To Do' };
-      case 'blocked':
-        return { color: 'bg-red-400', label: 'Blocked' };
-      case 'on hold':
-        return { color: 'bg-orange-400', label: 'On Hold' };
-      default:
-        return { color: 'bg-gray-400', label: status || 'Unknown' };
     }
   };
 
@@ -602,7 +380,7 @@ export default function TaskListView({
           defaultColumnWidths={{
             id: 80,
             name: 300,
-            subtasks: 200,
+            progress: 100,
             assignee: 150,
             status: 120,
             priority: 100,
@@ -618,7 +396,7 @@ export default function TaskListView({
               <tr>
                 <ResizableTableHeaderCell columnKey="id" className="text-lg font-bold text-slate-900">ID</ResizableTableHeaderCell>
                 <ResizableTableHeaderCell columnKey="name" className="text-lg font-bold text-slate-900">Task Name</ResizableTableHeaderCell>
-                <ResizableTableHeaderCell columnKey="subtasks" className="text-lg font-bold text-slate-900">Subtasks</ResizableTableHeaderCell>
+                <ResizableTableHeaderCell columnKey="progress" className="text-lg font-bold text-slate-900">%</ResizableTableHeaderCell>
                 <ResizableTableHeaderCell columnKey="assignee" className="text-lg font-bold text-slate-900">Assignee</ResizableTableHeaderCell>
                 <ResizableTableHeaderCell columnKey="status" className="text-lg font-bold text-slate-900">Status</ResizableTableHeaderCell>
                 <ResizableTableHeaderCell columnKey="priority" className="text-lg font-bold text-slate-900">Priority</ResizableTableHeaderCell>
@@ -718,74 +496,8 @@ export default function TaskListView({
                 </div>
                     </ResizableTableCell>
 
-                    {/* Subtasks */}
-                    <ResizableTableCell columnKey="subtasks" className="align-middle">
-                      <div className="flex items-center gap-2">
-                        {/* Display existing subtasks */}
-                        {(() => {
-                          // Parse subtasks - handle both string and array formats
-                          let subtasksArray = [];
-                          console.log(`🔄 Parsing subtasks for task ${task.id} (${task.title}):`, task.subtasks);
-                          
-                          if (task.subtasks) {
-                            if (typeof task.subtasks === 'string') {
-                              try {
-                                subtasksArray = JSON.parse(task.subtasks);
-                                console.log(`🔄 Parsed subtasks from string:`, subtasksArray);
-                              } catch (error) {
-                                console.warn('Failed to parse subtasks:', error);
-                                subtasksArray = [];
-                              }
-                            } else if (Array.isArray(task.subtasks)) {
-                              subtasksArray = task.subtasks;
-                              console.log(`🔄 Using subtasks array directly:`, subtasksArray);
-                            }
-                          } else {
-                            console.log(`🔄 No subtasks found for task ${task.id}`);
-                          }
-                          
-                          console.log(`🔄 Final subtasksArray for task ${task.id}:`, subtasksArray);
-                          
-                          return subtasksArray.length > 0 ? (
-                            <div className="flex flex-col gap-1">
-                              {subtasksArray.slice(0, 2).map((subtask: any, idx: number) => (
-                                <div key={idx} className="flex items-center gap-1">
-                                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full"></div>
-                                  <span className="text-sm text-slate-600 truncate max-w-32">
-                                    {subtask.title || (typeof subtask === 'string' ? subtask : 'Untitled Subtask')}
-                                  </span>
-                                </div>
-                              ))}
-                              {subtasksArray.length > 2 && (
-                                <span className="text-xs text-slate-400">
-                                  +{subtasksArray.length - 2} more
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-sm text-slate-400">No subtasks</span>
-                          );
-                        })()}
-                        
-                        {/* Add subtask button */}
-                        <button
-                          ref={(el) => {
-                            if (task.id) {
-                              subtaskButtonRefs.current[task.id] = el;
-                            }
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleSubtaskDropdown(task.id || '');
-                          }}
-                          className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                          title="Add subtask"
-                          data-subtask-button
-                        >
-                          <Plus size={14} />
-                        </button>
-                      </div>
-                    </ResizableTableCell>
+                    {/* Progress Percentage */}
+                    <ResizableTableCell columnKey="progress" className="text-slate-900 font-semibold text-2xl">{isCompleted ? '100' : '0'}%</ResizableTableCell>
               
                     {/* Assignee */}
                     <ResizableTableCell columnKey="assignee" className="align-middle">
@@ -912,9 +624,9 @@ export default function TaskListView({
                         setDropdownPosition(null);
                       } else {
                         setOpenMenuId(task.id || null);
-                        const buttonElement = buttonRefs.current[task.id!];
-                        if (buttonElement) {
-                          const position = calculateDropdownPosition(buttonElement);
+                        const buttonRef = buttonRefs.current[task.id!];
+                        if (buttonRef) {
+                          const position = calculateDropdownPosition(buttonRef);
                           setDropdownPosition(position);
                         }
                       }
@@ -962,97 +674,6 @@ export default function TaskListView({
           <Square className="w-12 h-12 mx-auto mb-3 text-slate-300" />
           <p className="text-lg">No tasks available</p>
         </div>
-      )}
-
-      {/* Subtask Dropdown Portal */}
-      {openSubtaskDropdownId && subtaskDropdownPosition && createPortal(
-        <div
-          className="fixed z-50 bg-white border border-slate-200 rounded-lg shadow-lg min-w-80 max-w-md"
-          style={{
-            top: subtaskDropdownPosition.top,
-            left: subtaskDropdownPosition.left,
-          }}
-          onClick={(e) => e.stopPropagation()}
-          data-subtask-dropdown
-        >
-          <div className="px-4 py-3 border-b border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <h5 className="text-lg font-semibold text-slate-700">Add Subtask</h5>
-              <button
-                onClick={closeSubtaskDropdown}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddSubtask(openSubtaskDropdownId);
-                closeSubtaskDropdown();
-              }}
-              className="w-full px-3 py-2 text-base text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded border border-blue-200 transition-colors flex items-center gap-2"
-            >
-              <Plus size={16} />
-              Create New Subtask
-            </button>
-          </div>
-          <div className="px-4 py-2 border-b border-slate-200">
-            <h6 className="text-base font-medium text-slate-600">Or add existing task ({allTasks.length})</h6>
-          </div>
-          <div className="max-h-60 overflow-y-auto">
-            {loadingAllTasks ? (
-              <div className="flex items-center justify-center py-6">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-base text-slate-600">Loading tasks...</span>
-              </div>
-            ) : allTasks.length > 0 ? (
-              allTasks.map((task) => {
-                const statusInfo = getTaskStatusInfo(task.status || '');
-                
-                return (
-                  <div key={task.id} className="flex items-center gap-4 p-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0">
-                    <div className={`w-3 h-3 ${statusInfo.color} rounded-full flex-shrink-0`}></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-lg font-medium text-slate-800 truncate">{task.title || 'Untitled Task'}</div>
-                      <div className="text-base text-slate-500">
-                        {task.assignee && `Assignee: ${task.assignee}`}
-                        {task.assignee && task.priority && ' • '}
-                        {task.priority && `Priority: ${task.priority}`}
-                      </div>
-                    </div>
-                    <div className="text-base text-slate-400">
-                      {statusInfo.label}
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        console.log('🔄 Add button clicked for task:', task.id, 'to parent:', openSubtaskDropdownId);
-                        e.stopPropagation();
-                        // Open the task form with this task as the editing task and set parent relationship
-                        const taskWithParent = {
-                          ...task,
-                          parentId: openSubtaskDropdownId,
-                          children: [],
-                          level: 0
-                        };
-                        onEditTask(taskWithParent);
-                        closeSubtaskDropdown();
-                      }}
-                      className="px-3 py-2 text-base text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
-                    >
-                      Add
-                    </button>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-6 text-slate-500">
-                <span className="text-base">No tasks found</span>
-              </div>
-            )}
-          </div>
-        </div>,
-        document.body
       )}
     </div>
   );
