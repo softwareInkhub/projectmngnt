@@ -99,11 +99,11 @@ export function DataTable({
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
           {onCreateNew && (
             <button
               onClick={onCreateNew}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium"
             >
               Create New
             </button>
@@ -121,7 +121,7 @@ export function DataTable({
               placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
             />
           </div>
         </div>
@@ -140,7 +140,7 @@ export function DataTable({
                   <ResizableTableHeaderCell
                     key={column.key}
                     columnKey={column.key}
-                    className={`text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                    className={`text-base font-medium text-gray-500 uppercase tracking-wider ${
                       column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
                     }`}
                   >
@@ -157,7 +157,7 @@ export function DataTable({
                     </div>
                   </ResizableTableHeaderCell>
                 ))}
-                <ResizableTableHeaderCell columnKey="actions" className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <ResizableTableHeaderCell columnKey="actions" className="text-right text-sm font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </ResizableTableHeaderCell>
               </tr>
@@ -175,12 +175,12 @@ export function DataTable({
                     <ResizableTableCell 
                       key={column.key} 
                       columnKey={column.key}
-                      className="text-sm text-gray-900"
+                      className="text-base text-gray-900"
                     >
                       {column.render ? column.render(row[column.key], row) : row[column.key]}
                     </ResizableTableCell>
                   ))}
-                  <ResizableTableCell columnKey="actions" className="text-right text-sm font-medium">
+                  <ResizableTableCell columnKey="actions" className="text-right text-base font-medium">
                   <div className="flex items-center justify-end space-x-2">
                     {onView && (
                       <button
@@ -188,7 +188,7 @@ export function DataTable({
                         className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
                         title="View"
                       >
-                        <Eye size={16} />
+                        <Eye size={20} />
                       </button>
                     )}
                     {onEdit && (
@@ -197,7 +197,7 @@ export function DataTable({
                         className="p-1 text-gray-400 hover:text-green-600 transition-colors"
                         title="Edit"
                       >
-                        <Edit size={16} />
+                        <Edit size={20} />
                       </button>
                     )}
                     {onDelete && (
@@ -206,7 +206,7 @@ export function DataTable({
                         className="p-1 text-gray-400 hover:text-red-600 transition-colors"
                         title="Delete"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={20} />
                       </button>
                     )}
                   </div>

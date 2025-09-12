@@ -49,7 +49,7 @@ export function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             <motion.h1
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-xl font-bold text-white"
+              className="text-3xl font-bold text-white"
             >
               Admin Panel
             </motion.h1>
@@ -72,13 +72,13 @@ export function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                className={`group flex items-center rounded-lg px-3 py-3 text-lg font-medium transition-colors ${
                   isActive
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }`}
               >
-                <Icon size={20} className="mr-3 flex-shrink-0" />
+                <Icon size={24} className="mr-3 flex-shrink-0" />
                 {isOpen && (
                   <motion.span
                     initial={{ opacity: 0 }}
@@ -99,7 +99,7 @@ export function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-xs text-gray-400"
+              className="text-sm text-gray-400"
             >
               <p>Project Management</p>
               <p>Admin Panel v1.0</p>

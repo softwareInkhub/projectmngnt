@@ -117,12 +117,12 @@ export default function AdminCompaniesPage() {
       sortable: true,
       render: (value: string, row: CompanyData) => (
         <div className="flex items-center">
-          <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-            <Building2 size={16} className="text-blue-600" />
+          <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+            <Building2 size={24} className="text-blue-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{value}</div>
-            <div className="text-sm text-gray-500">{row.industry}</div>
+            <div className="font-medium text-gray-900 text-xl">{value}</div>
+            <div className="text-lg text-gray-500">{row.industry}</div>
           </div>
         </div>
       )
@@ -132,7 +132,7 @@ export default function AdminCompaniesPage() {
       label: 'Status',
       sortable: true,
       render: (value: string) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+        <span className={`px-4 py-2 text-base font-medium rounded-full ${
           value === 'Active' 
             ? 'bg-green-100 text-green-800' 
             : 'bg-red-100 text-red-800'
@@ -146,8 +146,8 @@ export default function AdminCompaniesPage() {
       label: 'Location',
       sortable: true,
       render: (value: string) => (
-        <div className="flex items-center text-sm text-gray-600">
-          <MapPin size={14} className="mr-1" />
+        <div className="flex items-center text-lg text-gray-600">
+          <MapPin size={18} className="mr-1" />
           {value || 'Not specified'}
         </div>
       )
@@ -157,7 +157,7 @@ export default function AdminCompaniesPage() {
       label: 'Employees',
       sortable: true,
       render: (value: number) => (
-        <span className="text-sm text-gray-900">{value || 0}</span>
+        <span className="text-lg text-gray-900">{value || 0}</span>
       )
     },
     {
@@ -167,14 +167,14 @@ export default function AdminCompaniesPage() {
       render: (value: string, row: CompanyData) => (
         <div className="space-y-1">
           {value && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Mail size={14} className="mr-1" />
+            <div className="flex items-center text-lg text-gray-600">
+              <Mail size={18} className="mr-1" />
               {value}
             </div>
           )}
           {row.phone && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Phone size={14} className="mr-1" />
+            <div className="flex items-center text-lg text-gray-600">
+              <Phone size={18} className="mr-1" />
               {row.phone}
             </div>
           )}
@@ -191,13 +191,13 @@ export default function AdminCompaniesPage() {
             href={value.startsWith('http') ? value : `https://${value}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+            className="flex items-center text-lg text-blue-600 hover:text-blue-800"
           >
-            <Globe size={14} className="mr-1" />
+            <Globe size={18} className="mr-1" />
             {value.replace(/^https?:\/\//, '')}
           </a>
         ) : (
-          <span className="text-sm text-gray-400">Not specified</span>
+          <span className="text-lg text-gray-400">Not specified</span>
         )
       )
     }
@@ -220,8 +220,8 @@ export default function AdminCompaniesPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Companies</h1>
-          <p className="text-gray-600 mt-1">Manage all companies in the system</p>
+          <h1 className="text-5xl font-bold text-gray-900">Companies</h1>
+          <p className="text-xl text-gray-600 mt-1">Manage all companies in the system</p>
         </div>
       </motion.div>
 
@@ -248,38 +248,38 @@ export default function AdminCompaniesPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-3xl font-semibold text-gray-900 mb-4">
               {editingCompany ? 'Edit Company' : 'Create New Company'}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Company Name *</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Industry</label>
                 <input
                   type="text"
                   value={formData.industry}
                   onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -287,58 +287,58 @@ export default function AdminCompaniesPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Location</label>
                 <input
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Email</label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Phone</label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Website</label>
                 <input
                   type="url"
                   value={formData.website}
                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Employees</label>
+                <label className="block text-lg font-medium text-gray-700 mb-1">Employees</label>
                 <input
                   type="number"
                   value={formData.employees}
                   onChange={(e) => setFormData({ ...formData, employees: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                 />
               </div>
             </div>
             
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-lg font-medium text-gray-700 mb-1">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -365,13 +365,13 @@ export default function AdminCompaniesPage() {
                     revenue: ''
                   });
                 }}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-lg font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={editingCompany ? handleEditCompany : handleCreateCompany}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium"
               >
                 {editingCompany ? 'Update Company' : 'Create Company'}
               </button>

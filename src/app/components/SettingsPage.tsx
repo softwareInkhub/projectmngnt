@@ -1,12 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from '../contexts/UserContext';
 import { 
-  Settings, User, Bell, Shield, Palette, Globe, Mail, Smartphone, Monitor, Moon, Sun, Save, Eye, EyeOff, ChevronRight, Star, FilterX, Grid3X3, List, Heart, ExternalLink, GitCommit, DollarSign, UserCheck, Timer, Flag, Layers, Zap, SortAsc, CheckSquare, Square, Play, Pause, StopCircle, RotateCcw, LineChart, Crown, Trophy, Medal, Users2, UserX, UserCheck2, UserMinus, UserPlus2, Video, Phone, MessageSquare, AlertCircle, Info, Award, TrendingUp, Paperclip, FileText, BarChart, PieChart, ScatterChart, AreaChart, Gauge, Target, TrendingDown, Activity, Filter, Share2, Archive, Copy, Trash2, ArrowUpRight, ArrowDownRight, Minus, Building, MapPin, Home, School, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Folder, HardDrive, Cpu, HardDriveIcon, Network, WifiIcon, Bluetooth, BluetoothSearching, SmartphoneIcon, Tablet, Download, Upload, Key, Lock, Unlock, Database, Server, Cloud, Wifi, WifiOff, Volume2, VolumeX, Languages, Briefcase
+  Settings, User, Bell, Shield, Palette, Globe, Mail, Smartphone, Monitor, Moon, Sun, Eye, EyeOff, ChevronRight, Star, FilterX, Grid3X3, List, Heart, ExternalLink, GitCommit, DollarSign, UserCheck, Timer, Flag, Layers, Zap, SortAsc, CheckSquare, Square, Play, Pause, StopCircle, RotateCcw, LineChart, Crown, Trophy, Medal, Users2, UserX, UserCheck2, UserMinus, UserPlus2, Video, Phone, MessageSquare, AlertCircle, Info, Award, TrendingUp, Paperclip, FileText, BarChart, PieChart, ScatterChart, AreaChart, Gauge, Target, TrendingDown, Activity, Filter, Share2, Archive, Copy, Trash2, ArrowUpRight, ArrowDownRight, Minus, Building, MapPin, Home, School, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Folder, HardDrive, Cpu, HardDriveIcon, Network, WifiIcon, Bluetooth, BluetoothSearching, SmartphoneIcon, Tablet, Upload, Key, Lock, Unlock, Database, Server, Cloud, Wifi, WifiOff, Volume2, VolumeX, Languages, Briefcase
 } from "lucide-react";
 
 export default function SettingsPage() {
-  const { currentUser, loading } = useUser();
+  const { currentUser, loading, refreshUserData } = useUser();
   const [activeTab, setActiveTab] = useState("profile");
+
+  // Debug useEffect
+  useEffect(() => {
+    console.log('🔄 SettingsPage - currentUser:', currentUser);
+    console.log('🔄 SettingsPage - loading:', loading);
+    console.log('🔄 SettingsPage - localStorage user_email:', localStorage.getItem('user_email'));
+    console.log('🔄 SettingsPage - localStorage access_token exists:', !!localStorage.getItem('access_token'));
+  }, [currentUser, loading]);
+
+
   const [showPassword, setShowPassword] = useState(false);
   const [theme, setTheme] = useState("light");
   const [notifications, setNotifications] = useState({
@@ -48,125 +58,192 @@ export default function SettingsPage() {
   ];
 
   const renderProfileTab = () => (
-    <div className="space-y-6 animate-fade-in">
-      {/* Profile Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
-        <div className="flex items-center gap-4 mb-4 md:mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-            {loading ? '...' : currentUser ? (currentUser.name?.charAt(0) || currentUser.email?.charAt(0) || 'U') : 'U'}
+    <div className="space-y-8 animate-fade-in">
+      {/* Complete User Profile Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+        {/* Profile Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
+              {loading ? '...' : currentUser ? (currentUser.name?.charAt(0) || currentUser.email?.charAt(0) || 'U') : 'U'}
+            </div>
+            <div>
+              <h3 className="text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight">
+                {loading ? 'Loading...' : currentUser ? currentUser.name : 'User Profile'}
+              </h3>
+              <p className="text-slate-700 text-lg md:text-xl font-medium mt-2">
+                {loading ? 'Loading user information...' : currentUser ? `${currentUser.role} • ${currentUser.department || 'No Department'}` : 'No user data'}
+              </p>
+              <p className="text-base md:text-lg text-slate-600 mt-1">
+                {loading ? 'Member since loading...' : currentUser ? `Member since ${new Date(currentUser.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}` : 'Member since unknown'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg md:text-xl font-bold text-slate-900">
-              {loading ? 'Loading...' : currentUser ? currentUser.name : 'User Profile'}
-            </h3>
-            <p className="text-slate-600 text-sm md:text-base">
-              {loading ? 'Loading user information...' : currentUser ? `${currentUser.role} • ${currentUser.department || 'No Department'}` : 'No user data'}
+          <button
+            onClick={refreshUserData}
+            disabled={loading}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-base font-semibold flex items-center gap-3 transition-colors duration-200 shadow-sm"
+          >
+            <RotateCcw className="w-5 h-5" />
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
+
+        {/* All User Information in One Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Personal Information */}
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold text-slate-900 flex items-center gap-2 mb-6">
+              <User className="w-6 h-6 text-blue-600" />
+              Personal Details
+            </h4>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">First Name</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.name?.split(' ')[0] || 'User'}
+                placeholder="Enter first name"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Last Name</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.name?.split(' ').slice(1).join(' ') || 'Name'}
+                placeholder="Enter last name"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Email Address</label>
+              <input
+                type="email"
+                value={loading ? 'Loading...' : currentUser?.email || localStorage.getItem('user_email') || 'No email available'}
+                placeholder="Enter email address"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Phone Number</label>
+              <input
+                type="tel"
+                value={loading ? 'Loading...' : currentUser?.phone || 'Not provided'}
+                placeholder="Enter phone number"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+          </div>
+
+          {/* Work Information */}
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold text-slate-900 flex items-center gap-2 mb-6">
+              <Briefcase className="w-6 h-6 text-blue-600" />
+              Work Details
+            </h4>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Job Title</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.role || 'User'}
+                placeholder="Enter job title"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Department</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.department || 'General'}
+                placeholder="Enter department"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Employee ID</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.id || 'Not assigned'}
+                placeholder="Enter employee ID"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Status</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.status || 'Active'}
+                placeholder="Enter status"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+          </div>
+
+          {/* Additional Information */}
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold text-slate-900 flex items-center gap-2 mb-6">
+              <Settings className="w-6 h-6 text-blue-600" />
+              Account Details
+            </h4>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">User ID</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.id || 'Not available'}
+                placeholder="User ID"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Join Date</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.joinDate ? new Date(currentUser.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                placeholder="Join date"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Last Active</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.lastActive ? new Date(currentUser.lastActive).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                placeholder="Last active"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-base font-semibold text-slate-800 mb-3">Company ID</label>
+              <input
+                type="text"
+                value={loading ? 'Loading...' : currentUser?.companyId || 'Default Company'}
+                placeholder="Company ID"
+                className="w-3/4 px-4 py-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-medium text-slate-900 placeholder-slate-500 transition-colors duration-200"
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Profile Information Notice */}
+        <div className="flex justify-center mt-8 pt-6 border-t border-slate-200">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-4">
+            <p className="text-blue-800 text-base font-medium text-center">
+              📋 This is your current profile information. Contact your administrator to update any details.
             </p>
-            <p className="text-xs md:text-sm text-slate-500">
-              {loading ? 'Member since loading...' : currentUser ? `Member since ${new Date(currentUser.joinDate).toLocaleDateString()}` : 'Member since unknown'}
-            </p>
           </div>
         </div>
-      </div>
-
-      {/* Personal Information */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
-        <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-          <User className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
-          Personal Information
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-          <div>
-            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-2">First Name</label>
-            <input
-              type="text"
-              defaultValue={currentUser?.name?.split(' ')[0] || ''}
-              placeholder="Enter first name"
-              className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-xs md:text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-2">Last Name</label>
-            <input
-              type="text"
-              defaultValue={currentUser?.name?.split(' ').slice(1).join(' ') || ''}
-              placeholder="Enter last name"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-xs md:text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-2">Email</label>
-            <input
-              type="email"
-              defaultValue={currentUser?.email || ''}
-              placeholder="Enter email address"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-xs md:text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-2">Phone</label>
-            <input
-              type="tel"
-              defaultValue={currentUser?.phone || ''}
-              placeholder="Enter phone number"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-xs md:text-sm"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Work Information */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-          <Briefcase className="w-5 h-5 text-green-500" />
-          Work Information
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Job Title</label>
-            <input
-              type="text"
-              defaultValue={currentUser?.role || ''}
-              placeholder="Enter job title"
-              className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Department</label>
-            <input
-              type="text"
-              defaultValue={currentUser?.department || ''}
-              placeholder="Enter department"
-              className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Employee ID</label>
-            <input
-              type="text"
-              defaultValue={currentUser?.id || ''}
-              placeholder="Enter employee ID"
-              className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
-            <input
-              type="text"
-              defaultValue={currentUser?.status || ''}
-              placeholder="Enter status"
-              className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <button className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 font-semibold focus-ring">
-          <Save size={18} />
-          Save Changes
-        </button>
       </div>
     </div>
   );
@@ -583,35 +660,15 @@ export default function SettingsPage() {
             </div>
           </div>
           
-          {/* Actions (responsive) */}
-          <div className="hidden md:flex items-center gap-3">
-            <button 
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md"
-            >
-              <Download size={16} />
-              Export Settings
-            </button>
-            <button 
-              className="flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold"
-            >
-              <Save size={20} />
-              Save All
-            </button>
-          </div>
-
-          {/* Mobile compact actions */}
-          <div className="flex md:hidden items-center gap-1.5 w-full justify-end">
-            <button className="px-3 py-1.5 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-md text-xs font-medium">Save</button>
-          </div>
         </div>
       </div>
 
-      <div className="px-1 md:px-8 py-2 md:py-8 space-y-2 md:space-y-6">
+      <div className="px-4 md:px-8 py-4 md:py-8 space-y-4 md:space-y-8">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Settings Navigation */}
           <div className="lg:w-80">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Settings</h2>
+              <h2 className="text-xl font-semibold text-slate-900 mb-6">Settings</h2>
               <div className="space-y-2">
                 {settingsTabs.map((tab) => {
                   const Icon = tab.icon;

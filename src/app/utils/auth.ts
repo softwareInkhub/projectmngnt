@@ -6,17 +6,18 @@ export const logout = () => {
   localStorage.removeItem('id_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('token_expires');
+  localStorage.removeItem('user_email');
   
-  // Clear any OAuth state
+  // Clear all OAuth and session state
+  sessionStorage.clear(); // Clear all session storage
   sessionStorage.removeItem('oauth_state');
+  sessionStorage.removeItem('oauth_callback_processed');
   sessionStorage.removeItem('phone_signup_username');
   
-  console.log('✅ User logged out successfully');
+  console.log('✅ User logged out successfully - all tokens and session data cleared');
   
-  // Set mock tokens to keep user on main app
-  localStorage.setItem('access_token', 'mock-token-disabled');
-  localStorage.setItem('id_token', 'mock-token-disabled');
-  localStorage.setItem('refresh_token', 'mock-token-disabled');
+  // Redirect to auth page immediately
+  window.location.href = '/authPage';
 };
 
 export const isAuthenticated = (): boolean => {

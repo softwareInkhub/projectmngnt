@@ -6,10 +6,7 @@ import {
   Menu,
   Search,
   Bell,
-  User,
-  Settings,
-  LogOut,
-  ChevronDown
+  User
 } from 'lucide-react';
 import { logout } from '../../utils/auth';
 
@@ -18,7 +15,6 @@ interface AdminNavbarProps {
 }
 
 export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
@@ -45,7 +41,7 @@ export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-80 pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
             />
           </div>
         </div>
@@ -60,45 +56,12 @@ export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
             </span>
           </button>
 
-          {/* Profile Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center space-x-2 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-            >
-              <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <User size={16} className="text-white" />
-              </div>
-              <span className="hidden md:block text-sm font-medium">Admin User</span>
-              <ChevronDown size={16} />
-            </button>
-
-            {/* Dropdown Menu */}
-            {isProfileOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-              >
-                <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center space-x-2">
-                  <User size={16} />
-                  <span>Profile</span>
-                </button>
-                <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center space-x-2">
-                  <Settings size={16} />
-                  <span>Settings</span>
-                </button>
-                <hr className="my-2" />
-                <button 
-                  onClick={logout}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center space-x-2 text-red-600"
-                >
-                  <LogOut size={16} />
-                  <span>Sign Out</span>
-                </button>
-              </motion.div>
-            )}
+          {/* Admin Profile Display */}
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-sm">
+              <User size={20} className="text-white" />
+            </div>
+            <span className="text-lg font-semibold text-gray-800 hidden md:block">Admin User</span>
           </div>
         </div>
       </div>

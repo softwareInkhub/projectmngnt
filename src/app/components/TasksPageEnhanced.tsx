@@ -235,21 +235,27 @@ export default function TasksPageEnhanced({
     try {
       setIsSubmittingTask(true);
       if (editingTask) {
-        // Exclude fields that might conflict with backend _metadata field
-        const { 
-          id, 
-          subtasks, 
-          description, 
-          comments, 
-          tags, 
-          progress,
-          timeSpent,
-          estimatedHours,
-          createdAt, 
-          updatedAt,
-          ...updateData 
-        } = taskData;
-        await TaskApiService.updateTask(editingTask.id!, updateData);
+        // Build a safe, explicit update payload to avoid DynamoDB UpdateExpression conflicts
+        const safeUpdate = {
+          title: taskData.title,
+          description: taskData.description,
+          project: taskData.project,
+          assignee: taskData.assignee,
+          status: taskData.status,
+          priority: taskData.priority,
+          dueDate: taskData.dueDate,
+          startDate: taskData.startDate,
+          estimatedHours: taskData.estimatedHours,
+          tags: taskData.tags,
+          subtasks: taskData.subtasks,
+          comments: taskData.comments,
+          progress: taskData.progress,
+          timeSpent: taskData.timeSpent,
+          parentId: taskData.parentId,
+          updatedAt: new Date().toISOString()
+        } as Partial<typeof taskData>;
+
+        await TaskApiService.updateTask(editingTask.id!, safeUpdate);
         setSuccessMessage("Task updated successfully");
       } else {
         const newTask = await TaskApiService.createTask(taskData);
@@ -594,7 +600,6 @@ export default function TasksPageEnhanced({
             }
             return Promise.resolve(false);
           }}
-          onRefreshTasks={fetchTasks}
           selectedTaskId={null}
         />
       ) : viewMode === "grid" ? (

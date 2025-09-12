@@ -17,21 +17,16 @@ export default function Home() {
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
-        console.log('🔍 Checking authentication status...');
-        
         const accessToken = localStorage.getItem('access_token');
         const idToken = localStorage.getItem('id_token');
         
         // Check if user has valid tokens (not mock tokens)
         if (accessToken && idToken && accessToken !== 'mock-token-disabled') {
-          console.log('✅ User authenticated, showing main app');
           setIsAuthenticated(true);
         } else {
-          console.log('❌ User not authenticated, redirecting to auth page');
           router.push('/authPage');
         }
       } catch (error) {
-        console.error('❌ Error checking authentication:', error);
         router.push('/authPage');
       } finally {
         setIsLoading(false);

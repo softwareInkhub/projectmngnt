@@ -23,6 +23,39 @@ export default function AuthPage() {
   const [oauthLoading, setOauthLoading] = useState(false);
   const router = useRouter();
 
+  // Manual cleanup function for OAuth state
+  const clearOAuthState = () => {
+    console.log('🧹 Manually clearing all OAuth state...');
+    
+    // Clear all session storage
+    sessionStorage.clear();
+    
+    // Clear all OAuth-related localStorage items
+    localStorage.clear(); // Clear everything instead of individual items
+    
+    // Clear any Cognito-related cookies (if any)
+    document.cookie.split(";").forEach(function(c) { 
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+    
+    // Clear browser cache for this domain
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (let name of names) {
+          caches.delete(name);
+        }
+      });
+    }
+    
+    console.log('✅ All OAuth state, tokens, and cache cleared manually');
+    setMessage('All data cleared. Redirecting to fresh login page...');
+    
+    // Force hard reload to clear everything
+    setTimeout(() => {
+      window.location.href = '/authPage';
+    }, 1000);
+  };
+
 
   // Check if user is already logged in (but not during OAuth callback)
   useEffect(() => {
@@ -43,6 +76,9 @@ export default function AuthPage() {
         router.push('/');
       } else {
         console.log('🔍 User not authenticated, staying on auth page');
+        // Aggressively clear ALL OAuth state when user is not authenticated
+        sessionStorage.clear();
+        console.log('🧹 Cleared all session storage for fresh OAuth flow');
       }
     };
 
@@ -56,6 +92,13 @@ export default function AuthPage() {
     setMessage('');
    
     try {
+      // Clear any existing OAuth state first to prevent conflicts
+      sessionStorage.clear();
+      localStorage.removeItem('oauth_state');
+      localStorage.removeItem('oauth_callback_processed');
+      
+      console.log('🧹 Cleared all OAuth state before starting new flow');
+      
       // Get OAuth URL from backend
       const response = await fetch(`${API_BASE_URL}/auth/oauth-url`);
       if (!response.ok) {
@@ -63,6 +106,7 @@ export default function AuthPage() {
       }
      
       const { authUrl, state } = await response.json();
+      console.log('🔍 Received OAuth URL from backend:', { authUrl, state });
      
       // Check if the auth URL contains localhost and fix it
       let correctedAuthUrl = authUrl;
@@ -80,8 +124,10 @@ export default function AuthPage() {
         console.log('Fixed additional localhost references:', correctedAuthUrl);
       }
      
-      // Store state for verification
+      // Store fresh state for verification
       sessionStorage.setItem('oauth_state', state);
+      console.log('🔄 Starting fresh OAuth flow with state:', state);
+      console.log('🔄 Final OAuth URL:', correctedAuthUrl);
      
       // Redirect to Cognito
       window.location.href = correctedAuthUrl;
@@ -99,6 +145,15 @@ export default function AuthPage() {
     const code = urlParams.get('code');
     const state = urlParams.get('state');
     const error = urlParams.get('error');
+    
+    // Check if we've already processed this callback
+    const processedCallback = sessionStorage.getItem('oauth_callback_processed');
+    if (processedCallback && code) {
+      console.log('🔄 OAuth callback already processed, clearing URL and skipping...');
+      // Clear URL parameters to prevent re-processing
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
    
     if (error) {
       setMessage(`OAuth error: ${error}`);
@@ -107,6 +162,13 @@ export default function AuthPage() {
    
     if (code) {
       console.log('🔄 Processing OAuth callback with code:', code.substring(0, 10) + '...');
+      
+      // Validate code format (should be a reasonable length)
+      if (code.length < 10) {
+        console.error('❌ Invalid authorization code format');
+        setMessage('Invalid authorization code. Please try logging in again.');
+        return;
+      }
       
       // For password change flow, we might not have a state parameter
       // or it might not match due to Cognito's redirect behavior
@@ -118,7 +180,12 @@ export default function AuthPage() {
         console.warn('State mismatch detected, but proceeding with code exchange (password change flow)');
       }
      
+      // Mark callback as being processed
+      sessionStorage.setItem('oauth_callback_processed', 'true');
+      
       // Exchange code for tokens
+      console.log('🔄 Exchanging OAuth code for tokens...', { code: code?.substring(0, 10) + '...', state });
+      
       fetch(`${API_BASE_URL}/auth/token`, {
         method: 'POST',
         headers: {
@@ -130,8 +197,12 @@ export default function AuthPage() {
         })
       })
       .then(res => {
+        console.log('🔄 Token exchange response status:', res.status);
         if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+          return res.text().then(text => {
+            console.error('❌ Token exchange failed:', res.status, text);
+            throw new Error(`HTTP error! status: ${res.status} - ${text}`);
+          });
         }
         return res.json();
       })
@@ -151,11 +222,17 @@ export default function AuthPage() {
         localStorage.setItem('access_token', tokens.access_token);
         localStorage.setItem('refresh_token', tokens.refresh_token);
         localStorage.setItem('token_expires', (Date.now() + (tokens.expires_in * 1000)).toString());
+        
+        // Store user email if available in tokens
+        if (tokens.email) {
+          localStorage.setItem('user_email', tokens.email);
+        }
        
         console.log('✅ Tokens stored in localStorage');
        
         // Clean up
         sessionStorage.removeItem('oauth_state');
+        sessionStorage.removeItem('oauth_callback_processed');
        
         // Clear URL parameters immediately to prevent re-processing
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -165,15 +242,66 @@ export default function AuthPage() {
         router.push('/');
       })
       .catch(error => {
-        console.error('Token exchange failed:', error);
-        setMessage('Login failed. Please try again.');
+        console.error('❌ Token exchange failed:', error);
+        
+        // Provide more specific error messages
+        let errorMessage = 'Login failed. Please try again.';
+        if (error.message.includes('400')) {
+          errorMessage = 'Invalid authorization code. Please try logging in again.';
+        } else if (error.message.includes('401')) {
+          errorMessage = 'Authentication failed. Please check your credentials.';
+        } else if (error.message.includes('403')) {
+          errorMessage = 'Access denied. Please contact support.';
+        } else if (error.message.includes('500')) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+        
+        setMessage(errorMessage);
         sessionStorage.removeItem('oauth_state');
+        sessionStorage.removeItem('oauth_callback_processed');
         // Clear URL parameters on error too
         window.history.replaceState({}, document.title, window.location.pathname);
       });
     }
   }, []); // Remove router dependency to prevent re-runs
 
+
+  // Function to sync user from Cognito to application database
+  const syncUserToDatabase = async (cognitoUser: any) => {
+    try {
+      const userData = {
+        name: cognitoUser.username || cognitoUser.email,
+        email: cognitoUser.email,
+        role: 'Developer', // Default role
+        status: 'Active',
+        department: 'General',
+        joinDate: new Date().toISOString().split('T')[0],
+        lastActive: new Date().toISOString(),
+        phone: cognitoUser.phone_number || '',
+        companyId: '',
+        teamId: ''
+      };
+
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (response.ok) {
+        console.log('✅ User synced to application database');
+        return true;
+      } else {
+        console.warn('⚠️ Failed to sync user to application database');
+        return false;
+      }
+    } catch (error) {
+      console.warn('⚠️ Error syncing user to database:', error);
+      return false;
+    }
+  };
 
   // Handle email login/signup
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -205,6 +333,65 @@ export default function AuthPage() {
           localStorage.setItem('id_token', data.result.idToken.jwtToken);
           localStorage.setItem('access_token', data.result.accessToken.jwtToken);
           localStorage.setItem('refresh_token', data.result.refreshToken.token);
+          
+          // Store user email for context
+          localStorage.setItem('user_email', email);
+          
+          // Check if user exists in application database and sync if needed
+          try {
+            const userCheckResponse = await fetch(`${API_BASE_URL}/users?email=${encodeURIComponent(email)}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (userCheckResponse.ok) {
+              const userData = await userCheckResponse.json();
+              if (!userData.users || userData.users.length === 0) {
+                // User doesn't exist in database, create them
+                console.log('🔄 User not found in database, creating...');
+                await syncUserToDatabase({ username, email });
+              }
+            }
+          } catch (syncError) {
+            console.warn('⚠️ Error checking/syncing user during login:', syncError);
+          }
+        } else if (!isLogin) {
+          // Store user email for context after signup
+          localStorage.setItem('user_email', email);
+          
+          // After successful signup, create user in application database
+          try {
+            const userData = {
+              name: username, // Use username as name initially
+              email: email,
+              role: 'Developer', // Default role
+              status: 'Active',
+              department: 'General',
+              joinDate: new Date().toISOString().split('T')[0],
+              lastActive: new Date().toISOString(),
+              phone: '',
+              companyId: '',
+              teamId: ''
+            };
+
+            const userResponse = await fetch(`${API_BASE_URL}/users`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(userData),
+            });
+
+            if (userResponse.ok) {
+              console.log('✅ User created in application database');
+            } else {
+              console.warn('⚠️ Failed to create user in application database');
+            }
+          } catch (dbError) {
+            console.warn('⚠️ Error creating user in database:', dbError);
+          }
         }
         setMessage(isLogin ? 'Login successful!' : 'Signup successful! Please check your email.');
         setTimeout(() => {
@@ -450,7 +637,7 @@ export default function AuthPage() {
 
         {/* OAuth Login */}
         {authMode === 'oauth' && (
-          <div className="mt-8">
+          <div className="mt-8 space-y-3">
             <button
               onClick={handleOAuthLogin}
               disabled={oauthLoading}
@@ -462,6 +649,7 @@ export default function AuthPage() {
                 <span>Sign in with Cognito OAuth</span>
               )}
             </button>
+            
           </div>
         )}
 

@@ -9,14 +9,14 @@ import {
   Calendar, 
   BarChart3, 
   Grid3X3, 
-  Settings, 
+  Settings,
   Bell, 
   ChevronLeft, 
   ChevronRight,
   X,
   LogOut
 } from 'lucide-react';
-import { logout, isAuthenticated } from '../utils/auth';
+import { logout } from '../utils/auth';
 
 interface SidebarProps {
   activeTab: number;
@@ -162,35 +162,26 @@ export default function Sidebar({
             })}
           </nav>
           
-          {/* Enhanced Footer */}
-          <div className="p-3 border-t border-gray-100 bg-gray-50 space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
-                <span className="text-white text-sm font-bold">U</span>
-              </div>
-              <div className="flex-1">
-                <div className="text-lg font-medium text-gray-900">Profile</div>
-                <div className="text-base text-gray-500">User</div>
-              </div>
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors mobile-haptic">
-                <Settings size={14} className="text-gray-500" />
-              </button>
-            </div>
-            
-            {/* Enhanced Logout Button */}
+          {/* Logout Button */}
+          <div className="px-3 pb-3 pt-1">
             <button 
-              onClick={logout}
-              className="w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 text-left font-medium bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 hover:border-red-300 mobile-haptic"
+              onClick={async () => {
+                try {
+                  await logout();
+                  window.location.href = '/authPage';
+                } catch (error) {
+                  console.error('Logout failed:', error);
+                  window.location.href = '/authPage';
+                }
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 text-left font-medium bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 hover:border-red-300"
               aria-label="Sign Out"
             >
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-red-100 text-red-600">
-                <LogOut size={16} />
-              </div>
-              <div className="flex-1 text-left">
-                <span className="text-lg font-medium">Sign Out</span>
-              </div>
+              <LogOut size={16} />
+              <span className="text-base font-medium">Sign Out</span>
             </button>
           </div>
+          
         </div>
       </aside>
     );
@@ -274,25 +265,15 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* User Avatar */}
-      <div className="mt-4 mb-2 flex flex-col items-center">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center text-base font-bold text-white shadow-lg">
-          B
-        </div>
-        {isExpanded && (
-          <span className="text-base text-neutral-500 mt-1">User</span>
-        )}
-      </div>
-
       {/* Logout Button */}
-      <button
+      <div className="mt-1">
+        <button
         onClick={async () => {
           try {
             await logout();
             window.location.href = '/authPage';
           } catch (error) {
             console.error('Logout failed:', error);
-            // Still redirect to auth page even if logout fails
             window.location.href = '/authPage';
           }
         }}
@@ -314,8 +295,9 @@ export default function Sidebar({
           <span className="text-lg font-medium truncate transition-all duration-300">
             Logout
           </span>
-        )}
-      </button>
+         )}
+       </button>
+      </div>
     </aside>
   );
-} 
+}
