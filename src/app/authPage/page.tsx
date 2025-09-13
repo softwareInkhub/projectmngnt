@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
-const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000/authPage";
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "projectmngnt.vercel.app/authPage";
 
 
 export default function AuthPage() {
@@ -113,7 +113,7 @@ export default function AuthPage() {
       if (authUrl && authUrl.includes('localhost:3000')) {
         // Replace localhost with deployed URL
         const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-        correctedAuthUrl = authUrl.replace('http://localhost:3000', deployedUrl);
+        correctedAuthUrl = authUrl.replace('projectmngnt.vercel.app', deployedUrl);
         console.log('Fixed OAuth URL from localhost to deployed URL:', correctedAuthUrl);
       }
       
