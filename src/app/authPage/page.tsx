@@ -72,19 +72,18 @@ export default function AuthPage() {
      
       // Check if the auth URL contains localhost and fix it
       let correctedAuthUrl = authUrl;
-      if (authUrl && authUrl.includes('localhost')) {
+      if (authUrl && authUrl.includes('localhost:3000')) {
         // Replace localhost with deployed URL
         const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-        const deployedDomain = deployedUrl.replace('https://', '').replace('http://', '');
-        
-        // Replace all localhost patterns
-        correctedAuthUrl = authUrl.replace(/localhost:\d+/g, deployedDomain);
-        correctedAuthUrl = correctedAuthUrl.replace(/localhost/g, deployedDomain);
-        
-        console.log('🔧 Fixed OAuth URL from localhost to deployed URL:');
-        console.log('  Original:', authUrl);
-        console.log('  Corrected:', correctedAuthUrl);
-        console.log('  Deployed domain:', deployedDomain);
+        correctedAuthUrl = authUrl.replace('localhost:3000', deployedUrl.replace('https://', '').replace('http://', ''));
+        console.log('Fixed OAuth URL from localhost to deployed URL:', correctedAuthUrl);
+      }
+      
+      // Also check for any other localhost references
+      if (correctedAuthUrl && correctedAuthUrl.includes('localhost')) {
+        const deployedUrl = REDIRECT_URI.replace('/authPage', '');
+        correctedAuthUrl = correctedAuthUrl.replace(/localhost:\d+/, deployedUrl.replace('https://', '').replace('http://', ''));
+        console.log('Fixed additional localhost references:', correctedAuthUrl);
       }
      
       // Store state for verification
