@@ -10,7 +10,6 @@ const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "https://projectmng
 
 
 export default function AuthPage() {
-
   const [authMode, setAuthMode] = useState('oauth'); // 'oauth', 'email', 'phone'
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -20,70 +19,40 @@ export default function AuthPage() {
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
   const router = useRouter();
 
-  // Manual cleanup function for OAuth state
-  const clearOAuthState = () => {
-    console.log('🧹 Manually clearing all OAuth state...');
-    
-    // Clear all session storage
-    sessionStorage.clear();
-    
-    // Clear all OAuth-related localStorage items
-    localStorage.clear(); // Clear everything instead of individual items
-    
-    // Clear any Cognito-related cookies (if any)
-    document.cookie.split(";").forEach(function(c) { 
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-    });
-    
-    // Clear browser cache for this domain
-    if ('caches' in window) {
-      caches.keys().then(function(names) {
-        for (let name of names) {
-          caches.delete(name);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      // Validate token
+      fetch(`${API_BASE_URL}/auth/validate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
+      })
+      .then(res => {
+        if (res.ok) {
+          router.push('/'); // Redirect to main app
+        } else {
+          // Token invalid, clear it
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('id_token');
+          localStorage.removeItem('refresh_token');
+        }
+      })
+      .catch(() => {
+        // Network error, clear tokens
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('id_token');
+        localStorage.removeItem('refresh_token');
       });
     }
-    
-    console.log('✅ All OAuth state, tokens, and cache cleared manually');
-    setMessage('All data cleared. Redirecting to fresh login page...');
-    
-    // Force hard reload to clear everything
-    setTimeout(() => {
-      window.location.href = '/authPage';
-    }, 1000);
-  };
-
-
-  // Check if user is already logged in (but not during OAuth callback)
-  useEffect(() => {
-    const checkAuthStatus = () => {
-      // Don't redirect if we're processing an OAuth callback
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('code')) {
-        console.log('🔍 OAuth callback detected, skipping auth check');
-        return;
-      }
-
-      const accessToken = localStorage.getItem('access_token');
-      const idToken = localStorage.getItem('id_token');
-      
-      // If user has valid tokens (not mock tokens), redirect to main app
-      if (accessToken && idToken && accessToken !== 'mock-token-disabled') {
-        console.log('🔍 User already authenticated, redirecting to main app');
-        router.push('/');
-      } else {
-        console.log('🔍 User not authenticated, staying on auth page');
-        // Aggressively clear ALL OAuth state when user is not authenticated
-        sessionStorage.clear();
-        console.log('🧹 Cleared all session storage for fresh OAuth flow');
-      }
-    };
-
-    checkAuthStatus();
   }, [router]);
 
 
@@ -93,13 +62,6 @@ export default function AuthPage() {
     setMessage('');
    
     try {
-      // Clear any existing OAuth state first to prevent conflicts
-      sessionStorage.clear();
-      localStorage.removeItem('oauth_state');
-      localStorage.removeItem('oauth_callback_processed');
-      
-      console.log('🧹 Cleared all OAuth state before starting new flow');
-      
       // Get OAuth URL from backend
       const response = await fetch(`${API_BASE_URL}/auth/oauth-url`);
       if (!response.ok) {
@@ -107,14 +69,13 @@ export default function AuthPage() {
       }
      
       const { authUrl, state } = await response.json();
-      console.log('🔍 Received OAuth URL from backend:', { authUrl, state });
      
       // Check if the auth URL contains localhost and fix it
       let correctedAuthUrl = authUrl;
-      if (authUrl && authUrl.includes('https://projectmngnt.vercel.app/')) {
+      if (authUrl && authUrl.includes('localhost:3000')) {
         // Replace localhost with deployed URL
         const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-        correctedAuthUrl = authUrl.replace('projectmngnt.vercel.app', deployedUrl);
+        correctedAuthUrl = authUrl.replace('localhost:3000', deployedUrl.replace('https://', '').replace('http://', ''));
         console.log('Fixed OAuth URL from localhost to deployed URL:', correctedAuthUrl);
       }
       
@@ -125,10 +86,8 @@ export default function AuthPage() {
         console.log('Fixed additional localhost references:', correctedAuthUrl);
       }
      
-      // Store fresh state for verification
+      // Store state for verification
       sessionStorage.setItem('oauth_state', state);
-      console.log('🔄 Starting fresh OAuth flow with state:', state);
-      console.log('🔄 Final OAuth URL:', correctedAuthUrl);
      
       // Redirect to Cognito
       window.location.href = correctedAuthUrl;
@@ -146,15 +105,6 @@ export default function AuthPage() {
     const code = urlParams.get('code');
     const state = urlParams.get('state');
     const error = urlParams.get('error');
-    
-    // Check if we've already processed this callback
-    const processedCallback = sessionStorage.getItem('oauth_callback_processed');
-    if (processedCallback && code) {
-      console.log('🔄 OAuth callback already processed, clearing URL and skipping...');
-      // Clear URL parameters to prevent re-processing
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return;
-    }
    
     if (error) {
       setMessage(`OAuth error: ${error}`);
@@ -163,13 +113,6 @@ export default function AuthPage() {
    
     if (code) {
       console.log('🔄 Processing OAuth callback with code:', code.substring(0, 10) + '...');
-      
-      // Validate code format (should be a reasonable length)
-      if (code.length < 10) {
-        console.error('❌ Invalid authorization code format');
-        setMessage('Invalid authorization code. Please try logging in again.');
-        return;
-      }
       
       // For password change flow, we might not have a state parameter
       // or it might not match due to Cognito's redirect behavior
@@ -181,12 +124,8 @@ export default function AuthPage() {
         console.warn('State mismatch detected, but proceeding with code exchange (password change flow)');
       }
      
-      // Mark callback as being processed
-      sessionStorage.setItem('oauth_callback_processed', 'true');
-      
       // Exchange code for tokens
-      console.log('🔄 Exchanging OAuth code for tokens...', { code: code?.substring(0, 10) + '...', state });
-      
+      console.log('🔄 Exchanging OAuth code for tokens...');
       fetch(`${API_BASE_URL}/auth/token`, {
         method: 'POST',
         headers: {
@@ -233,13 +172,12 @@ export default function AuthPage() {
        
         // Clean up
         sessionStorage.removeItem('oauth_state');
-        sessionStorage.removeItem('oauth_callback_processed');
        
-        // Clear URL parameters immediately to prevent re-processing
+        // Clear URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
        
         console.log('✅ Redirecting to main app...');
-        // Always redirect to main app after OAuth login
+        // Redirect to main app
         router.push('/');
       })
       .catch(error => {
@@ -259,50 +197,12 @@ export default function AuthPage() {
         
         setMessage(errorMessage);
         sessionStorage.removeItem('oauth_state');
-        sessionStorage.removeItem('oauth_callback_processed');
         // Clear URL parameters on error too
         window.history.replaceState({}, document.title, window.location.pathname);
       });
     }
-  }, []); // Remove router dependency to prevent re-runs
+  }, [router]);
 
-
-  // Function to sync user from Cognito to application database
-  const syncUserToDatabase = async (cognitoUser: any) => {
-    try {
-      const userData = {
-        name: cognitoUser.username || cognitoUser.email,
-        email: cognitoUser.email,
-        role: 'Developer', // Default role
-        status: 'Active',
-        department: 'General',
-        joinDate: new Date().toISOString().split('T')[0],
-        lastActive: new Date().toISOString(),
-        phone: cognitoUser.phone_number || '',
-        companyId: '',
-        teamId: ''
-      };
-
-      const response = await fetch(`${API_BASE_URL}/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (response.ok) {
-        console.log('✅ User synced to application database');
-        return true;
-      } else {
-        console.warn('⚠️ Failed to sync user to application database');
-        return false;
-      }
-    } catch (error) {
-      console.warn('⚠️ Error syncing user to database:', error);
-      return false;
-    }
-  };
 
   // Handle email login/signup
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -337,66 +237,12 @@ export default function AuthPage() {
           
           // Store user email for context
           localStorage.setItem('user_email', email);
-          
-          // Check if user exists in application database and sync if needed
-          try {
-            const userCheckResponse = await fetch(`${API_BASE_URL}/users?email=${encodeURIComponent(email)}`, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-
-            if (userCheckResponse.ok) {
-              const userData = await userCheckResponse.json();
-              if (!userData.users || userData.users.length === 0) {
-                // User doesn't exist in database, create them
-                console.log('🔄 User not found in database, creating...');
-                await syncUserToDatabase({ username, email });
-              }
-            }
-          } catch (syncError) {
-            console.warn('⚠️ Error checking/syncing user during login:', syncError);
-          }
         } else if (!isLogin) {
           // Store user email for context after signup
           localStorage.setItem('user_email', email);
-          
-          // After successful signup, create user in application database
-          try {
-            const userData = {
-              name: username, // Use username as name initially
-              email: email,
-              role: 'Developer', // Default role
-              status: 'Active',
-              department: 'General',
-              joinDate: new Date().toISOString().split('T')[0],
-              lastActive: new Date().toISOString(),
-              phone: '',
-              companyId: '',
-              teamId: ''
-            };
-
-            const userResponse = await fetch(`${API_BASE_URL}/users`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(userData),
-            });
-
-            if (userResponse.ok) {
-              console.log('✅ User created in application database');
-            } else {
-              console.warn('⚠️ Failed to create user in application database');
-            }
-          } catch (dbError) {
-            console.warn('⚠️ Error creating user in database:', dbError);
-          }
         }
         setMessage(isLogin ? 'Login successful!' : 'Signup successful! Please check your email.');
         setTimeout(() => {
-          // Always redirect to main app
           router.push('/');
         }, 1000);
       } else {
@@ -441,6 +287,11 @@ export default function AuthPage() {
         } else {
           sessionStorage.setItem('phone_signup_username', phoneNumber);
         }
+        
+        // Store user email if provided during phone signup
+        if (email) {
+          localStorage.setItem('user_email', email);
+        }
       } else {
         setMessage(data.error || 'Signup failed');
       }
@@ -479,9 +330,14 @@ export default function AuthPage() {
         localStorage.setItem('id_token', data.result.idToken.jwtToken);
         localStorage.setItem('access_token', data.result.accessToken.jwtToken);
         localStorage.setItem('refresh_token', data.result.refreshToken.token);
+        
+        // Store user email for context (if available)
+        if (email) {
+          localStorage.setItem('user_email', email);
+        }
+        
         setMessage('Login successful!');
         setTimeout(() => {
-          // Always redirect to main app
           router.push('/');
         }, 1000);
       } else {
@@ -523,9 +379,7 @@ export default function AuthPage() {
         setOtp('');
         // Optionally redirect to login or auto-login
         setTimeout(() => {
-          // Always redirect to deployed URL
-          const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-          window.location.href = `${deployedUrl}/`;
+          router.push('/');
         }, 1000);
       } else {
         setMessage(data.error || 'Verification failed');
@@ -651,6 +505,11 @@ export default function AuthPage() {
               )}
             </button>
             
+            {message && (
+              <div className={`text-sm text-center ${message.includes('successful') ? 'text-green-600' : 'text-red-600'}`}>
+                {message}
+              </div>
+            )}
           </div>
         )}
 
