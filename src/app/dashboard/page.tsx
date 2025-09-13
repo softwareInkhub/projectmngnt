@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import ClientLayout from './components/ClientLayout';
-import { UserProvider } from './contexts/UserContext';
-import { validateToken } from './utils/auth';
+import DashboardPage from '../components/DashboardPage';
+import { UserProvider } from '../contexts/UserContext';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
-const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI ;
 
-export default function Home() {
+export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
@@ -22,8 +20,7 @@ export default function Home() {
         
         // Check if user has valid tokens (not mock tokens)
         if (accessToken && idToken && accessToken !== 'mock-token-disabled') {
-          // Redirect to dashboard instead of showing main app
-          router.push('/dashboard');
+          setIsAuthenticated(true);
         } else {
           router.push('/authPage');
         }
@@ -43,20 +40,35 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading application...</p>
+          <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
-  // Show main app only if authenticated
+  // Show auth page if not authenticated
   if (!isAuthenticated) {
     return null; // Will redirect to auth page
   }
 
+  // Mock functions for the dashboard component
+  const handleOpenTab = (tabName: string, context?: any) => {
+    // Handle opening tabs - you can customize this based on your needs
+    console.log('Opening tab:', tabName, context);
+  };
+
+  const handleClose = () => {
+    // Handle closing - for standalone dashboard, this could redirect to home
+    router.push('/');
+  };
+
   return (
     <UserProvider>
-      <ClientLayout />
+      <DashboardPage 
+        open={true} 
+        onClose={handleClose} 
+        onOpenTab={handleOpenTab} 
+      />
     </UserProvider>
   );
 }

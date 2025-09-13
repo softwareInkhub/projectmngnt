@@ -38,7 +38,8 @@ export default function AuthPage() {
       })
       .then(res => {
         if (res.ok) {
-          router.push('/'); // Redirect to main app
+          router.push('/dashboard'); // Redirect to dashboard
+
         } else {
           // Token invalid, clear it
           localStorage.removeItem('access_token');
@@ -177,8 +178,8 @@ export default function AuthPage() {
         window.history.replaceState({}, document.title, window.location.pathname);
        
         console.log('✅ Redirecting to main app...');
-        // Redirect to main app
-        router.push('/');
+        // Redirect to dashboard
+        router.push('/dashboard');
       })
       .catch(error => {
         console.error('❌ Token exchange failed:', error);
@@ -243,7 +244,7 @@ export default function AuthPage() {
         }
         setMessage(isLogin ? 'Login successful!' : 'Signup successful! Please check your email.');
         setTimeout(() => {
-          router.push('/');
+          router.push('/dashboard');
         }, 1000);
       } else {
         setMessage(data.error || 'Authentication failed');
@@ -338,7 +339,7 @@ export default function AuthPage() {
         
         setMessage('Login successful!');
         setTimeout(() => {
-          router.push('/');
+          router.push('/dashboard');
         }, 1000);
       } else {
         setMessage(data.error || 'Login failed');
@@ -379,7 +380,7 @@ export default function AuthPage() {
         setOtp('');
         // Optionally redirect to login or auto-login
         setTimeout(() => {
-          router.push('/');
+          router.push('/dashboard');
         }, 1000);
       } else {
         setMessage(data.error || 'Verification failed');
