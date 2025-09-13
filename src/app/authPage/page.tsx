@@ -10,6 +10,7 @@ const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "https://projectmng
 
 
 export default function AuthPage() {
+
   const [authMode, setAuthMode] = useState('oauth'); // 'oauth', 'email', 'phone'
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -110,7 +111,7 @@ export default function AuthPage() {
      
       // Check if the auth URL contains localhost and fix it
       let correctedAuthUrl = authUrl;
-      if (authUrl && authUrl.includes('localhost:3000')) {
+      if (authUrl && authUrl.includes('https://projectmngnt.vercel.app/')) {
         // Replace localhost with deployed URL
         const deployedUrl = REDIRECT_URI.replace('/authPage', '');
         correctedAuthUrl = authUrl.replace('projectmngnt.vercel.app', deployedUrl);

@@ -39,7 +39,7 @@ console.log('   - Users can access all pages without login');
 console.log('   - Guest user experience provided');
 console.log('   - No authentication barriers\n');
 
-console.log('🚀 Application should now be accessible at: http://localhost:3000');
+console.log('🚀 Application should now be accessible at: https://projectmngnt.vercel.app');
 console.log('   - No login required');
 console.log('   - All features available');
 console.log('   - Guest user experience active');
