@@ -40,6 +40,7 @@ export default function AuthPage() {
         if (res.ok) {
           router.push('/dashboard'); // Redirect to dashboard
 
+
         } else {
           // Token invalid, clear it
           localStorage.removeItem('access_token');
@@ -53,6 +54,23 @@ export default function AuthPage() {
         localStorage.removeItem('id_token');
         localStorage.removeItem('refresh_token');
       });
+    }
+  }, [router]);
+
+  // Fallback: If user lands on OAuth callback URL but processing fails, redirect after timeout
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
+    if (code) {
+      // Set a fallback timeout to redirect to dashboard if OAuth processing takes too long
+      const fallbackTimeout = setTimeout(() => {
+        console.log('🔄 OAuth processing timeout - redirecting to dashboard as fallback');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        router.push('/dashboard');
+      }, 10000); // 10 second timeout
+      
+      return () => clearTimeout(fallbackTimeout);
     }
   }, [router]);
 
@@ -108,12 +126,19 @@ export default function AuthPage() {
     const error = urlParams.get('error');
    
     if (error) {
+      console.error('❌ OAuth error:', error);
       setMessage(`OAuth error: ${error}`);
+      // Clear URL parameters on error
+      window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
    
     if (code) {
       console.log('🔄 Processing OAuth callback with code:', code.substring(0, 10) + '...');
+      
+      // Show loading state for OAuth processing
+      setOauthLoading(true);
+      setMessage('Processing login...');
       
       // For password change flow, we might not have a state parameter
       // or it might not match due to Cognito's redirect behavior
@@ -174,15 +199,20 @@ export default function AuthPage() {
         // Clean up
         sessionStorage.removeItem('oauth_state');
        
-        // Clear URL parameters
+        // Clear URL parameters immediately
         window.history.replaceState({}, document.title, window.location.pathname);
        
-        console.log('✅ Redirecting to main app...');
-        // Redirect to dashboard
-        router.push('/dashboard');
+        console.log('✅ Redirecting to dashboard...');
+        setMessage('Login successful! Redirecting to dashboard...');
+        
+        // Redirect to dashboard with a small delay to show success message
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
       })
       .catch(error => {
         console.error('❌ Token exchange failed:', error);
+        setOauthLoading(false);
         
         // Provide more specific error messages
         let errorMessage = 'Login failed. Please try again.';
