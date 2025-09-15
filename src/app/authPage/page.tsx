@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 
 
 const API_BASE_URL = "https://brmh.in";
+const REDIRECT_URI = "https://projectmngnt.vercel.app/authPage";
 
 
 
@@ -30,6 +31,18 @@ export default function AuthPage() {
   const [oauthLoading, setOauthLoading] = useState(false);
   const router = useRouter();
 
+  // Clear any stale OAuth data on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
+    // If there's no code in URL, clear any stale OAuth data
+    if (!code) {
+      sessionStorage.removeItem('oauth_state');
+      sessionStorage.removeItem('oauth_code_timestamp');
+    }
+  }, []);
+
 
 
 
@@ -47,8 +60,9 @@ export default function AuthPage() {
       })
       .then(res => {
         if (res.ok) {
-          // Dispatch auth success event
+          // Dispatch auth success event and redirect
           window.dispatchEvent(new CustomEvent('auth-success'));
+          router.push('/dashboard');
         } else {
           // Token invalid, clear it
           localStorage.removeItem('access_token');
@@ -84,7 +98,9 @@ export default function AuthPage() {
      
       // Store state for verification
       sessionStorage.setItem('oauth_state', state);
-     
+      // Store timestamp for code expiration check
+      sessionStorage.setItem('oauth_code_timestamp', Date.now().toString());
+      
       // Redirect to Cognito
       window.location.href = authUrl;
     } catch (error) {
@@ -110,6 +126,15 @@ export default function AuthPage() {
     }
    
     if (code) {
+      console.log('🔄 OAuth callback detected with code:', code.substring(0, 10) + '...');
+      
+      // Set up fallback redirect in case token exchange fails
+      const fallbackTimeout = setTimeout(() => {
+        console.log('🔄 OAuth fallback: Redirecting to dashboard after timeout');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        router.push('/dashboard');
+      }, 10000); // 10 second fallback
+      
       // For password change flow, we might not have a state parameter
       // or it might not match due to Cognito's redirect behavior
       const savedState = sessionStorage.getItem('oauth_state');
@@ -121,6 +146,22 @@ export default function AuthPage() {
       }
      
       // Exchange code for tokens
+      console.log('🔄 Attempting token exchange with:', { 
+        code: code?.substring(0, 10) + '...', 
+        state: state || savedState || 'password-change-flow',
+        apiUrl: `${API_BASE_URL}/auth/token`,
+        redirectUri: REDIRECT_URI
+      });
+      
+      // Check if code might be expired (basic check)
+      const codeTimestamp = sessionStorage.getItem('oauth_code_timestamp');
+      if (codeTimestamp) {
+        const codeAge = Date.now() - parseInt(codeTimestamp);
+        if (codeAge > 10 * 60 * 1000) { // 10 minutes
+          console.warn('⚠️ Authorization code might be expired (age:', Math.round(codeAge / 1000), 'seconds)');
+        }
+      }
+      
       fetch(`${API_BASE_URL}/auth/token`, {
         method: 'POST',
         headers: {
@@ -128,34 +169,90 @@ export default function AuthPage() {
         },
         body: JSON.stringify({
           code,
-          state: state || savedState || 'password-change-flow' // Use available state or fallback
+          state: state || savedState || 'password-change-flow', // Use available state or fallback
+          redirect_uri: REDIRECT_URI // Explicitly include redirect URI
         })
       })
-      .then(res => res.json())
+      .then(res => {
+        console.log('🔄 Token exchange response status:', res.status);
+        if (!res.ok) {
+          return res.text().then(text => {
+            console.error('❌ Token exchange failed:', res.status, text);
+            throw new Error(`HTTP ${res.status}: ${text}`);
+          });
+        }
+        return res.json();
+      })
       .then(tokens => {
+        console.log('✅ Token exchange successful:', { 
+          hasIdToken: !!tokens.id_token, 
+          hasAccessToken: !!tokens.access_token,
+          hasRefreshToken: !!tokens.refresh_token 
+        });
+        
         if (tokens.error) {
           throw new Error(tokens.error);
         }
-       
-                // Store tokens
+        
+        // Store tokens
         localStorage.setItem('id_token', tokens.id_token);
         localStorage.setItem('access_token', tokens.access_token);
         localStorage.setItem('refresh_token', tokens.refresh_token);
         localStorage.setItem('token_expires', (Date.now() + (tokens.expires_in * 1000)).toString());
-       
+        
+        // Store user email if available
+        if (tokens.email) {
+          localStorage.setItem('user_email', tokens.email);
+        }
+        
+        console.log('✅ Tokens stored successfully');
+        
         // Clean up
         sessionStorage.removeItem('oauth_state');
-       
+        sessionStorage.removeItem('oauth_code_timestamp');
+        clearTimeout(fallbackTimeout); // Clear the fallback timeout
+        
         // Clear URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
-       
-        // Dispatch auth success event
+        
+        // Dispatch auth success event and redirect
         window.dispatchEvent(new CustomEvent('auth-success'));
+        router.push('/dashboard');
       })
       .catch(error => {
-        console.error('Token exchange failed:', error);
-        setMessage('Login failed. Please try again.');
+        console.error('❌ Token exchange failed:', error);
+        
+        // Provide more specific error messages
+        let errorMessage = 'OAuth login failed. Please try again.';
+        if (error.message.includes('404')) {
+          errorMessage = 'OAuth endpoint not found. Please contact support.';
+        } else if (error.message.includes('400')) {
+          if (error.message.includes('invalid_grant')) {
+            errorMessage = 'Authorization code expired or already used. Please try logging in again.';
+          } else {
+            errorMessage = 'Invalid authorization code. Please try logging in again.';
+          }
+        } else if (error.message.includes('401')) {
+          errorMessage = 'Authentication failed. Please check your credentials.';
+        } else if (error.message.includes('500')) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        }
+        
+        setMessage(errorMessage);
         sessionStorage.removeItem('oauth_state');
+        sessionStorage.removeItem('oauth_code_timestamp');
+        clearTimeout(fallbackTimeout); // Clear the fallback timeout
+        
+        // Clear URL parameters on error
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Redirect to dashboard anyway after 3 seconds (fallback)
+        setTimeout(() => {
+          console.log('🔄 Fallback: Redirecting to dashboard despite OAuth error');
+          router.push('/dashboard');
+        }, 3000);
       });
     }
   }, [router]);
@@ -204,8 +301,9 @@ export default function AuthPage() {
         }
         setMessage(isLogin ? 'Login successful!' : 'Signup successful! Please check your email.');
         setTimeout(() => {
-          // Dispatch auth success event
-          window.dispatchEvent(new CustomEvent('auth-success'));
+         // Dispatch auth success event and redirect
+         window.dispatchEvent(new CustomEvent('auth-success'));
+         router.push('/dashboard');
         }, 1000);
       } else {
         setMessage(data.error || 'Authentication failed');
@@ -305,8 +403,9 @@ export default function AuthPage() {
         localStorage.setItem('refresh_token', data.result.refreshToken.token);
         setMessage('Login successful!');
         setTimeout(() => {
-          // Dispatch auth success event
-          window.dispatchEvent(new CustomEvent('auth-success'));
+         // Dispatch auth success event and redirect
+         window.dispatchEvent(new CustomEvent('auth-success'));
+         router.push('/dashboard');
         }, 1000);
       } else {
         setMessage(data.error || 'Login failed');
@@ -355,8 +454,9 @@ export default function AuthPage() {
         setOtp('');
         // Optionally redirect to login or auto-login
         setTimeout(() => {
-          // Dispatch auth success event
-          window.dispatchEvent(new CustomEvent('auth-success'));
+         // Dispatch auth success event and redirect
+         window.dispatchEvent(new CustomEvent('auth-success'));
+         router.push('/dashboard');
         }, 1000);
       } else {
         setMessage(data.error || 'Verification failed');
