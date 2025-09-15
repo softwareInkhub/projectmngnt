@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import DashboardPage from '../components/DashboardPage';
+import ClientLayout from '../components/ClientLayout';
 import { UserProvider } from '../contexts/UserContext';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
@@ -34,6 +34,20 @@ export default function Dashboard() {
     checkAuthentication();
   }, [router]);
 
+  // Listen for auth success events from auth page
+  useEffect(() => {
+    const handleAuthSuccess = () => {
+      console.log('Auth success event received, redirecting to dashboard...');
+      setIsAuthenticated(true);
+    };
+
+    window.addEventListener('auth-success', handleAuthSuccess);
+    
+    return () => {
+      window.removeEventListener('auth-success', handleAuthSuccess);
+    };
+  }, []);
+
   // Show loading state while checking authentication
   if (isLoading) {
     return (
@@ -51,24 +65,9 @@ export default function Dashboard() {
     return null; // Will redirect to auth page
   }
 
-  // Mock functions for the dashboard component
-  const handleOpenTab = (tabName: string, context?: any) => {
-    // Handle opening tabs - you can customize this based on your needs
-    console.log('Opening tab:', tabName, context);
-  };
-
-  const handleClose = () => {
-    // Handle closing - for standalone dashboard, this could redirect to home
-    router.push('/');
-  };
-
   return (
     <UserProvider>
-      <DashboardPage 
-        open={true} 
-        onClose={handleClose} 
-        onOpenTab={handleOpenTab} 
-      />
+      <ClientLayout />
     </UserProvider>
   );
 }
