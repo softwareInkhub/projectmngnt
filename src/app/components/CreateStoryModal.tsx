@@ -389,7 +389,7 @@ export default function CreateStoryModal({ open, onClose, onCreate }: CreateStor
 
             <div className="space-y-2">
               {acceptanceCriteria.map((criteria, index) => (
-                <div key={index} className="flex items-center space-x-2">
+                <div key={`modal-criteria-${index}`} className="flex items-center space-x-2">
                   <input
                     type="text"
                     value={criteria}

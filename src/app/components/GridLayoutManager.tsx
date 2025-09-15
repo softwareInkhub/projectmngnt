@@ -27,7 +27,7 @@ import {
 import ResponsiveSheetContent from './ResponsiveSheetContent';
 
 // Import actual sheet components
-import DashboardPage from './DashboardPage';
+// DashboardPage removed - using SimpleDashboard from ClientLayout
 import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
 import TeamsPageSheet from './TeamsPageSheet';
 import DepartmentsPage from './DepartmentsPage';
@@ -85,7 +85,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
 
   // Available sheet types
   const availableSheets = useMemo(() => [
-    { type: 'dashboard', title: 'Dashboard', component: DashboardPage },
+    { type: 'dashboard', title: 'Dashboard', component: ProjectsAnalyticsPage }, // Using ProjectsAnalyticsPage as placeholder
     { type: 'projects', title: 'Projects Analytics', component: ProjectsAnalyticsPage },
     { type: 'tasks', title: 'Tasks', component: TasksPage },
     { type: 'teams', title: 'Teams', component: TeamsPageSheet },
@@ -186,7 +186,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
         id: 'dashboard',
         type: 'dashboard',
         title: 'Dashboard',
-        component: DashboardPage,
+        component: ProjectsAnalyticsPage, // Using ProjectsAnalyticsPage as placeholder
         layout: { x: 0, y: 0, w: 6, h: 4, minW: 4, minH: 3 }
       },
       {
@@ -348,7 +348,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
         id: 'dashboard',
         type: 'dashboard',
         title: 'Dashboard',
-        component: DashboardPage,
+        component: ProjectsAnalyticsPage, // Using ProjectsAnalyticsPage as placeholder
         layout: { x: 0, y: 0, w: 6, h: 4, minW: 4, minH: 3 }
       },
       {

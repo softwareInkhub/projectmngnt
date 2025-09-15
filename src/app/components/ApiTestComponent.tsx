@@ -88,7 +88,7 @@ export default function ApiTestComponent() {
         <h3>Testing API connection...</h3>
         <div style={{ background: '#f5f5f5', padding: '10px', maxHeight: '200px', overflow: 'auto' }}>
           {debugInfo.map((info, index) => (
-            <div key={index} style={{ fontSize: '12px', marginBottom: '5px' }}>{info}</div>
+            <div key={`debug-${index}`} style={{ fontSize: '12px', marginBottom: '5px' }}>{info}</div>
           ))}
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function ApiTestComponent() {
         <p>Error: {error}</p>
         <div style={{ background: '#f5f5f5', padding: '10px', maxHeight: '200px', overflow: 'auto' }}>
           {debugInfo.map((info, index) => (
-            <div key={index} style={{ fontSize: '12px', marginBottom: '5px' }}>{info}</div>
+            <div key={`debug-${index}`} style={{ fontSize: '12px', marginBottom: '5px' }}>{info}</div>
           ))}
         </div>
       </div>
@@ -116,7 +116,7 @@ export default function ApiTestComponent() {
       <div style={{ background: '#f5f5f5', padding: '10px', maxHeight: '200px', overflow: 'auto', marginBottom: '20px' }}>
         <h4>Debug Info:</h4>
         {debugInfo.map((info, index) => (
-          <div key={index} style={{ fontSize: '12px', marginBottom: '5px' }}>{info}</div>
+          <div key={`debug-${index}`} style={{ fontSize: '12px', marginBottom: '5px' }}>{info}</div>
         ))}
       </div>
       

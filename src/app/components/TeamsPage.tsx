@@ -1268,7 +1268,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                       >
                         <option value="">Select WhatsApp Group</option>
                         {whatsappGroups.map(group => (
-                          <option key={group.id} value={group.id}>{group.name}</option>
+                          <option key={`whatsapp-${group.id}`} value={group.id}>{group.name}</option>
                         ))}
                       </select>
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -1533,7 +1533,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                           <ResizableTableCell columnKey="tags" className="align-middle">
                             <div className="flex flex-nowrap gap-1.5 overflow-hidden">
                               {team.tags && team.tags.length > 0 ? team.tags.slice(0, 2).map((tag, idx) => (
-                                <span key={idx} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">{tag}</span>
+                                <span key={`team-table-tag-${idx}`} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">{tag}</span>
                               )) : (
                                 <span className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">No tags</span>
                               )}

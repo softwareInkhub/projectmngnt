@@ -842,7 +842,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1">
                   {project.tags.slice(0, 3).map((tag, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-base">
+                    <span key={`projects-page-tag-${idx}`} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-base">
                       {tag}
                     </span>
                   ))}
@@ -971,7 +971,7 @@ export default function ProjectsPage({ context }: { context?: { company: string 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-1">
                       {project.tags.slice(0, 3).map((tag, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
+                        <span key={`projects-page-list-tag-${idx}`} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
                           {tag}
                         </span>
                       ))}

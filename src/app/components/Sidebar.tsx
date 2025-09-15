@@ -8,7 +8,6 @@ import {
   Building, 
   Calendar, 
   BarChart3, 
-  Grid3X3, 
   Settings,
   Bell, 
   ChevronLeft, 
@@ -52,13 +51,12 @@ export default function Sidebar({
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, type: "dashboard" },
-    { label: "Projects Analytics", icon: FolderOpen, type: "projects" },
+    { label: "Projects", icon: FolderOpen, type: "projects" },
     { label: "Tasks", icon: CheckSquare, type: "tasks" },
     { label: "Teams", icon: Users, type: "teams" },
     { label: "Companies", icon: Building, type: "companies" },
     { label: "Calendar", icon: Calendar, type: "calendar" },
     { label: "Reports", icon: BarChart3, type: "reports" },
-    { label: "Grid Layout", icon: Grid3X3, type: "grid-layout" },
     { label: "Settings", icon: Settings, type: "settings" },
     { label: "Notifications", icon: Bell, type: "notifications" },
   ];
@@ -111,19 +109,14 @@ export default function Sidebar({
           <nav className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin">
             {navItems.map((item, index) => {
               const Icon = item.icon;
-              const isGridLayoutItem = item.label === "Grid Layout";
-              const isDraggable = !isGridLayoutItem && isGridMode;
+              const isDraggable = isGridMode;
               const isActive = activeTab === index;
               
               return (
                 <button
                   key={item.label}
                   onClick={() => {
-                    if (isGridLayoutItem && onToggleGridMode) {
-                      onToggleGridMode();
-                    } else {
-                      onNavClick(index);
-                    }
+                    onNavClick(index);
                     // Close mobile sidebar after navigation
                     if (onMobileClose) {
                       onMobileClose();
@@ -207,35 +200,28 @@ export default function Sidebar({
       <nav className="flex flex-col gap-3 flex-1 w-full items-center px-2">
         {navItems.map((item, idx) => {
           const Icon = item.icon;
-          const isGridLayoutItem = item.label === "Grid Layout";
-          const isDraggable = !isGridLayoutItem && isGridMode;
+          const isDraggable = isGridMode;
           const isActive = activeTab === idx;
           
           return (
             <button
               key={item.label}
               className={`group flex items-center w-full px-3 py-3 rounded-xl transition-all duration-300 ${
-                isGridLayoutItem && isGridMode
-                  ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/25" 
-                  : isActive 
+                isActive 
                   ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25" 
                   : "hover:bg-neutral-100 hover:text-neutral-700 text-neutral-500 hover:shadow-md"
               } ${isExpanded ? 'justify-start gap-3' : 'justify-center'} ${
                 isDraggable ? 'cursor-grab active:cursor-grabbing hover:shadow-lg' : ''
               }`}
               onClick={() => {
-                if (isGridLayoutItem && onToggleGridMode) {
-                  onToggleGridMode();
-                } else {
-                  onNavClick(idx);
-                }
+                onNavClick(idx);
               }}
               draggable={isDraggable}
               onDragStart={(e) => handleDragStart(e, item)}
               aria-label={item.label}
             >
               <div className={`flex items-center justify-center rounded-lg transition-all duration-300 ${
-                isActive || (isGridLayoutItem && isGridMode)
+                isActive
                   ? "bg-white/20 backdrop-blur-sm p-1"
                   : "p-1"
               }`}>

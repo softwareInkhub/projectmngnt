@@ -443,7 +443,7 @@ export default function TasksPageSheet({ open, onClose, onOpenTab, context }: {
           <div className="flex flex-wrap gap-1 mt-3">
             {task.tags.slice(0, 3).map((tag: string, index: number) => (
               <span
-                key={index}
+                key={`task-tag-${index}`}
                 className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
               >
                 {tag}

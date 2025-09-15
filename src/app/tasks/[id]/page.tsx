@@ -569,7 +569,7 @@ export default function TaskDetailPage() {
                         <div className="flex flex-wrap gap-2">
                           {task.tags.map((tag, index) => (
                             <span
-                              key={index}
+                              key={`task-detail-tag-${index}`}
                               className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
                             >
                               {tag}

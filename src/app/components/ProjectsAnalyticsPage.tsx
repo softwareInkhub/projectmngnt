@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ProjectApiService, ProjectData } from "../utils/projectApi";
 import { CompanyApiService, CompanyData } from "../utils/companyApi";
-import { TaskApiService, TaskData } from "../utils/taskApi";
+import { TaskApiService, TaskData, validateTaskData } from "../utils/taskApi";
 import UniversalDetailsModal from "./UniversalDetailsModal";
 import EditableTableCell from "./EditableTableCell";
 import { useProjectUpdates } from "../hooks/useProjectUpdates";
@@ -121,14 +121,17 @@ interface ProjectsAnalyticsPageProps {
 // Helper function to safely parse project tasks
 const parseProjectTasks = (tasksString: string | number | undefined): string[] => {
   if (!tasksString) return [];
-  if (typeof tasksString === 'number') return []; // Handle legacy number format
+  if (typeof tasksString === 'number') {
+    console.warn('⚠️ Project tasks field is a number, not a JSON array. This indicates a database issue.');
+    return []; // Handle legacy number format
+  }
   if (typeof tasksString !== 'string') return [];
   
   try {
     const parsed = JSON.parse(tasksString);
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-    console.warn('Failed to parse project tasks:', error);
+    console.warn('Failed to parse project tasks:', error, 'Raw value:', tasksString);
     return [];
   }
 };
@@ -488,8 +491,33 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     try {
       const response = await TaskApiService.getTasks();
       if (response.success && response.data) {
-        // Filter tasks that belong to this project
-        const projectSpecificTasks = response.data.filter((task: TaskData) => task.project === projectId);
+        // Find the project to get its tasks field
+        const project = projects.find(p => p.id === projectId);
+        let projectSpecificTasks: TaskData[] = [];
+        
+        if (project) {
+          // First, try to get tasks from the project's tasks field (JSON array of task IDs)
+          const taskIds = parseProjectTasks(project.tasks);
+          console.log(`🔍 Fetching tasks for project ${projectId}, task IDs:`, taskIds);
+          
+          if (taskIds.length > 0) {
+            projectSpecificTasks = response.data.filter((task: TaskData) => 
+              task.id && taskIds.includes(task.id)
+            );
+            console.log(`🔍 Tasks found by ID match:`, projectSpecificTasks.length);
+          }
+          
+          // Fallback: if no tasks found in project's task list, use the old filtering method
+          if (projectSpecificTasks.length === 0) {
+            projectSpecificTasks = response.data.filter((task: TaskData) => task.project === projectId);
+            console.log(`🔍 Tasks found by project field match:`, projectSpecificTasks.length);
+          }
+        } else {
+          // If project not found, use the old filtering method
+          projectSpecificTasks = response.data.filter((task: TaskData) => task.project === projectId);
+        }
+        
+        console.log(`🔍 Final project tasks for ${projectId}:`, projectSpecificTasks.length);
         setProjectTasks(prev => ({ ...prev, [projectId]: projectSpecificTasks }));
       } else {
         setProjectTasks(prev => ({ ...prev, [projectId]: [] }));
@@ -556,12 +584,12 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           id: `task-${Date.now()}`,
           title: newTaskName.trim(),
           project: projectId,
-          status: 'Pending',
+          status: 'To Do',
           priority: 'Medium',
-          assignee: '',
-          description: '',
-          dueDate: '',
-          startDate: '',
+          assignee: 'Unassigned', // Fixed: Provide a default assignee
+          description: `Task for project ${projectId}`,
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
+          startDate: new Date().toISOString().split('T')[0], // Today
           progress: 0,
           estimatedHours: 0,
           timeSpent: '0',
@@ -572,9 +600,21 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           updatedAt: new Date().toISOString()
         };
 
+        // Validate task data before creating
+        const validation = validateTaskData(newTask);
+        if (!validation.isValid) {
+          console.error('❌ Task validation failed:', validation.errors);
+          alert(`Task validation failed: ${validation.errors.join(', ')}`);
+          return;
+        }
+
+        console.log('🔄 Creating task with data:', newTask);
         const response = await TaskApiService.createTask(newTask);
+        console.log('📝 Task creation response:', response);
         
         if (response.success && response.data) {
+          console.log('✅ Task created successfully:', response.data);
+          
           // Update local state
           setProjectTasks(prev => ({
             ...prev,
@@ -585,53 +625,51 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           setAllTasks(prev => [...prev, response.data!]);
           console.log('✅ New task added to allTasks list:', response.data!.id);
 
-          // Update project task list with new task ID
-          setProjects(prev => prev.map(project => {
-            if (project.id === projectId) {
-              const currentTasks = parseProjectTasks(project.tasks);
-              const updatedTasks = [...currentTasks, response.data!.id];
-              const updatedProject = { ...project, tasks: JSON.stringify(updatedTasks) };
-              
-              // Update project in database with new task list
-              try {
-                console.log(`🔄 Updating project ${projectId} in database with new task:`, response.data!.id);
-                fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in'}/crud?tableName=projects&id=${projectId}`, {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    key: { id: projectId },
-                    updates: { tasks: JSON.stringify(updatedTasks) }
-                  }),
-                }).then(response => {
-                  if (response.ok) {
-                    console.log(`✅ Project task list updated with new task in database successfully`);
-                    return response.json();
-                  } else {
-                    console.warn(`⚠️ Failed to update project task list in database:`, response.status, response.statusText);
-                    return response.text();
-                  }
-                }).then(data => {
-                  console.log(`📊 Database update response:`, data);
-                });
-              } catch (error) {
-                console.warn(`⚠️ Error updating project task list:`, error);
-              }
-              
-              return updatedProject;
-            }
-            return project;
-          }));
-        }
+          // Clear the input field
+          setNewTaskName('');
 
-        setNewTaskName("");
-        setShowAddTaskInput(null);
-        
-        // Refresh all tasks to ensure display updates
-        await fetchAllTasks(true);
-      } catch (error) {
-        console.error('Error creating task:', error);
-        // You could add a toast notification here
-      }
+          // Update project task list with new task ID
+          const currentProject = projects.find(p => p.id === projectId);
+          if (currentProject) {
+            const currentTasks = parseProjectTasks(currentProject.tasks);
+            const updatedTasks = [...currentTasks, response.data!.id];
+            
+            // Update project in database with new task list
+            try {
+              console.log(`🔄 Updating project ${projectId} in database with new task:`, response.data!.id);
+              const updateResponse = await ProjectApiService.updateProject(projectId, { tasks: JSON.stringify(updatedTasks) });
+              if (updateResponse.success) {
+                console.log(`✅ Project task list updated with new task in database successfully`);
+              } else {
+                console.warn(`⚠️ Failed to update project task list in database:`, updateResponse.error);
+              }
+            } catch (error) {
+              console.warn(`⚠️ Error updating project task list:`, error);
+            }
+            
+            // Update local state
+            setProjects(prev => prev.map(project => {
+              if (project.id === projectId) {
+                return { ...project, tasks: JSON.stringify(updatedTasks) };
+              }
+              return project;
+            }));
+          }
+
+          setNewTaskName("");
+          setShowAddTaskInput(null);
+          
+          // Refresh all tasks and projects to ensure display updates
+          await fetchAllTasks(true);
+          fetchProjects();
+        } else {
+          console.error('❌ Task creation failed:', response.error);
+          alert(`Failed to create task: ${response.error || 'Unknown error'}`);
+        }
+    } catch (error) {
+      console.error('❌ Error creating task:', error);
+      alert(`Error creating task: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
     }
   };
 
@@ -684,41 +722,32 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
       ));
 
       // Update project task list with actual task IDs
-      setProjects(prev => prev.map(project => {
-        if (project.id === projectId) {
-          const currentTasks = parseProjectTasks(project.tasks);
-          const updatedTasks = [...currentTasks, taskId];
-          const updatedProject = { ...project, tasks: JSON.stringify(updatedTasks) };
-          
-          // Update project in database with new task list
-          try {
-            console.log(`🔄 Updating project ${projectId} in database with tasks:`, JSON.stringify(updatedTasks));
-            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://brmh.in'}/crud?tableName=projects&id=${projectId}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                key: { id: projectId },
-                updates: { tasks: JSON.stringify(updatedTasks) }
-              }),
-            }).then(response => {
-              if (response.ok) {
-                console.log(`✅ Project task list updated in database successfully`);
-                return response.json();
-              } else {
-                console.warn(`⚠️ Failed to update project task list in database:`, response.status, response.statusText);
-                return response.text();
-              }
-            }).then(data => {
-              console.log(`📊 Database update response:`, data);
-            });
-          } catch (error) {
-            console.warn(`⚠️ Error updating project task list:`, error);
+      const currentProject = projects.find(p => p.id === projectId);
+      if (currentProject) {
+        const currentTasks = parseProjectTasks(currentProject.tasks);
+        const updatedTasks = [...currentTasks, taskId];
+        
+        // Update project in database with new task list
+        try {
+          console.log(`🔄 Updating project ${projectId} in database with tasks:`, JSON.stringify(updatedTasks));
+          const updateResponse = await ProjectApiService.updateProject(projectId, { tasks: JSON.stringify(updatedTasks) });
+          if (updateResponse.success) {
+            console.log(`✅ Project task list updated in database successfully`);
+          } else {
+            console.warn(`⚠️ Failed to update project task list in database:`, updateResponse.error);
           }
-          
-          return updatedProject;
+        } catch (error) {
+          console.warn(`⚠️ Error updating project task list:`, error);
         }
-        return project;
-      }));
+        
+        // Update local state
+        setProjects(prev => prev.map(project => {
+          if (project.id === projectId) {
+            return { ...project, tasks: JSON.stringify(updatedTasks) };
+          }
+          return project;
+        }));
+      }
 
       // Show success feedback
       console.log(`✅ Task "${taskToAdd.title}" successfully added to project!`);
@@ -727,8 +756,9 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
       setShowAddTaskInput(null);
       setNewTaskName("");
       
-      // Refresh all tasks to ensure display updates
+      // Refresh all tasks and projects to ensure display updates
       await fetchAllTasks(true);
+      fetchProjects();
       
     } catch (error) {
       console.error('Error adding existing task to project:', error);
@@ -1001,7 +1031,8 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
               <BarChart2 className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 leading-tight">Projects Analytics</h1>
+              <h1 className="text-2xl font-bold text-slate-900 leading-tight">Projects</h1>
+              
               <p className="text-slate-600 mt-1 text-xl">Analytics and insights for your projects</p>
             </div>
           </div>
@@ -1952,7 +1983,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                           >
                             <div className="flex flex-nowrap gap-1.5 overflow-hidden">
                               {parseTags(project.tags).slice(0, 2).map((tag, idx) => (
-                                <span key={idx} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">{tag}</span>
+                                <span key={`project-tag-${idx}`} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">{tag}</span>
                               ))}
                               {parseTags(project.tags).length > 2 && (
                                 <span className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">+{parseTags(project.tags).length - 2}</span>
@@ -2045,7 +2076,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                           {projectTaskList.slice(0, 2).map((task, index) => {
                             const statusInfo = getTaskStatusInfo(task.status || '');
                             return (
-                              <div key={task.id || index} className="flex items-center gap-1.5">
+                              <div key={`project-task-${task.id || index}`} className="flex items-center gap-1.5">
                                 <div className={`w-1.5 h-1.5 ${statusInfo.color} rounded-full`}></div>
                                 <span className="text-sm text-slate-600 truncate">{task.title || 'Untitled Task'}</span>
                               </div>
@@ -2162,4 +2193,4 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
         />
       </div>
     );
-} 
+}

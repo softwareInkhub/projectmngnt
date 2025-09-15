@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import DashboardPage from './DashboardPage';
+// DashboardPage removed - using ProjectsAnalyticsPage as placeholder
 import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
 import TeamsPageSheet from './TeamsPageSheet';
 import TasksPage from './TasksPage';
@@ -56,9 +56,7 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-                        <DashboardPage
-              open={true}
-              onClose={() => {}}
+                        <ProjectsAnalyticsPage
               onOpenTab={onOpenTab ? (type: string) => onOpenTab(type, sheetTitle, context) : (() => {})}
             />
           </div>

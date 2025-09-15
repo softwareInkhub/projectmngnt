@@ -237,7 +237,7 @@ export default function EnhancedTaskModal({
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <ul className="text-red-700  space-y-0.5">
               {errors.map((error, index) => (
-                <li key={index}>• {error}</li>
+                <li key={`error-${index}`}>• {error}</li>
               ))}
             </ul>
           </div>

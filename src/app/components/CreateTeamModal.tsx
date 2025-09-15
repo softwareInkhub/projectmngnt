@@ -349,7 +349,7 @@ export default function CreateTeamModal({ open, onClose, onCreate }: CreateTeamM
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-28 overflow-y-auto">
                     {whatsappGroups.map((group) => (
                       <button
-                        key={group.id}
+                        key={`whatsapp-modal-${group.id}`}
                         type="button"
                         onClick={() => {
                           setSelectedGroup(group);
