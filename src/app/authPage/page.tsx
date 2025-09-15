@@ -1,12 +1,20 @@
 "use client";
 
 
+
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
-const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || "https://projectmngnt.vercel.app/authPage";
+
+
+const API_BASE_URL = "https://brmh.in";
+const REDIRECT_URI = "https://projectmngnt.vercel.app/authPage";
+
+
+
+
 
 
 export default function AuthPage() {
@@ -23,6 +31,29 @@ export default function AuthPage() {
   const [oauthLoading, setOauthLoading] = useState(false);
   const router = useRouter();
 
+  // Clear any stale OAuth data on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
+    // If there's no code in URL, clear any stale OAuth data
+    if (!code) {
+      sessionStorage.removeItem('oauth_state');
+      sessionStorage.removeItem('oauth_code_timestamp');
+    }
+    
+    // Log current environment for debugging
+    console.log('🌐 Current environment:', {
+      hostname: window.location.hostname,
+      protocol: window.location.protocol,
+      href: window.location.href,
+      isLocalhost: window.location.hostname === 'localhost',
+      isVercel: window.location.hostname.includes('vercel.app')
+    });
+  }, []);
+
+
+
 
   // Check if user is already logged in
   useEffect(() => {
@@ -38,9 +69,9 @@ export default function AuthPage() {
       })
       .then(res => {
         if (res.ok) {
-          router.push('/dashboard'); // Redirect to dashboard
-
-
+          // Dispatch auth success event and redirect
+          window.dispatchEvent(new CustomEvent('auth-success'));
+          router.push('/dashboard');
         } else {
           // Token invalid, clear it
           localStorage.removeItem('access_token');
@@ -57,22 +88,7 @@ export default function AuthPage() {
     }
   }, [router]);
 
-  // Fallback: If user lands on OAuth callback URL but processing fails, redirect after timeout
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    
-    if (code) {
-      // Set a fallback timeout to redirect to dashboard if OAuth processing takes too long
-      const fallbackTimeout = setTimeout(() => {
-        console.log('🔄 OAuth processing timeout - redirecting to dashboard as fallback');
-        window.history.replaceState({}, document.title, window.location.pathname);
-        router.push('/dashboard');
-      }, 10000); // 10 second timeout
-      
-      return () => clearTimeout(fallbackTimeout);
-    }
-  }, [router]);
+
 
 
   // Handle OAuth login
@@ -89,33 +105,21 @@ export default function AuthPage() {
      
       const { authUrl, state } = await response.json();
      
-      // Check if the auth URL contains localhost and fix it
-      let correctedAuthUrl = authUrl;
-      if (authUrl && authUrl.includes('localhost:3000')) {
-        // Replace localhost with deployed URL
-        const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-        correctedAuthUrl = authUrl.replace('localhost:3000', deployedUrl.replace('https://', '').replace('http://', ''));
-        console.log('Fixed OAuth URL from localhost to deployed URL:', correctedAuthUrl);
-      }
-      
-      // Also check for any other localhost references
-      if (correctedAuthUrl && correctedAuthUrl.includes('localhost')) {
-        const deployedUrl = REDIRECT_URI.replace('/authPage', '');
-        correctedAuthUrl = correctedAuthUrl.replace(/localhost:\d+/, deployedUrl.replace('https://', '').replace('http://', ''));
-        console.log('Fixed additional localhost references:', correctedAuthUrl);
-      }
-     
       // Store state for verification
       sessionStorage.setItem('oauth_state', state);
-     
+      // Store timestamp for code expiration check
+      sessionStorage.setItem('oauth_code_timestamp', Date.now().toString());
+      
       // Redirect to Cognito
-      window.location.href = correctedAuthUrl;
+      window.location.href = authUrl;
     } catch (error) {
       console.error('OAuth login error:', error);
       setMessage('OAuth login failed. Please try again.');
       setOauthLoading(false);
     }
   };
+
+
 
 
   // Handle OAuth callback
@@ -125,20 +129,28 @@ export default function AuthPage() {
     const state = urlParams.get('state');
     const error = urlParams.get('error');
    
+    // Check if we're on localhost but should be on Vercel
+    if (window.location.hostname === 'localhost' && code) {
+      console.log('🔄 Detected localhost OAuth callback, redirecting to Vercel...');
+      const vercelUrl = `https://projectmngnt.vercel.app/authPage?code=${code}&state=${state || ''}`;
+      window.location.href = vercelUrl;
+      return;
+    }
+   
     if (error) {
-      console.error('❌ OAuth error:', error);
       setMessage(`OAuth error: ${error}`);
-      // Clear URL parameters on error
-      window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
    
     if (code) {
-      console.log('🔄 Processing OAuth callback with code:', code.substring(0, 10) + '...');
+      console.log('🔄 OAuth callback detected with code:', code.substring(0, 10) + '...');
       
-      // Show loading state for OAuth processing
-      setOauthLoading(true);
-      setMessage('Processing login...');
+      // Set up fallback redirect in case token exchange fails
+      const fallbackTimeout = setTimeout(() => {
+        console.log('🔄 OAuth fallback: Redirecting to dashboard after timeout');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        router.push('/dashboard');
+      }, 10000); // 10 second fallback
       
       // For password change flow, we might not have a state parameter
       // or it might not match due to Cognito's redirect behavior
@@ -151,7 +163,22 @@ export default function AuthPage() {
       }
      
       // Exchange code for tokens
-      console.log('🔄 Exchanging OAuth code for tokens...');
+      console.log('🔄 Attempting token exchange with:', { 
+        code: code?.substring(0, 10) + '...', 
+        state: state || savedState || 'password-change-flow',
+        apiUrl: `${API_BASE_URL}/auth/token`,
+        redirectUri: REDIRECT_URI
+      });
+      
+      // Check if code might be expired (basic check)
+      const codeTimestamp = sessionStorage.getItem('oauth_code_timestamp');
+      if (codeTimestamp) {
+        const codeAge = Date.now() - parseInt(codeTimestamp);
+        if (codeAge > 10 * 60 * 1000) { // 10 minutes
+          console.warn('⚠️ Authorization code might be expired (age:', Math.round(codeAge / 1000), 'seconds)');
+        }
+      }
+      
       fetch(`${API_BASE_URL}/auth/token`, {
         method: 'POST',
         headers: {
@@ -159,7 +186,8 @@ export default function AuthPage() {
         },
         body: JSON.stringify({
           code,
-          state: state || savedState || 'password-change-flow' // Use available state or fallback
+          state: state || savedState || 'password-change-flow', // Use available state or fallback
+          redirect_uri: REDIRECT_URI // Explicitly include redirect URI
         })
       })
       .then(res => {
@@ -167,72 +195,86 @@ export default function AuthPage() {
         if (!res.ok) {
           return res.text().then(text => {
             console.error('❌ Token exchange failed:', res.status, text);
-            throw new Error(`HTTP error! status: ${res.status} - ${text}`);
+            throw new Error(`HTTP ${res.status}: ${text}`);
           });
         }
         return res.json();
       })
       .then(tokens => {
-        if (tokens.error) {
-          throw new Error(tokens.error);
-        }
-       
-        console.log('✅ OAuth tokens received:', { 
+        console.log('✅ Token exchange successful:', { 
           hasIdToken: !!tokens.id_token, 
           hasAccessToken: !!tokens.access_token,
           hasRefreshToken: !!tokens.refresh_token 
         });
-       
+        
+        if (tokens.error) {
+          throw new Error(tokens.error);
+        }
+        
         // Store tokens
         localStorage.setItem('id_token', tokens.id_token);
         localStorage.setItem('access_token', tokens.access_token);
         localStorage.setItem('refresh_token', tokens.refresh_token);
         localStorage.setItem('token_expires', (Date.now() + (tokens.expires_in * 1000)).toString());
         
-        // Store user email if available in tokens
+        // Store user email if available
         if (tokens.email) {
           localStorage.setItem('user_email', tokens.email);
         }
-       
-        console.log('✅ Tokens stored in localStorage');
-       
+        
+        console.log('✅ Tokens stored successfully');
+        
         // Clean up
         sessionStorage.removeItem('oauth_state');
-       
-        // Clear URL parameters immediately
-        window.history.replaceState({}, document.title, window.location.pathname);
-       
-        console.log('✅ Redirecting to dashboard...');
-        setMessage('Login successful! Redirecting to dashboard...');
+        sessionStorage.removeItem('oauth_code_timestamp');
+        clearTimeout(fallbackTimeout); // Clear the fallback timeout
         
-        // Redirect to dashboard with a small delay to show success message
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1000);
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Dispatch auth success event and redirect
+        window.dispatchEvent(new CustomEvent('auth-success'));
+        router.push('/dashboard');
       })
       .catch(error => {
         console.error('❌ Token exchange failed:', error);
-        setOauthLoading(false);
         
         // Provide more specific error messages
-        let errorMessage = 'Login failed. Please try again.';
-        if (error.message.includes('400')) {
-          errorMessage = 'Invalid authorization code. Please try logging in again.';
+        let errorMessage = 'OAuth login failed. Please try again.';
+        if (error.message.includes('404')) {
+          errorMessage = 'OAuth endpoint not found. Please contact support.';
+        } else if (error.message.includes('400')) {
+          if (error.message.includes('invalid_grant')) {
+            errorMessage = 'Authorization code expired or already used. Please try logging in again.';
+          } else {
+            errorMessage = 'Invalid authorization code. Please try logging in again.';
+          }
         } else if (error.message.includes('401')) {
           errorMessage = 'Authentication failed. Please check your credentials.';
-        } else if (error.message.includes('403')) {
-          errorMessage = 'Access denied. Please contact support.';
         } else if (error.message.includes('500')) {
           errorMessage = 'Server error. Please try again later.';
+        } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
         }
         
         setMessage(errorMessage);
         sessionStorage.removeItem('oauth_state');
-        // Clear URL parameters on error too
+        sessionStorage.removeItem('oauth_code_timestamp');
+        clearTimeout(fallbackTimeout); // Clear the fallback timeout
+        
+        // Clear URL parameters on error
         window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Redirect to dashboard anyway after 3 seconds (fallback)
+        setTimeout(() => {
+          console.log('🔄 Fallback: Redirecting to dashboard despite OAuth error');
+          router.push('/dashboard');
+        }, 3000);
       });
     }
   }, [router]);
+
+
 
 
   // Handle email login/signup
@@ -242,9 +284,13 @@ export default function AuthPage() {
     setMessage('');
 
 
+
+
     try {
       const endpoint = isLogin ? '/auth/login' : '/auth/signup';
       const body = isLogin ? { username, password } : { username, password, email };
+
+
 
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -256,7 +302,11 @@ export default function AuthPage() {
       });
 
 
+
+
       const data = await response.json();
+
+
 
 
       if (data.success) {
@@ -265,16 +315,12 @@ export default function AuthPage() {
           localStorage.setItem('id_token', data.result.idToken.jwtToken);
           localStorage.setItem('access_token', data.result.accessToken.jwtToken);
           localStorage.setItem('refresh_token', data.result.refreshToken.token);
-          
-          // Store user email for context
-          localStorage.setItem('user_email', email);
-        } else if (!isLogin) {
-          // Store user email for context after signup
-          localStorage.setItem('user_email', email);
         }
         setMessage(isLogin ? 'Login successful!' : 'Signup successful! Please check your email.');
         setTimeout(() => {
-          router.push('/dashboard');
+         // Dispatch auth success event and redirect
+         window.dispatchEvent(new CustomEvent('auth-success'));
+         router.push('/dashboard');
         }, 1000);
       } else {
         setMessage(data.error || 'Authentication failed');
@@ -287,11 +333,15 @@ export default function AuthPage() {
   };
 
 
+
+
   // Handle phone signup
   const handlePhoneSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+
+
 
 
     try {
@@ -305,8 +355,12 @@ export default function AuthPage() {
       });
 
 
+
+
       const data = await response.json();
       console.log('[FE] Phone signup response', { status: response.status, data });
+
+
 
 
       if (data.success) {
@@ -317,11 +371,6 @@ export default function AuthPage() {
           sessionStorage.setItem('phone_signup_username', data.username);
         } else {
           sessionStorage.setItem('phone_signup_username', phoneNumber);
-        }
-        
-        // Store user email if provided during phone signup
-        if (email) {
-          localStorage.setItem('user_email', email);
         }
       } else {
         setMessage(data.error || 'Signup failed');
@@ -334,11 +383,15 @@ export default function AuthPage() {
   };
 
 
+
+
   // Handle phone login
   const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+
+
 
 
     try {
@@ -352,8 +405,12 @@ export default function AuthPage() {
       });
 
 
+
+
       const data = await response.json();
       console.log('[FE] Phone login response', { status: response.status, data });
+
+
 
 
       if (data.success) {
@@ -361,15 +418,11 @@ export default function AuthPage() {
         localStorage.setItem('id_token', data.result.idToken.jwtToken);
         localStorage.setItem('access_token', data.result.accessToken.jwtToken);
         localStorage.setItem('refresh_token', data.result.refreshToken.token);
-        
-        // Store user email for context (if available)
-        if (email) {
-          localStorage.setItem('user_email', email);
-        }
-        
         setMessage('Login successful!');
         setTimeout(() => {
-          router.push('/dashboard');
+         // Dispatch auth success event and redirect
+         window.dispatchEvent(new CustomEvent('auth-success'));
+         router.push('/dashboard');
         }, 1000);
       } else {
         setMessage(data.error || 'Login failed');
@@ -382,11 +435,15 @@ export default function AuthPage() {
   };
 
 
+
+
   // Handle OTP verification
   const handleOtpVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+
+
 
 
     try {
@@ -400,8 +457,12 @@ export default function AuthPage() {
       });
 
 
+
+
       const data = await response.json();
       console.log('[FE] Verify OTP response', { status: response.status, data });
+
+
 
 
       if (data.success) {
@@ -410,7 +471,9 @@ export default function AuthPage() {
         setOtp('');
         // Optionally redirect to login or auto-login
         setTimeout(() => {
-          router.push('/dashboard');
+         // Dispatch auth success event and redirect
+         window.dispatchEvent(new CustomEvent('auth-success'));
+         router.push('/dashboard');
         }, 1000);
       } else {
         setMessage(data.error || 'Verification failed');
@@ -423,10 +486,14 @@ export default function AuthPage() {
   };
 
 
+
+
   // Handle resend OTP
   const handleResendOtp = async () => {
     setLoading(true);
     setMessage('');
+
+
 
 
     try {
@@ -440,8 +507,12 @@ export default function AuthPage() {
       });
 
 
+
+
       const data = await response.json();
       console.log('[FE] Resend OTP response', { status: response.status, data });
+
+
 
 
       if (data.success) {
@@ -457,6 +528,8 @@ export default function AuthPage() {
   };
 
 
+
+
   const resetForm = () => {
     setMessage('');
     setUsername('');
@@ -468,22 +541,15 @@ export default function AuthPage() {
   };
 
 
+
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mb-8">
-            <h1 className="text-6xl font-semibold text-gray-800 tracking-wide">
-              BRMH
-            </h1>
-            <h2 className="text-2xl font-medium text-gray-600 tracking-wider">
-              PROJECT MANAGEMENT
-            </h2>
-            <div className="mt-4 w-20 h-1 bg-blue-600 mx-auto"></div>
-          </div>
-          <h3 className="text-2xl font-semibold text-gray-900">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             {isLogin ? 'Sign in to your account' : 'Create your account'}
-          </h3>
+          </h2>
         </div>
        
         {/* Authentication Mode Selector */}
@@ -521,9 +587,11 @@ export default function AuthPage() {
         </div>
 
 
+
+
         {/* OAuth Login */}
         {authMode === 'oauth' && (
-          <div className="mt-8 space-y-3">
+          <div className="mt-8">
             <button
               onClick={handleOAuthLogin}
               disabled={oauthLoading}
@@ -535,14 +603,10 @@ export default function AuthPage() {
                 <span>Sign in with Cognito OAuth</span>
               )}
             </button>
-            
-            {message && (
-              <div className={`text-sm text-center ${message.includes('successful') ? 'text-green-600' : 'text-red-600'}`}>
-                {message}
-              </div>
-            )}
           </div>
         )}
+
+
 
 
         {/* Email Login/Signup */}
@@ -599,11 +663,15 @@ export default function AuthPage() {
             </div>
 
 
+
+
             {message && (
               <div className={`text-sm text-center ${message.includes('successful') ? 'text-green-600' : 'text-red-600'}`}>
                 {message}
               </div>
             )}
+
+
 
 
             <div>
@@ -615,6 +683,8 @@ export default function AuthPage() {
                 {loading ? 'Processing...' : (isLogin ? 'Sign in' : 'Sign up')}
               </button>
             </div>
+
+
 
 
             <div className="text-center">
@@ -631,6 +701,8 @@ export default function AuthPage() {
             </div>
           </form>
         )}
+
+
 
 
         {/* Phone Login/Signup */}
@@ -688,11 +760,15 @@ export default function AuthPage() {
                 </div>
 
 
+
+
                 {message && (
                   <div className={`text-sm text-center mt-4 ${message.includes('successful') ? 'text-green-600' : 'text-red-600'}`}>
                     {message}
                   </div>
                 )}
+
+
 
 
                 <div className="mt-6">
@@ -704,6 +780,8 @@ export default function AuthPage() {
                     {loading ? 'Processing...' : (isLogin ? 'Sign in' : 'Sign up')}
                   </button>
                 </div>
+
+
 
 
                 <div className="text-center mt-4">
@@ -741,11 +819,15 @@ export default function AuthPage() {
                 </div>
 
 
+
+
                 {message && (
                   <div className={`text-sm text-center mt-4 ${message.includes('successful') ? 'text-green-600' : 'text-red-600'}`}>
                     {message}
                   </div>
                 )}
+
+
 
 
                 <div className="mt-6 space-y-3">
@@ -782,6 +864,12 @@ export default function AuthPage() {
     </div>
   );
 }
+
+
+
+
+
+
 
 
 
