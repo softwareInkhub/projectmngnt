@@ -54,7 +54,7 @@ const layoutPresets: LayoutPreset[] = [
     icon: Maximize2,
     description: 'Full width layout',
     cells: [
-      { id: 'cell-1', x: 0, y: 0, width: 1, height: 1, component: null }
+      { id: 'single-cell-1', x: 0, y: 0, width: 1, height: 1, component: null }
     ]
   },
   {
@@ -63,8 +63,8 @@ const layoutPresets: LayoutPreset[] = [
     icon: Columns,
     description: 'Split screen layout',
     cells: [
-      { id: 'cell-1', x: 0, y: 0, width: 0.5, height: 1, component: null },
-      { id: 'cell-2', x: 0.5, y: 0, width: 0.5, height: 1, component: null }
+      { id: 'two-column-cell-1', x: 0, y: 0, width: 0.5, height: 1, component: null },
+      { id: 'two-column-cell-2', x: 0.5, y: 0, width: 0.5, height: 1, component: null }
     ]
   },
   {
@@ -73,9 +73,9 @@ const layoutPresets: LayoutPreset[] = [
     icon: Grid,
     description: 'Three equal columns',
     cells: [
-      { id: 'cell-1', x: 0, y: 0, width: 0.33, height: 1, component: null },
-      { id: 'cell-2', x: 0.33, y: 0, width: 0.34, height: 1, component: null },
-      { id: 'cell-3', x: 0.67, y: 0, width: 0.33, height: 1, component: null }
+      { id: 'three-column-cell-1', x: 0, y: 0, width: 0.33, height: 1, component: null },
+      { id: 'three-column-cell-2', x: 0.33, y: 0, width: 0.34, height: 1, component: null },
+      { id: 'three-column-cell-3', x: 0.67, y: 0, width: 0.33, height: 1, component: null }
     ]
   },
   {
@@ -84,8 +84,8 @@ const layoutPresets: LayoutPreset[] = [
     icon: Layout,
     description: 'Large main area with sidebar',
     cells: [
-      { id: 'cell-1', x: 0, y: 0, width: 0.7, height: 1, component: null },
-      { id: 'cell-2', x: 0.7, y: 0, width: 0.3, height: 1, component: null }
+      { id: 'main-sidebar-cell-1', x: 0, y: 0, width: 0.7, height: 1, component: null },
+      { id: 'main-sidebar-cell-2', x: 0.7, y: 0, width: 0.3, height: 1, component: null }
     ]
   },
   {
@@ -94,10 +94,10 @@ const layoutPresets: LayoutPreset[] = [
     icon: Square,
     description: 'Four equal quadrants',
     cells: [
-      { id: 'cell-1', x: 0, y: 0, width: 0.5, height: 0.5, component: null },
-      { id: 'cell-2', x: 0.5, y: 0, width: 0.5, height: 0.5, component: null },
-      { id: 'cell-3', x: 0, y: 0.5, width: 0.5, height: 0.5, component: null },
-      { id: 'cell-4', x: 0.5, y: 0.5, width: 0.5, height: 0.5, component: null }
+      { id: 'quadrant-cell-1', x: 0, y: 0, width: 0.5, height: 0.5, component: null },
+      { id: 'quadrant-cell-2', x: 0.5, y: 0, width: 0.5, height: 0.5, component: null },
+      { id: 'quadrant-cell-3', x: 0, y: 0.5, width: 0.5, height: 0.5, component: null },
+      { id: 'quadrant-cell-4', x: 0.5, y: 0.5, width: 0.5, height: 0.5, component: null }
     ]
   },
   {
@@ -106,8 +106,8 @@ const layoutPresets: LayoutPreset[] = [
     icon: Rows,
     description: 'Vertical stack layout',
     cells: [
-      { id: 'cell-1', x: 0, y: 0, width: 1, height: 0.5, component: null },
-      { id: 'cell-2', x: 0, y: 0.5, width: 1, height: 0.5, component: null }
+      { id: 'stacked-cell-1', x: 0, y: 0, width: 1, height: 0.5, component: null },
+      { id: 'stacked-cell-2', x: 0, y: 0.5, width: 1, height: 0.5, component: null }
     ]
   }
 ];
@@ -473,7 +473,7 @@ export default function SnapLayoutManager({
                       <div className="w-full h-20 bg-slate-100 rounded border-2 border-slate-200 relative overflow-hidden">
                         {preset.cells.map((cell, index) => (
                           <div
-                            key={index}
+                            key={`${preset.id}-preview-${index}`}
                             className="absolute bg-blue-200 border border-blue-300"
                             style={{
                               left: `${cell.x * 100}%`,
@@ -634,7 +634,7 @@ export default function SnapLayoutManager({
                     <div className="w-full h-20 bg-slate-100 rounded border-2 border-slate-200 relative overflow-hidden">
                       {preset.cells.map((cell, index) => (
                         <div
-                          key={index}
+                          key={`${preset.id}-grid-${index}`}
                           className="absolute bg-blue-200 border border-blue-300"
                           style={{
                             left: `${cell.x * 100}%`,

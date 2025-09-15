@@ -568,7 +568,7 @@ export default function TeamDetailPage() {
                         <div className="flex flex-wrap gap-1 sm:gap-2">
                           {teamUI.tags.map((tag, index) => (
                             <span
-                              key={index}
+                              key={`team-tag-${index}`}
                               className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
                             >
                               {tag}
@@ -588,7 +588,7 @@ export default function TeamDetailPage() {
                         <div className="flex flex-wrap gap-1 sm:gap-2">
                           {teamUI.achievements.map((achievement, index) => (
                             <span
-                              key={index}
+                              key={`team-achievement-${index}`}
                               className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs"
                             >
                               {achievement}

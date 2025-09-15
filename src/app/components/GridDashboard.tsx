@@ -58,7 +58,7 @@ const ActivityWidget = ({ activities }: any) => (
     </div>
     <div className="space-y-3">
       {activities.map((activity: any, index: number) => (
-        <div key={index} className="flex items-start gap-3">
+        <div key={`activity-${index}`} className="flex items-start gap-3">
           <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-center">
             {activity.avatar}
           </div>
@@ -81,7 +81,7 @@ const ProgressWidget = ({ projects }: any) => (
     </div>
     <div className="space-y-4">
       {projects.map((project: any, index: number) => (
-        <div key={index} className="space-y-2">
+        <div key={`project-${index}`} className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-900">{project.name}</span>
             <span className="text-sm text-gray-600">{project.progress}%</span>
@@ -107,7 +107,7 @@ const TeamWidget = ({ members }: any) => (
     </div>
     <div className="space-y-3">
       {members.map((member: any, index: number) => (
-        <div key={index} className="flex items-center gap-3">
+        <div key={`member-${index}`} className="flex items-center gap-3">
           <div className="relative">
             <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-600 text-sm font-semibold flex items-center justify-center">
               {member.avatar}
@@ -137,7 +137,7 @@ const NotificationsWidget = ({ notifications }: any) => (
     </div>
     <div className="space-y-3">
       {notifications.map((notification: any, index: number) => (
-        <div key={index} className="flex items-start gap-3">
+        <div key={`notification-${index}`} className="flex items-start gap-3">
           <div className={`p-1 rounded ${
             notification.type === 'success' ? 'bg-green-100 text-green-600' :
             notification.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
@@ -355,7 +355,7 @@ export default function GridDashboard({ onOpenTab }: { onOpenTab?: (type: string
         <div className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {stats.map((stat, index) => (
-              <StatsWidget key={index} {...stat} />
+              <StatsWidget key={`stat-${index}`} {...stat} />
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

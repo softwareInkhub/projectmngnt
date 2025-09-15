@@ -28,7 +28,7 @@ const ChartWidget = ({ title, data, color }: any) => (
     </div>
     <div className="space-y-2">
       {data.map((item: any, index: number) => (
-        <div key={index} className="flex items-center justify-between">
+        <div key={`demo-${index}`} className="flex items-center justify-between">
           <span className="text-sm text-gray-600">{item.label}</span>
           <div className="flex items-center gap-2">
             <div className="w-16 bg-gray-200 rounded-full h-2">
@@ -70,7 +70,7 @@ const ActivityWidget = ({ activities }: any) => (
     </div>
     <div className="space-y-3">
       {activities.map((activity: any, index: number) => (
-        <div key={index} className="flex items-start gap-3">
+        <div key={`demo-${index}`} className="flex items-start gap-3">
           <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-center">
             {activity.avatar}
           </div>
@@ -93,7 +93,7 @@ const CalendarWidget = ({ events }: any) => (
     </div>
     <div className="space-y-3">
       {events.map((event: any, index: number) => (
-        <div key={index} className="flex items-center gap-3">
+        <div key={`demo-${index}`} className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-blue-500"></div>
           <div className="flex-1">
             <div className="text-sm font-medium text-gray-900">{event.title}</div>
@@ -113,7 +113,7 @@ const NotificationsWidget = ({ notifications }: any) => (
     </div>
     <div className="space-y-3">
       {notifications.map((notification: any, index: number) => (
-        <div key={index} className="flex items-start gap-3">
+        <div key={`demo-${index}`} className="flex items-start gap-3">
           <div className={`w-2 h-2 rounded-full mt-2 ${
             notification.type === 'success' ? 'bg-green-500' :
             notification.type === 'warning' ? 'bg-yellow-500' :

@@ -538,7 +538,7 @@ const companies: string[] = [];
                   >
                     <option value="">Select a WhatsApp group</option>
                     {whatsappGroups.map(group => (
-                      <option key={group.id} value={group.id}>{group.name}</option>
+                      <option key={`whatsapp-sheet-${group.id}`} value={group.id}>{group.name}</option>
                     ))}
                   </select>
                 </div>
@@ -737,7 +737,7 @@ const companies: string[] = [];
           
           <div className="divide-y divide-neutral-200">
             {filteredTeams.map((team) => (
-              <div key={team.id} className="p-6 hover:bg-neutral-50 transition-colors">
+              <div key={`team-sheet-${team.id}`} className="p-6 hover:bg-neutral-50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -817,7 +817,7 @@ const companies: string[] = [];
                       <div className="ml-8 mt-4 space-y-3">
                         <h4 className="text-sm font-medium text-neutral-700 mb-3">Sub-teams ({team.subteams.length})</h4>
                         {team.subteams.map((subteam) => (
-                          <div key={subteam.id} className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+                          <div key={`subteam-sheet-${subteam.id}`} className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg border border-neutral-200">
                             <div className="flex items-center gap-3">
                               <Users className="w-4 h-4 text-blue-400" />
                               <div>

@@ -456,7 +456,7 @@ export default function ProjectDetailPage() {
                        </label>
                        <div className="flex flex-wrap gap-1.5 md:gap-2">
                          {project.tags.map((tag, idx) => (
-                           <span key={idx} className="px-2 py-1 md:px-3 md:py-1 bg-blue-100 text-blue-700 rounded-full text-xs md:text-sm">
+                           <span key={`project-detail-tag-${idx}`} className="px-2 py-1 md:px-3 md:py-1 bg-blue-100 text-blue-700 rounded-full text-xs md:text-sm">
                              {tag}
                            </span>
                          ))}

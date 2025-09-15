@@ -445,7 +445,7 @@ export default function ContextSidebar({
                         const theme = teamThemes[idx % teamThemes.length];
                         return (
                         <li
-                          key={team.id || idx}
+                          key={`context-team-${team.id || idx}`}
                           className={`flex items-center px-2 py-1.5 rounded-lg border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer hover:shadow-sm`}
                           onClick={() => { if (team.id) openDetailsModal('team', team.id.toString()); }}
                           title={team.name}
@@ -758,7 +758,7 @@ export default function ContextSidebar({
                         const theme = teamThemes[idx % teamThemes.length];
                         return (
                         <li
-                          key={team.id || idx}
+                          key={`context-team-${team.id || idx}`}
                           className={`flex items-center px-3 py-2 rounded-lg border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer hover:shadow-sm`}
                           onClick={() => { if (team.id) openDetailsModal('team', team.id.toString()); }}
                           title={team.name}

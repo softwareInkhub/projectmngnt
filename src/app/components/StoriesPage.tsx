@@ -665,7 +665,7 @@ ${story.comments.map(comment => `[${comment.timestamp}] ${comment.author}: ${com
                 <label className="block text-xs font-medium text-neutral-700 mb-1.5">Criteria</label>
                 <div className="space-y-2">
                   {formData.acceptanceCriteria.map((criteria, index) => (
-                    <div key={index} className="flex items-center gap-2">
+                    <div key={`criteria-${index}`} className="flex items-center gap-2">
                       <input
                         value={criteria}
                         onChange={e => updateAcceptanceCriteria(index, e.target.value)}
@@ -925,7 +925,7 @@ ${story.comments.map(comment => `[${comment.timestamp}] ${comment.author}: ${com
                       {/* Tags */}
                       <div className="flex items-center gap-2 mb-4">
                         {story.tags.map((tag, index) => (
-                          <span key={index} className="px-2 py-1 bg-neutral-100 text-neutral-600 text-xs rounded">
+                          <span key={`story-tag-${index}`} className="px-2 py-1 bg-neutral-100 text-neutral-600 text-xs rounded">
                             {tag}
                           </span>
                         ))}
@@ -965,7 +965,7 @@ ${story.comments.map(comment => `[${comment.timestamp}] ${comment.author}: ${com
                             <h4 className="text-sm font-medium text-neutral-700 mb-2">Acceptance Criteria</h4>
                             <div className="space-y-2">
                               {story.acceptanceCriteria.map((criteria, index) => (
-                                <div key={index} className="flex items-start gap-2 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                                <div key={`story-criteria-${index}`} className="flex items-start gap-2 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
                                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                                   <span className="text-sm text-neutral-700">{criteria}</span>
                                 </div>

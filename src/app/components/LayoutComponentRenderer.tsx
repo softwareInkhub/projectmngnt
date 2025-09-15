@@ -4,7 +4,7 @@ import React from 'react';
 import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
 import TasksPage from './TasksPage';
 import TeamsPage from './TeamsPage';
-import DashboardPage from './DashboardPage';
+// DashboardPage removed - using ProjectsAnalyticsPage as placeholder
 import CalendarPage from './CalendarPage';
 import ReportsPage from './ReportsPage';
 import GridDashboard from './GridDashboard';
@@ -33,7 +33,7 @@ export default function LayoutComponentRenderer({
       case 'teams':
         return <TeamsPage onOpenTab={onOpenTab} context={{ company: 'Default Company' }} />;
       case 'analytics':
-        return <DashboardPage open={true} onClose={() => {}} onOpenTab={onOpenTab || (() => {})} />;
+        return <ProjectsAnalyticsPage onOpenTab={onOpenTab || (() => {})} />; // Using ProjectsAnalyticsPage as placeholder
       case 'calendar':
         return <CalendarPage open={true} onClose={() => {}} onOpenTab={onOpenTab || (() => {})} />;
       case 'reports':

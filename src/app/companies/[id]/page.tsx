@@ -501,7 +501,7 @@ export default function CompanyDetailPage() {
                          <div className="flex flex-wrap gap-1 sm:gap-2">
                            {company.tags.split(',').map((tag, index) => (
                              <span
-                               key={index}
+                               key={`company-tag-${index}`}
                                className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
                              >
                                {tag.trim()}
@@ -566,7 +566,7 @@ export default function CompanyDetailPage() {
                        <div className="space-y-2 sm:space-y-3">
                          {teams.map((team) => (
                            <div
-                             key={team.id}
+                             key={`company-team-${team.id}`}
                              className="p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-200"
                            >
                              <div className="flex items-center justify-between">

@@ -211,7 +211,7 @@ export default function ApiDebugComponent() {
           <h4 className="font-medium text-red-800 mb-2">Error Details</h4>
           {Object.entries(apiStatus).map(([apiName, status]) => 
             status.error && (
-              <div key={apiName} className="text-sm text-red-700 mb-1">
+              <div key={`api-debug-${apiName}`} className="text-sm text-red-700 mb-1">
                 <span className="font-medium capitalize">{apiName}:</span> {status.error}
               </div>
             )

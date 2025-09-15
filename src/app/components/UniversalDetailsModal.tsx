@@ -306,7 +306,7 @@ export default function UniversalDetailsModal({ isOpen, onClose, itemType, itemI
                 <h4 className="text-lg font-semibold text-blue-900 mb-3">Team Members</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {item.members.map((member: string, index: number) => (
-                    <div key={index} className="flex items-center gap-3 p-2 bg-white rounded-lg border border-blue-200">
+                    <div key={`member-${index}`} className="flex items-center gap-3 p-2 bg-white rounded-lg border border-blue-200">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
                         {getInitials(member)}
                       </div>
@@ -375,7 +375,7 @@ export default function UniversalDetailsModal({ isOpen, onClose, itemType, itemI
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {relatedItems.map((relatedItem, index) => (
-          <div key={index} className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200 hover:shadow-md transition-shadow">
+          <div key={`related-${index}`} className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h4 className="text-lg font-semibold text-blue-900 mb-2">{relatedItem.name || relatedItem.title}</h4>
