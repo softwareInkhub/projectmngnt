@@ -50,6 +50,13 @@ export default function AuthPage() {
       isLocalhost: window.location.hostname === 'localhost',
       isVercel: window.location.hostname.includes('vercel.app')
     });
+
+    // If we're on localhost and this is a production build, redirect to Vercel
+    if (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'production') {
+      console.log('🔄 Production build detected on localhost, redirecting to Vercel...');
+      window.location.href = 'https://projectmngnt.vercel.app/authPage';
+      return;
+    }
   }, []);
 
 
@@ -134,6 +141,13 @@ export default function AuthPage() {
       console.log('🔄 Detected localhost OAuth callback, redirecting to Vercel...');
       const vercelUrl = `https://projectmngnt.vercel.app/authPage?code=${code}&state=${state || ''}`;
       window.location.href = vercelUrl;
+      return;
+    }
+    
+    // Additional check: if we're on localhost and there's no code, redirect to Vercel
+    if (window.location.hostname === 'localhost' && !code) {
+      console.log('🔄 On localhost without OAuth code, redirecting to Vercel...');
+      window.location.href = 'https://projectmngnt.vercel.app/authPage';
       return;
     }
    
