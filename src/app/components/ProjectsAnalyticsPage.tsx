@@ -1876,7 +1876,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                                                 const isCurrentProject = task.project === project.id;
                                                 
                                                 return (
-                                                  <div key={task.id} className={`flex items-center gap-4 p-3 hover:bg-white border-b border-slate-100 last:border-b-0 ${isAlreadyInProject || isCurrentProject ? 'bg-green-50' : ''}`}>
+                                                  <div key={`project-task-list-${task.id}`} className={`flex items-center gap-4 p-3 hover:bg-white border-b border-slate-100 last:border-b-0 ${isAlreadyInProject || isCurrentProject ? 'bg-green-50' : ''}`}>
                                                     <div className={`w-3 h-3 ${statusInfo.color} rounded-full flex-shrink-0`}></div>
                                                     <div className="flex-1 min-w-0">
                                                       <div className="text-lg font-medium text-slate-800 truncate">{task.title || 'Untitled Task'}</div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, Plus, Download, X, ChevronLeft, ChevronRight, Users, FolderOpen, CheckSquare, UserPlus, Link } from 'lucide-react';
 import { ProjectApiService } from '../utils/projectApi';
 import { TaskApiService } from '../utils/taskApi';
@@ -44,14 +44,10 @@ export default function CalendarPage({
     projectId: '',
     taskId: '',
     teamId: '',
-    assignedMembers: []
+    assignedMembers: [] as string[]
   });
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -91,10 +87,15 @@ export default function CalendarPage({
         setTeams(Array.isArray(teamsData) ? teamsData : []);
         
         // Extract team members from teams
-        const allMembers = teamsData.flatMap(team => {
+        const teamsArray = Array.isArray(teamsData) ? teamsData : [];
+        const allMembers = teamsArray.flatMap(team => {
           try {
-            const members = typeof team.members === 'string' ? JSON.parse(team.members) : team.members;
-            return Array.isArray(members) ? members : [];
+            // Ensure team has members property and it's a TeamData object
+            if (team && typeof team === 'object' && 'members' in team) {
+              const members = typeof team.members === 'string' ? JSON.parse(team.members) : team.members;
+              return Array.isArray(members) ? members : [];
+            }
+            return [];
           } catch (error) {
             console.warn('Error parsing team members:', error);
             return [];
@@ -122,7 +123,11 @@ export default function CalendarPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const fetchCalendarEvents = async () => {
     try {
