@@ -84,33 +84,33 @@ export default function CalendarPage() {
             <span className="text-lg font-semibold text-blue-600">Workload Report</span>
             <span className="text-gray-400">&gt;</span>
             <span className="text-lg font-semibold text-gray-600">Task Owner</span>
-              </div>
-            </div>
+          </div>
+        </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-                <button 
+            <button
               onClick={() => navigateDateRange('prev')}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
             >
               <ChevronLeft className="h-5 w-5" />
-                </button>
+            </button>
             <span className="text-sm font-medium text-gray-900 min-w-[200px] text-center">
               {dateRange.start.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })} to {dateRange.end.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </span>
-                <button 
+            <button
               onClick={() => navigateDateRange('next')}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
             >
               <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
+            </button>
+          </div>
           <div className="flex items-center space-x-2">
             <span className="text-sm font-medium text-blue-600">Heatmap</span>
             <Filter className="h-4 w-4 text-gray-600" />
           </div>
         </div>
-              </div>
-              
+      </div>
+
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         <div className="flex h-full">
@@ -124,9 +124,9 @@ export default function CalendarPage() {
                 </select>
                 <button className="text-gray-400 hover:text-gray-600">
                   <X className="h-4 w-4" />
-              </button>
+                </button>
                 <button className="text-sm text-gray-500 hover:text-gray-700">Clear filter</button>
-            </div>
+              </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
@@ -134,9 +134,9 @@ export default function CalendarPage() {
                   placeholder="Search..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-        </div>
-      </div>
-
+              </div>
+            </div>
+            
             <div className="flex-1 overflow-y-auto">
               <div className="p-4">
                 <div className="space-y-1">
@@ -148,9 +148,9 @@ export default function CalendarPage() {
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-gray-600" />
                       <span className="text-sm text-gray-900">Unassigned User</span>
-            </div>
+                    </div>
                     <div className="w-16 h-2 bg-gray-200 rounded"></div>
-          </div>
+                  </div>
 
                   {/* Inkhub Tattoos */}
                   <div className="space-y-1">
@@ -159,10 +159,10 @@ export default function CalendarPage() {
                         <ChevronDown className="h-4 w-4 text-gray-500" />
                         <Users2 className="h-4 w-4 text-blue-600" />
                         <span className="text-sm text-gray-900">Inkhub Tattoos (2)</span>
-        </div>
+                      </div>
                       <div className="w-16 h-2 bg-green-400 rounded"></div>
-      </div>
-
+                    </div>
+                    
                     {/* IN-1 Explore Zoho Projects */}
                     <div className="ml-6 space-y-1">
                       <div className="flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors">
@@ -170,34 +170,34 @@ export default function CalendarPage() {
                           <ChevronDown className="h-4 w-4 text-gray-500" />
                           <div className="w-4 h-4 bg-blue-500 rounded text-white text-xs flex items-center justify-center">IN</div>
                           <span className="text-sm text-gray-900">IN-1 Explore Zoho Projects 2</span>
-                </div>
+                        </div>
                         <div className="w-16 h-2 bg-green-400 rounded"></div>
-                </div>
-
+                      </div>
+                      
                       {/* Tasks */}
                       <div className="ml-6 space-y-1">
                         <div className="flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors">
                           <div className="flex items-center space-x-2">
                             <div className="w-4 h-4 bg-orange-500 rounded text-white text-xs flex items-center justify-center">EZ</div>
                             <span className="text-sm text-gray-900">EZ1-T1 Task 1</span>
-              </div>
+                          </div>
                           <div className="w-16 h-2 bg-gray-200 rounded"></div>
-            </div>
-
+                        </div>
+                        
                         <div className="flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors">
                           <div className="flex items-center space-x-2">
                             <div className="w-4 h-4 bg-orange-500 rounded text-white text-xs flex items-center justify-center">EZ</div>
                             <span className="text-sm text-gray-900">EZ1-T3 Task 3</span>
-                  </div>
+                          </div>
                           <div className="w-16 h-2 bg-gray-200 rounded"></div>
-                </div>
-                    </div>
-                    </div>
-                  </div>
-                </div>
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Main Calendar Grid */}
           <div className="flex-1 flex flex-col overflow-hidden">
@@ -207,7 +207,7 @@ export default function CalendarPage() {
                 <div className="w-80 p-4 border-r border-gray-200 bg-yellow-50">
                   <div className="text-sm font-medium text-gray-700">Sep 1-Sep 30</div>
                   <div className="text-xs text-gray-500">176 hours</div>
-                    </div>
+                </div>
                 <div className="flex-1 overflow-x-auto">
                   <div className="flex min-w-max">
                     {dateColumns.map((date, index) => {
@@ -224,17 +224,17 @@ export default function CalendarPage() {
                             isWeekend ? 'text-red-600' : 'text-gray-600'
                           }`}>
                             {date.toLocaleDateString('en-US', { weekday: 'short' }).charAt(0)}
-                        </div>
+                          </div>
                           <div className="text-sm font-bold text-gray-900">
                             {date.getDate()}
-                      </div>
-                    </div>
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
                 </div>
               </div>
-                </div>
+            </div>
 
             {/* Calendar Body - Gantt Chart */}
             <div className="flex-1 overflow-auto">
@@ -249,7 +249,7 @@ export default function CalendarPage() {
                       </div>
                     </div>
                   </div>
-
+                  
                   {/* IN-1 Explore Zoho Projects Row */}
                   <div className="border-b border-gray-100">
                     <div className="p-4">
@@ -259,28 +259,28 @@ export default function CalendarPage() {
                       </div>
                     </div>
                   </div>
-
+                  
                   {/* EZ1-T1 Task 1 Row */}
                   <div className="border-b border-gray-100">
                     <div className="p-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-orange-500 rounded text-white text-xs flex items-center justify-center">EZ</div>
                         <span className="text-sm font-medium text-gray-900">EZ1-T1 Task 1</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-
+                  
                   {/* EZ1-T3 Task 3 Row */}
                   <div className="border-b border-gray-100">
                     <div className="p-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-orange-500 rounded text-white text-xs flex items-center justify-center">EZ</div>
                         <span className="text-sm font-medium text-gray-900">EZ1-T3 Task 3</span>
-                  </div>
-                </div>
+                      </div>
                     </div>
                   </div>
-
+                </div>
+                
                 <div className="flex-1 overflow-x-auto">
                   <div className="flex min-w-max">
                     {dateColumns.map((date, index) => {
@@ -295,76 +295,76 @@ export default function CalendarPage() {
                         >
                           {/* Add Task Button */}
                           <div className="absolute top-1 right-1 z-10">
-                          <button
+                            <button 
                               className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-blue-700 transition-colors"
                               onMouseEnter={(e) => handleButtonHover(date, e)}
                               onMouseLeave={handleButtonLeave}
                               onClick={() => handlePlusButtonClick(date)}
                             >
                               <Plus className="h-3 w-3" />
-                          </button>
-                        </div>
+                            </button>
+                          </div>
                           
                           {/* Inkhub Tattoos Bar */}
                           <div className={`h-16 border-b border-gray-100 ${
                             isWeekend ? 'bg-blue-50' : 'bg-white'
                           }`}>
-                    </div>
+                          </div>
                           
                           {/* IN-1 Explore Zoho Projects Bar */}
                           <div className={`h-16 border-b border-gray-100 ${
                             isWeekend ? 'bg-blue-50' : 'bg-white'
                           }`}>
-              </div>
-
+                          </div>
+                          
                           {/* EZ1-T1 Task 1 Bar */}
                           <div className={`h-16 border-b border-gray-100 ${
                             isWeekend ? 'bg-blue-50' : 'bg-white'
                           }`}>
-                </div>
-
+                          </div>
+                          
                           {/* EZ1-T3 Task 3 Bar */}
                           <div className={`h-16 border-b border-gray-100 ${
                             isWeekend ? 'bg-blue-50' : 'bg-white'
                           }`}>
-                       </div>
-                    </div>
-                    );
-                  })}
-                  </div>
-                      </div>
-                    </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
 
           {/* Right Sidebar */}
           <div className="w-16 border-l border-gray-200 bg-white flex flex-col items-center py-4 space-y-4">
             <div className="flex flex-col items-center space-y-2">
               <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
                 <BarChart3 className="h-4 w-4 text-blue-600" />
-                </div>
+              </div>
               <span className="text-xs text-gray-600">Heatmap</span>
               <ChevronDown className="h-3 w-3 text-gray-400" />
-              </div>
-
+            </div>
+            
             <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
               <Filter className="h-4 w-4 text-gray-600" />
-                  </div>
+            </div>
             
             <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
               <MoreVertical className="h-4 w-4 text-gray-600" />
-                </div>
-                
+            </div>
+            
             <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
               <Grid3X3 className="h-4 w-4 text-gray-600" />
-              </div>
-                
+            </div>
+            
             <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
               <List className="h-4 w-4 text-gray-600" />
+            </div>
           </div>
         </div>
-                    </div>
-                </div>
+      </div>
 
       {/* Hover Tooltip */}
       {hoveredDate && (
@@ -378,7 +378,7 @@ export default function CalendarPage() {
         >
           Add Task
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
-                        </div>
+        </div>
       )}
 
       {/* Button Hover Dropdown */}
@@ -395,40 +395,40 @@ export default function CalendarPage() {
           <div className="flex items-center space-x-2 mb-3">
             <User className="h-5 w-5 text-gray-600" />
             <span className="font-semibold text-gray-900">Unassigned User</span>
-                            </div>
-                
+          </div>
+          
           <div className="space-y-2 mb-3">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Total Availability:</span>
               <span className="text-sm font-medium text-gray-900">100% 8h 00m</span>
-                            </div>
+            </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Work Hours Assig...:</span>
               <span className="text-sm font-medium text-gray-900">0% 0h 00m</span>
-                        </div>
+            </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Free time:</span>
               <span className="text-sm font-medium text-gray-900">100% 8h 00m</span>
-                      </div>
-                </div>
-                
+            </div>
+          </div>
+          
           <div className="border-t border-gray-100 pt-2 space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Business Hours:</span>
               <span className="text-sm font-medium text-blue-600">Standard Business Hours</span>
-                            </div>
+            </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Time Period:</span>
               <span className="text-sm font-medium text-gray-900">01 Sep 2025 - 30 Sep 2025</span>
-                          </div>
-                      </div>
+            </div>
+          </div>
           
           <div className="flex items-center space-x-2 mt-3 pt-2 border-t border-gray-100">
             <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
             <span className="text-sm text-gray-600">Unallocated</span>
-              </div>
-            </div>
-          )}
+          </div>
+        </div>
+      )}
 
       {/* Popup Modal */}
       {selectedItem && (
@@ -438,45 +438,45 @@ export default function CalendarPage() {
               <div className="flex items-center space-x-2">
                 <User className="h-6 w-6 text-gray-600" />
                 <h3 className="text-lg font-semibold text-gray-900">Unassigned User</h3>
-                    </div>
-                <button
+              </div>
+              <button
                 onClick={() => setSelectedItem(null)}
                 className="text-gray-400 hover:text-gray-600"
-                >
+              >
                 <X className="h-5 w-5" />
-                </button>
-                </div>
-                
+              </button>
+            </div>
+            
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Total Availability:</span>
                 <span className="text-sm font-medium text-gray-900">100% 8h 00m</span>
-                    </div>
+              </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Work Hours Assig...:</span>
                 <span className="text-sm font-medium text-gray-900">0% 0h 00m</span>
-                  </div>
+              </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Free time:</span>
                 <span className="text-sm font-medium text-gray-900">100% 8h 00m</span>
-                  </div>
+              </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Business Hours:</span>
                 <span className="text-sm font-medium text-blue-600 cursor-pointer">Standard Business Hours</span>
-                </div>
+              </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Time Period:</span>
                 <span className="text-sm font-medium text-gray-900">01 Sep 2025 - 30 Sep 2025</span>
-                  </div>
-                </div>
-                
+              </div>
+            </div>
+            
             <div className="mt-4 flex items-center space-x-2">
               <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
               <span className="text-sm text-gray-600">Unallocated</span>
-                </div>
-              </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
       {/* Task Form Slide-in Panel */}
       {showTaskForm && (
@@ -500,11 +500,11 @@ export default function CalendarPage() {
                   >
                     <X className="h-5 w-5" />
                   </button>
-      </div>
-
+                </div>
+                
                 {/* Tabs */}
                 <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                <button
+                  <button
                     onClick={() => setActiveTab('new')}
                     className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'new'
@@ -523,9 +523,9 @@ export default function CalendarPage() {
                     }`}
                   >
                     Existing Task
-                </button>
+                  </button>
+                </div>
               </div>
-            </div>
 
               {/* Form Content */}
               <div className="flex-1 p-6 overflow-y-auto">
@@ -562,7 +562,7 @@ export default function CalendarPage() {
                     
                     {/* Rich Text Editor Toolbar */}
                     <div className="border border-gray-300 rounded-t-lg bg-gray-50 p-2">
-                            <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1">
                         {/* Text Formatting */}
                         <button className="p-1 hover:bg-gray-200 rounded">
                           <Bold className="h-4 w-4" />
@@ -672,8 +672,8 @@ export default function CalendarPage() {
                         <button className="p-1 hover:bg-gray-200 rounded">
                           <span className="text-xs font-bold">Za</span>
                         </button>
-                            </div>
-                          </div>
+                      </div>
+                    </div>
                     
                     {/* Text Area */}
                     <textarea
@@ -681,9 +681,9 @@ export default function CalendarPage() {
                       rows={8}
                       className="w-full px-3 py-2 border border-gray-300 border-t-0 rounded-b-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     />
-                      </div>
-                    </div>
                   </div>
+                </div>
+              </div>
 
               {/* Footer Actions */}
               <div className="p-6 border-t border-gray-200">
@@ -700,7 +700,7 @@ export default function CalendarPage() {
                   >
                     Cancel
                   </button>
-                  </div>
+                </div>
               </div>
             </div>
           </div>

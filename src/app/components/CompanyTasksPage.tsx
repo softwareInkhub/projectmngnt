@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 interface Task {
-  id: number;
+  id: string | number;
   name: string;
   status: string;
   priority: string;
@@ -46,7 +46,7 @@ interface Task {
   company: string;
   project: string;
   comments: Array<{
-    id: number;
+    id: string | number;
     author: string;
     content: string;
     timestamp: string;
@@ -61,7 +61,7 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
   
   const [tasks, setTasks] = useState<Task[]>([
     {
-      id: 1,
+      id: "company-task-1",
       name: "Implement user authentication",
       status: "In Progress",
       priority: "High",
@@ -90,7 +90,7 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
       project: "E-commerce Platform",
       comments: [
         {
-          id: 1,
+          id: "company-comment-1",
           author: "",
           content: "Started implementing JWT token generation",
           timestamp: "2024-01-18T10:30:00Z"
@@ -98,7 +98,7 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
       ]
     },
     {
-      id: 2,
+      id: "company-task-2",
       name: "Design responsive dashboard",
       status: "Done",
       priority: "Medium",
@@ -127,7 +127,7 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
       project: "Client Portal",
       comments: [
         {
-          id: 2,
+          id: "company-task-2",
           author: "Alice Johnson",
           content: "Completed responsive design implementation",
           timestamp: "2024-01-25T14:20:00Z"
@@ -135,7 +135,7 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
       ]
     },
     {
-      id: 3,
+      id: "company-task-3",
       name: "Fix API rate limiting",
       status: "Review",
       priority: "High",
@@ -164,7 +164,7 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
       project: "E-commerce Platform",
       comments: [
         {
-          id: 3,
+          id: "company-task-3",
           author: "Mike Brown",
           content: "Implemented basic rate limiting, ready for review",
           timestamp: "2024-01-28T09:15:00Z"
@@ -172,7 +172,7 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
       ]
     },
     {
-      id: 4,
+      id: "company-task-4",
       name: "Database optimization",
       status: "To Do",
       priority: "Medium",
@@ -208,11 +208,11 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
   const [priorityFilter, setPriorityFilter] = useState<string>("");
   const [projectFilter, setProjectFilter] = useState<string>("");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("");
-  const [showMoreMenu, setShowMoreMenu] = useState<number | null>(null);
+  const [showMoreMenu, setShowMoreMenu] = useState<string | number | null>(null);
   const [sortBy, setSortBy] = useState<string>("dueDate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  const deleteTask = (taskId: number) => {
+  const deleteTask = (taskId: string | number) => {
     setTasks(tasks.filter(task => task.id !== taskId));
     setShowMoreMenu(null);
   };
@@ -220,7 +220,7 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
   const duplicateTask = (task: Task) => {
     const newTask = {
       ...task,
-      id: Math.max(...tasks.map(t => t.id)) + 1,
+      id: `company-task-${Date.now()}`,
       name: `${task.name} (Copy)`,
       created: new Date().toISOString().split('T')[0],
       updated: new Date().toISOString().split('T')[0],
@@ -255,7 +255,7 @@ export default function CompanyTasksPage({ onOpenTab, context }: {
 
   const handleCreateTask = () => {
     const newTask: Task = {
-      id: Math.max(...tasks.map(t => t.id)) + 1,
+      id: `company-task-${Date.now()}`,
       name: "New Task",
       status: "To Do",
       priority: "Medium",

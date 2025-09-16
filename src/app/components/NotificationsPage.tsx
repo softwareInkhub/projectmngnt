@@ -6,7 +6,7 @@ import {
 // Enhanced notifications data
 const notifications = [
   {
-    id: 1,
+    id: "notif-1",
     title: "Task Completed Successfully",
     message: "Sarah Johnson completed the 'Design UI Components' task ahead of schedule. The design system is now ready for implementation.",
     type: "success",
@@ -21,7 +21,7 @@ const notifications = [
     health: "excellent"
   },
   {
-    id: 2,
+    id: "notif-2",
     title: "Project Deadline Reminder",
     message: "Client Portal project deadline is approaching in 3 days. Please ensure all critical features are completed and tested.",
     type: "warning",
@@ -36,7 +36,7 @@ const notifications = [
     health: "good"
   },
   {
-    id: 3,
+    id: "notif-3",
     title: "New Team Member Added",
     message: "David Kim joined the Backend Development team as Senior Developer. Welcome to the team!",
     type: "info",
@@ -51,7 +51,7 @@ const notifications = [
     health: "excellent"
   },
   {
-    id: 4,
+    id: "notif-4",
     title: "Code Review Request",
     message: "Alex Rodriguez requested a review for the authentication system implementation. Please review the changes.",
     type: "info",
@@ -66,7 +66,7 @@ const notifications = [
     health: "good"
   },
   {
-    id: 5,
+    id: "notif-5",
     title: "System Maintenance Scheduled",
     message: "Scheduled maintenance will occur tonight at 2:00 AM. Expected downtime: 30 minutes. All data will be backed up.",
     type: "warning",
@@ -81,7 +81,7 @@ const notifications = [
     health: "fair"
   },
   {
-    id: 6,
+    id: "notif-6",
     title: "Weekly Report Available",
     message: "Your weekly project progress report is ready to view. Key metrics show 15% improvement in team velocity.",
     type: "success",
@@ -96,7 +96,7 @@ const notifications = [
     health: "excellent"
   },
   {
-    id: 7,
+    id: "notif-7",
     title: "Sprint Planning Meeting",
     message: "Sprint 25 planning meeting starts in 30 minutes. Please prepare your task estimates and priorities.",
     type: "info",
@@ -111,7 +111,7 @@ const notifications = [
     health: "good"
   },
   {
-    id: 8,
+    id: "notif-8",
     title: "Bug Report Submitted",
     message: "Critical bug reported in user authentication flow. Users unable to log in with OAuth providers.",
     type: "warning",

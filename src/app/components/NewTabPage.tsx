@@ -126,7 +126,7 @@ export default function NewTabPage() {
 
   const recentItems = [
     {
-      id: 1,
+      id: "recent-1",
       title: "Whapi Project Management",
       type: "Company",
       icon: Building,
@@ -137,7 +137,7 @@ export default function NewTabPage() {
       health: "excellent"
     },
     {
-      id: 2,
+      id: "recent-2",
       title: "Mobile App Development",
       type: "Project",
       icon: Tag,
@@ -148,7 +148,7 @@ export default function NewTabPage() {
       health: "good"
     },
     {
-      id: 3,
+      id: "recent-3",
       title: "Core Development Team",
       type: "Team",
       icon: User,
@@ -159,7 +159,7 @@ export default function NewTabPage() {
       health: "excellent"
     },
     {
-      id: 4,
+      id: "recent-4",
       title: "Sprint 24",
       type: "Sprint",
       icon: Calendar,
@@ -170,7 +170,7 @@ export default function NewTabPage() {
       health: "good"
     },
     {
-      id: 5,
+      id: "recent-5",
       title: "TechCorp Solutions",
       type: "Company",
       icon: Building,
@@ -181,7 +181,7 @@ export default function NewTabPage() {
       health: "good"
     },
     {
-      id: 6,
+      id: "recent-6",
       title: "UI/UX Redesign",
       type: "Project",
       icon: Tag,

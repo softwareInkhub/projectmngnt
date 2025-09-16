@@ -122,10 +122,10 @@ export default function TaskDetailPage() {
         lastActivity: '2 hours ago',
         tags: ['demo', 'testing', 'frontend'],
         subtasks: [
-          { id: 1, title: 'Design mockups', completed: true },
-          { id: 2, title: 'Frontend implementation', completed: true },
-          { id: 3, title: 'Backend integration', completed: false },
-          { id: 4, title: 'Testing and QA', completed: false }
+          { id: "subtask-1", title: 'Design mockups', completed: true },
+          { id: "subtask-2", title: 'Frontend implementation', completed: true },
+          { id: "subtask-3", title: 'Backend integration', completed: false },
+          { id: "subtask-4", title: 'Testing and QA', completed: false }
         ],
         parentId: null
       };

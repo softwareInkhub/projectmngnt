@@ -193,7 +193,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const [newProject, setNewProject] = useState("");
 
   const [formData, setFormData] = useState({
-    id: 0, // Add ID field to preserve team ID when editing
+    id: "", // Add ID field to preserve team ID when editing
     name: "",
     description: "",
     project: context?.company || projects[0],
@@ -217,11 +217,11 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   });
 
   const whatsappGroups = [
-    { id: "1", name: "Development Team" },
-    { id: "2", name: "Design Team" },
-    { id: "3", name: "Marketing Team" },
-    { id: "4", name: "Sales Team" },
-    { id: "5", name: "Support Team" }
+    { id: "team-option-1", name: "Development Team" },
+    { id: "team-option-2", name: "Design Team" },
+    { id: "team-option-3", name: "Marketing Team" },
+    { id: "team-option-4", name: "Sales Team" },
+    { id: "team-option-5", name: "Support Team" }
   ];
 
   // Fetch teams from API
@@ -329,7 +329,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         name: team.name,
         description: team.description,
         members: JSON.stringify(team.teamMembers.map((member, index) => ({
-          id: index + 1,
+          id: `team-item-${index + 1}`,
           name: member,
           role: "Member",
           avatar: member.split(' ').map(n => n[0]).join(''),
@@ -364,7 +364,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         name: team.name,
         description: team.description,
         members: team.teamMembers.map((member, index) => ({
-          id: index + 1,
+          id: `team-item-${index + 1}`,
           name: member,
           role: "Member",
           avatar: member.split(' ').map(n => n[0]).join(''),
@@ -500,7 +500,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         description: formData.description,
         project: formData.project,
         members: JSON.stringify(formData.members.map((member, index) => ({
-          id: index + 1,
+          id: `team-item-${index + 1}`,
           name: member,
           role: "Member",
           avatar: member.split(' ').map(n => n[0]).join(''),
@@ -529,7 +529,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         setEditingTeam(null);
         // Reset form data including ID
         setFormData({
-          id: 0,
+          id: "",
           name: "",
           description: "",
           project: context?.company || projects[0],
@@ -755,7 +755,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         name: formData.name,
         description: formData.description,
         members: JSON.stringify(formData.members.map((member, index) => ({
-          id: index + 1,
+          id: `team-item-${index + 1}`,
           name: member,
           role: formData.roles[member] || "Member",
           avatar: member.split(' ').map(n => n[0]).join(''),
@@ -808,7 +808,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
       // Reset form and hide it
       setShowCreateForm(false);
               setFormData({
-          id: 0,
+          id: "",
           name: "",
           description: "",
           project: context?.company || projects[0],

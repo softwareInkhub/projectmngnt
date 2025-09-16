@@ -23,11 +23,11 @@ const companies: string[] = [];
 const managers = ["Alice Johnson", "Bob Smith", "Charlie Davis", "Diana Wilson", "Emma Chen"];
 const availableMembers = ["Alice Johnson", "Bob Smith", "Charlie Davis", "Diana Wilson", "Emma Chen", "Frank Miller", "Grace Lee", "Henry Brown"];
 const whatsappGroups = [
-  { id: "1", name: "Development Team" },
-  { id: "2", name: "Design Team" },
-  { id: "3", name: "Marketing Team" },
-  { id: "4", name: "Sales Team" },
-  { id: "5", name: "Product Team" }
+  { id: "modal-whatsapp-1", name: "Development Team" },
+  { id: "modal-whatsapp-2", name: "Design Team" },
+  { id: "modal-whatsapp-3", name: "Marketing Team" },
+  { id: "modal-whatsapp-4", name: "Sales Team" },
+  { id: "modal-whatsapp-5", name: "Product Team" }
 ];
 
 export default function CreateTeamModal({ open, onClose, onCreate }: CreateTeamModalProps) {
