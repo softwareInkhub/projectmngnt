@@ -71,7 +71,7 @@ interface TaskSidebarData {
 // Mock data for calendar events
 const allCalendarEvents = [
   {
-    id: 1,
+    id: "calendar-event-1",
     title: "Sprint Planning Meeting",
     description: "Plan tasks and assign responsibilities for the upcoming sprint",
     date: "2024-02-15",
@@ -79,7 +79,7 @@ const allCalendarEvents = [
     duration: "2 hours"
   },
   {
-    id: 2,
+    id: "calendar-event-2",
     title: "Code Review Session",
     description: "Review pull requests and discuss implementation details",
     date: "2024-02-16",
@@ -91,14 +91,14 @@ const allCalendarEvents = [
 // Mock data for reports
 const allReports = [
   {
-    id: 1,
+    id: "report-1",
     title: "Project Performance Report",
     description: "Comprehensive analysis of project metrics and KPIs",
     status: "Published",
     author: "Sarah Johnson"
   },
   {
-    id: 2,
+    id: "report-2",
     title: "Team Productivity Analysis",
     description: "Detailed breakdown of team performance and productivity trends",
     status: "Draft",

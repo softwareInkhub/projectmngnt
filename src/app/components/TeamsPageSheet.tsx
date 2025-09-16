@@ -29,7 +29,7 @@ import {
 // Sample team data
 const initialTeams = [
   {
-    id: 1,
+    id: "team-1",
     name: "Frontend Development",
     lead: "Sarah Johnson",
     members: 12,
@@ -43,7 +43,7 @@ const initialTeams = [
     archived: false,
     subteams: [
       {
-        id: 1,
+        id: "subteam-1",
         name: "React Team",
         lead: "Mike Chen",
         members: 6,
@@ -52,7 +52,7 @@ const initialTeams = [
         focus: "Frontend Development"
       },
       {
-        id: 2,
+        id: "subteam-2",
         name: "UI Components",
         lead: "Alex Rodriguez",
         members: 3,
@@ -61,7 +61,7 @@ const initialTeams = [
         focus: "Component Library"
       },
       {
-        id: 3,
+        id: "subteam-3",
         name: "User Experience",
         lead: "Emma Wilson",
         members: 3,
@@ -72,7 +72,7 @@ const initialTeams = [
     ]
   },
   {
-    id: 2,
+    id: "team-2",
     name: "Backend Development",
     lead: "David Kim",
     members: 8,
@@ -86,7 +86,7 @@ const initialTeams = [
     archived: false,
     subteams: [
       {
-        id: 4,
+        id: "subteam-4",
         name: "Node.js Team",
         lead: "David Kim",
         members: 5,
@@ -95,7 +95,7 @@ const initialTeams = [
         focus: "Backend Development"
       },
       {
-        id: 5,
+        id: "subteam-5",
         name: "Database Team",
         lead: "Tom Anderson",
         members: 3,
@@ -106,7 +106,7 @@ const initialTeams = [
     ]
   },
   {
-    id: 3,
+    id: "team-3",
     name: "Quality Assurance",
     lead: "Lisa Thompson",
     members: 6,
@@ -120,7 +120,7 @@ const initialTeams = [
     archived: false,
     subteams: [
       {
-        id: 6,
+        id: "subteam-6",
         name: "Manual Testing",
         lead: "Lisa Thompson",
         members: 3,
@@ -129,7 +129,7 @@ const initialTeams = [
         focus: "Manual Testing"
       },
       {
-        id: 7,
+        id: "subteam-7",
         name: "Automation Testing",
         lead: "James Brown",
         members: 3,
@@ -140,7 +140,7 @@ const initialTeams = [
     ]
   },
   {
-    id: 4,
+    id: "team-4",
     name: "Product Strategy",
     lead: "Lisa Chen",
     members: 4,
@@ -154,7 +154,7 @@ const initialTeams = [
     archived: false,
     subteams: [
       {
-        id: 8,
+        id: "subteam-8",
         name: "Market Research",
         lead: "James Brown",
         members: 2,
@@ -163,7 +163,7 @@ const initialTeams = [
         focus: "Market Analysis"
       },
       {
-        id: 9,
+        id: "subteam-9",
         name: "Product Planning",
         lead: "Lisa Chen",
         members: 2,
@@ -174,7 +174,7 @@ const initialTeams = [
     ]
   },
   {
-    id: 5,
+    id: "team-5",
     name: "UI/UX Design",
     lead: "Alex Rodriguez",
     members: 5,
@@ -188,7 +188,7 @@ const initialTeams = [
     archived: false,
     subteams: [
       {
-        id: 10,
+        id: "subteam-10",
         name: "Visual Design",
         lead: "Maria Garcia",
         members: 2,
@@ -197,7 +197,7 @@ const initialTeams = [
         focus: "Visual Identity"
       },
       {
-        id: 11,
+        id: "subteam-11",
         name: "Interaction Design",
         lead: "Alex Rodriguez",
         members: 3,
@@ -394,11 +394,11 @@ export default function TeamsPageSheet({ open, onClose, onOpenTab, context }: {
 const companies: string[] = [];
   const managers = ["Alice Johnson", "Bob Smith", "Charlie Davis", "Diana Wilson", "Emma Chen"];
   const whatsappGroups = [
-    { id: "1", name: "Development Team" },
-    { id: "2", name: "Design Team" },
-    { id: "3", name: "Marketing Team" },
-    { id: "4", name: "Sales Team" },
-    { id: "5", name: "Product Team" }
+    { id: "whatsapp-1", name: "Development Team" },
+    { id: "whatsapp-2", name: "Design Team" },
+    { id: "whatsapp-3", name: "Marketing Team" },
+    { id: "whatsapp-4", name: "Sales Team" },
+    { id: "whatsapp-5", name: "Product Team" }
   ];
 
   if (!open) return null;

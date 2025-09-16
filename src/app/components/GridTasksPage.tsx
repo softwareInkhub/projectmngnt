@@ -157,7 +157,7 @@ const TaskStatusFilter = ({ selectedStatus, onStatusChange }: any) => (
 // Sample task data
 const sampleTasks = [
   {
-    id: 1,
+    id: "grid-task-1",
     name: "Implement User Authentication",
     status: "Completed",
     priority: "High",
@@ -173,7 +173,7 @@ const sampleTasks = [
     tags: ["Authentication", "Frontend", "Security"]
   },
   {
-    id: 2,
+    id: "grid-task-2",
     name: "Design Dashboard Layout",
     status: "In Progress",
     priority: "High",
@@ -189,7 +189,7 @@ const sampleTasks = [
     tags: ["Frontend", "UI/UX", "Dashboard"]
   },
   {
-    id: 3,
+    id: "grid-task-3",
     name: "API Integration for Payment",
     status: "To Do",
     priority: "Medium",
@@ -205,7 +205,7 @@ const sampleTasks = [
     tags: ["Backend", "API", "Payment"]
   },
   {
-    id: 4,
+    id: "grid-task-4",
     name: "Mobile App Testing",
     status: "In Progress",
     priority: "Medium",
@@ -221,7 +221,7 @@ const sampleTasks = [
     tags: ["Testing", "Mobile", "QA"]
   },
   {
-    id: 5,
+    id: "grid-task-5",
     name: "Database Optimization",
     status: "To Do",
     priority: "Low",
@@ -237,7 +237,7 @@ const sampleTasks = [
     tags: ["Backend", "Database", "Performance"]
   },
   {
-    id: 6,
+    id: "grid-task-6",
     name: "User Documentation",
     status: "Completed",
     priority: "Low",

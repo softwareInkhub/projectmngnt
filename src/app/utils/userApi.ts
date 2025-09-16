@@ -119,12 +119,12 @@ class UserApiServiceClass {
         const timeoutId = setTimeout(() => controller.abort(), 8000);
         
         const cognitoResponse = await fetch('/api/cognito/users', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
-          },
-          credentials: 'include',
+        },
+        credentials: 'include',
           signal: controller.signal,
         });
         
@@ -209,7 +209,7 @@ class UserApiServiceClass {
           console.log(`${endpoint.name} endpoint response status:`, response.status);
 
           if (response.ok) {
-            const data = await response.json();
+      const data = await response.json();
             console.log(`${endpoint.name} endpoint success, data:`, data);
             
             let users = data.users || data;

@@ -28,7 +28,7 @@ import {
 // Sample department data
 const initialDepartments = [
   {
-    id: 1,
+    id: "dept-1",
     name: "HR",
     manager: "Jennifer Davis",
     members: 6,
@@ -44,7 +44,7 @@ const initialDepartments = [
     archived: false,
     subdepartments: [
       {
-        id: 1,
+        id: "subdept-1",
         name: "Talent Acquisition",
         manager: "Jennifer Davis",
         members: 3,
@@ -53,7 +53,7 @@ const initialDepartments = [
         status: "Active"
       },
       {
-        id: 2,
+        id: "subdept-2",
         name: "Employee Experience",
         manager: "Tom Anderson",
         members: 3,
@@ -64,7 +64,7 @@ const initialDepartments = [
     ]
   },
   {
-    id: 2,
+    id: "dept-2",
     name: "Engineering",
     manager: "Sarah Johnson",
     members: 45,
@@ -80,7 +80,7 @@ const initialDepartments = [
     archived: false,
     subdepartments: [
       {
-        id: 3,
+        id: "subdept-3",
         name: "Frontend Engineering",
         manager: "Mike Chen",
         members: 18,
@@ -89,7 +89,7 @@ const initialDepartments = [
         status: "Active"
       },
       {
-        id: 4,
+        id: "subdept-4",
         name: "Backend Engineering",
         manager: "David Kim",
         members: 15,
@@ -98,7 +98,7 @@ const initialDepartments = [
         status: "Active"
       },
       {
-        id: 5,
+        id: "subdept-5",
         name: "DevOps & Infrastructure",
         manager: "Emma Wilson",
         members: 8,
@@ -107,7 +107,7 @@ const initialDepartments = [
         status: "Active"
       },
       {
-        id: 6,
+        id: "subdept-6",
         name: "Quality Assurance",
         manager: "Alex Rodriguez",
         members: 4,
@@ -118,7 +118,7 @@ const initialDepartments = [
     ]
   },
   {
-    id: 3,
+    id: "dept-3",
     name: "Design",
     manager: "Alex Rodriguez",
     members: 8,
@@ -134,7 +134,7 @@ const initialDepartments = [
     archived: false,
     subdepartments: [
       {
-        id: 7,
+        id: "subdept-7",
         name: "UI/UX Design",
         manager: "Alex Rodriguez",
         members: 5,
@@ -143,7 +143,7 @@ const initialDepartments = [
         status: "Active"
       },
       {
-        id: 8,
+        id: "subdept-8",
         name: "Visual Design",
         manager: "Rachel Green",
         members: 3,

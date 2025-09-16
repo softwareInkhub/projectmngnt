@@ -153,9 +153,9 @@ export default function TeamDetailPage() {
                 description: 'This is a demo team created for testing purposes.',
                 project: 'Demo Project',
                 members: JSON.stringify([
-                  { id: 1, name: 'Demo Member 1', role: 'Team Lead', status: 'Active', projects: 2 },
-                  { id: 2, name: 'Demo Member 2', role: 'Developer', status: 'Active', projects: 1 },
-                  { id: 3, name: 'Demo Member 3', role: 'Designer', status: 'Active', projects: 1 }
+                  { id: "member-1", name: 'Demo Member 1', role: 'Team Lead', status: 'Active', projects: 2 },
+                  { id: "member-2", name: 'Demo Member 2', role: 'Developer', status: 'Active', projects: 1 },
+                  { id: "member-3", name: 'Demo Member 3', role: 'Designer', status: 'Active', projects: 1 }
                 ]),
                 tasksCompleted: 8,
                 totalTasks: 15,
@@ -186,9 +186,9 @@ export default function TeamDetailPage() {
               description: 'This is a demo team created for testing purposes.',
               project: 'Demo Project',
               members: JSON.stringify([
-                { id: 1, name: 'Demo Member 1', role: 'Team Lead', status: 'Active', projects: 2 },
-                { id: 2, name: 'Demo Member 2', role: 'Developer', status: 'Active', projects: 1 },
-                { id: 3, name: 'Demo Member 3', role: 'Designer', status: 'Active', projects: 1 }
+                { id: "member-1", name: 'Demo Member 1', role: 'Team Lead', status: 'Active', projects: 2 },
+                { id: "member-2", name: 'Demo Member 2', role: 'Developer', status: 'Active', projects: 1 },
+                { id: "member-3", name: 'Demo Member 3', role: 'Designer', status: 'Active', projects: 1 }
               ]),
               tasksCompleted: 8,
               totalTasks: 15,

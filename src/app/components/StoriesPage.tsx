@@ -31,7 +31,7 @@ import {
 // Sample story data
 const initialStories = [
   {
-    id: 1,
+    id: "story-1",
     name: "User Authentication System",
     status: "Completed",
     priority: "High",
@@ -56,13 +56,13 @@ const initialStories = [
     tags: ["Authentication", "Security", "Backend"],
     comments: [
       {
-        id: 1,
+        id: "comment-1",
         author: "Mike Chen",
         content: "Great work on the authentication system!",
         timestamp: "2024-01-10 14:30"
       },
       {
-        id: 2,
+        id: "comment-2",
         author: "Sarah Johnson",
         content: "Thanks! The JWT implementation is working perfectly.",
         timestamp: "2024-01-10 15:45"
@@ -70,7 +70,7 @@ const initialStories = [
     ]
   },
   {
-    id: 2,
+    id: "story-2",
     name: "Dashboard Layout",
     status: "In Progress",
     priority: "High",
@@ -95,7 +95,7 @@ const initialStories = [
     tags: ["Frontend", "UI/UX", "Dashboard"],
     comments: [
       {
-        id: 3,
+        id: "criteria-3",
         author: "Lisa Chen",
         content: "The layout looks great! Can we add more widget options?",
         timestamp: "2024-01-12 10:15"
@@ -103,7 +103,7 @@ const initialStories = [
     ]
   },
   {
-    id: 3,
+    id: "story-3",
     name: "Payment Integration",
     status: "In Progress",
     priority: "High",
@@ -128,7 +128,7 @@ const initialStories = [
     tags: ["Payment", "Stripe", "E-commerce"],
     comments: [
       {
-        id: 4,
+        id: "criteria-4",
         author: "Alex Rodriguez",
         content: "Stripe integration is progressing well. Need to test with sandbox environment.",
         timestamp: "2024-01-13 16:20"
@@ -136,7 +136,7 @@ const initialStories = [
     ]
   },
   {
-    id: 4,
+    id: "story-4",
     name: "Mobile App Navigation",
     status: "To Do",
     priority: "Medium",
@@ -162,7 +162,7 @@ const initialStories = [
     comments: []
   },
   {
-    id: 5,
+    id: "story-5",
     name: "Data Analytics Dashboard",
     status: "Planning",
     priority: "Medium",

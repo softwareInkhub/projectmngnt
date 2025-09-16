@@ -35,7 +35,7 @@ export default function LayoutComponentRenderer({
       case 'analytics':
         return <ProjectsAnalyticsPage onOpenTab={onOpenTab || (() => {})} />; // Using ProjectsAnalyticsPage as placeholder
       case 'calendar':
-        return <CalendarPage open={true} onClose={() => {}} onOpenTab={onOpenTab || (() => {})} />;
+        return <CalendarPage onOpenTab={onOpenTab || (() => {})} />;
       case 'reports':
         return <ReportsPage onOpenTab={onOpenTab || (() => {})} />;
       case 'grid-dashboard':

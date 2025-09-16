@@ -28,7 +28,7 @@ import {
 // Sample sprint data
 const initialSprints = [
   {
-    id: 1,
+    id: "sprint-1",
     name: "Sprint 1 - Q1 2024",
     status: "In Progress",
     startDate: "2024-01-01",
@@ -43,7 +43,7 @@ const initialSprints = [
     archived: false,
     stories: [
       {
-        id: 1,
+        id: "sprint-story-1",
         name: "User Authentication System",
         status: "Completed",
         priority: "High",
@@ -53,7 +53,7 @@ const initialSprints = [
         completed: 5
       },
       {
-        id: 2,
+        id: "sprint-story-2",
         name: "Dashboard Layout",
         status: "In Progress",
         priority: "High",
@@ -63,7 +63,7 @@ const initialSprints = [
         completed: 2
       },
       {
-        id: 3,
+        id: "sprint-story-3",
         name: "Navigation Component",
         status: "Completed",
         priority: "Medium",
@@ -75,7 +75,7 @@ const initialSprints = [
     ]
   },
   {
-    id: 2,
+    id: "sprint-2",
     name: "Sprint 2 - Q1 2024",
     status: "Planning",
     startDate: "2024-01-16",
@@ -90,7 +90,7 @@ const initialSprints = [
     archived: false,
     stories: [
       {
-        id: 4,
+        id: "sprint-story-4",
         name: "API Authentication",
         status: "To Do",
         priority: "High",
@@ -100,7 +100,7 @@ const initialSprints = [
         completed: 0
       },
       {
-        id: 5,
+        id: "sprint-story-5",
         name: "Database Schema",
         status: "To Do",
         priority: "High",
@@ -110,7 +110,7 @@ const initialSprints = [
         completed: 0
       },
       {
-        id: 6,
+        id: "sprint-story-6",
         name: "User Management API",
         status: "To Do",
         priority: "Medium",
@@ -122,7 +122,7 @@ const initialSprints = [
     ]
   },
   {
-    id: 3,
+    id: "sprint-3",
     name: "Sprint 3 - Q1 2024",
     status: "Completed",
     startDate: "2023-12-15",
@@ -137,7 +137,7 @@ const initialSprints = [
     archived: false,
     stories: [
       {
-        id: 7,
+        id: "sprint-story-7",
         name: "Design System",
         status: "Completed",
         priority: "High",
@@ -147,7 +147,7 @@ const initialSprints = [
         completed: 6
       },
       {
-        id: 8,
+        id: "sprint-story-8",
         name: "Component Library",
         status: "Completed",
         priority: "High",
@@ -157,7 +157,7 @@ const initialSprints = [
         completed: 4
       },
       {
-        id: 9,
+        id: "sprint-story-9",
         name: "Style Guide",
         status: "Completed",
         priority: "Medium",
@@ -169,7 +169,7 @@ const initialSprints = [
     ]
   },
   {
-    id: 4,
+    id: "sprint-4",
     name: "Sprint 4 - Q1 2024",
     status: "In Progress",
     startDate: "2024-02-01",
@@ -184,7 +184,7 @@ const initialSprints = [
     archived: false,
     stories: [
       {
-        id: 10,
+        id: "sprint-story-10",
         name: "Test Automation Setup",
         status: "In Progress",
         priority: "High",
@@ -194,7 +194,7 @@ const initialSprints = [
         completed: 2
       },
       {
-        id: 11,
+        id: "sprint-story-11",
         name: "Manual Testing",
         status: "In Progress",
         priority: "Medium",
@@ -204,7 +204,7 @@ const initialSprints = [
         completed: 1
       },
       {
-        id: 12,
+        id: "sprint-story-12",
         name: "Performance Testing",
         status: "To Do",
         priority: "Medium",
@@ -216,7 +216,7 @@ const initialSprints = [
     ]
   },
   {
-    id: 5,
+    id: "sprint-5",
     name: "Sprint 5 - Q1 2024",
     status: "Planning",
     startDate: "2024-02-16",
@@ -231,7 +231,7 @@ const initialSprints = [
     archived: false,
     stories: [
       {
-        id: 13,
+        id: "sprint-story-13",
         name: "Market Research",
         status: "To Do",
         priority: "High",
@@ -241,7 +241,7 @@ const initialSprints = [
         completed: 0
       },
       {
-        id: 14,
+        id: "sprint-story-14",
         name: "Feature Prioritization",
         status: "To Do",
         priority: "High",
@@ -251,7 +251,7 @@ const initialSprints = [
         completed: 0
       },
       {
-        id: 15,
+        id: "sprint-story-15",
         name: "Roadmap Planning",
         status: "To Do",
         priority: "Medium",

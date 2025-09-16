@@ -53,7 +53,7 @@ export default function TasksGridComponent({ onOpenTab, context }: {
 }) {
   const [tasks, setTasks] = useState<Task[]>([
     {
-      id: 1,
+      id: "grid-task-1",
       name: "Implement user authentication",
       status: "In Progress",
       priority: "High",
@@ -80,7 +80,7 @@ export default function TasksGridComponent({ onOpenTab, context }: {
       timeEstimate: "16h",
       comments: [
         {
-          id: 1,
+          id: "grid-comment-1",
           author: "",
           content: "Started implementing JWT token generation",
           timestamp: "2024-01-18T10:30:00Z"
@@ -88,7 +88,7 @@ export default function TasksGridComponent({ onOpenTab, context }: {
       ]
     },
     {
-      id: 2,
+      id: "grid-task-2",
       name: "Design responsive dashboard",
       status: "Done",
       priority: "Medium",
@@ -115,7 +115,7 @@ export default function TasksGridComponent({ onOpenTab, context }: {
       timeEstimate: "10h",
       comments: [
         {
-          id: 2,
+          id: "grid-comment-2",
           author: "Alice Johnson",
           content: "Completed responsive design implementation",
           timestamp: "2024-01-25T14:20:00Z"
@@ -123,7 +123,7 @@ export default function TasksGridComponent({ onOpenTab, context }: {
       ]
     },
     {
-      id: 3,
+      id: "grid-task-3",
       name: "Fix API rate limiting",
       status: "Review",
       priority: "High",
@@ -150,7 +150,7 @@ export default function TasksGridComponent({ onOpenTab, context }: {
       timeEstimate: "8h",
       comments: [
         {
-          id: 3,
+          id: "grid-task-3",
           author: "Mike Brown",
           content: "Implemented basic rate limiting, ready for review",
           timestamp: "2024-01-28T09:15:00Z"
