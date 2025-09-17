@@ -330,7 +330,7 @@ export default function GridTasksPage({ onOpenTab }: { onOpenTab?: (type: string
   const handleDuplicateTask = (task: any) => {
     const newTask = {
       ...task,
-      id: Math.max(...tasks.map(t => t.id)) + 1,
+      id: `grid-task-${Date.now()}`,
       name: `${task.name} (Copy)`,
       status: 'To Do'
     };

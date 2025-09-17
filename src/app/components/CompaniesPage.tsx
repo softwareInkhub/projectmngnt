@@ -145,6 +145,8 @@ export default function CompaniesPage({ context }: { context?: { company: string
   };
 
   // Close UniversalDetailsModal
+
+
   const closeDetailsModal = () => {
     setDetailsModal({
       isOpen: false,

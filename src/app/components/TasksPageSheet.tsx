@@ -22,7 +22,7 @@ import {
 import GridLayoutWrapper from "./GridLayoutWrapper";
 
 interface Task {
-  id: number;
+  id: string | number;
   name: string;
   status: string;
   priority: string;
@@ -43,7 +43,7 @@ interface Task {
   timeSpent: string;
   timeEstimate: string;
   comments: Array<{
-    id: number;
+    id: string | number;
     author: string;
     content: string;
     timestamp: string;
@@ -169,7 +169,7 @@ export default function TasksPageSheet({ open, onClose, onOpenTab, context }: {
   const [priorityFilter, setPriorityFilter] = useState<string>("");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("");
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState<number | null>(null);
+  const [showMoreMenu, setShowMoreMenu] = useState<string | number | null>(null);
   const [isGridMode, setIsGridMode] = useState(false);
 
   const defaultTaskLayout = [
@@ -178,7 +178,7 @@ export default function TasksPageSheet({ open, onClose, onOpenTab, context }: {
     { i: 'task-3', x: 0, y: 4, w: 6, h: 4 }
   ];
 
-  const deleteTask = (taskId: number) => {
+  const deleteTask = (taskId: string | number) => {
     setTasks(tasks.filter(task => task.id !== taskId));
     setShowMoreMenu(null);
   };
@@ -186,7 +186,7 @@ export default function TasksPageSheet({ open, onClose, onOpenTab, context }: {
   const duplicateTask = (task: Task) => {
     const newTask = {
       ...task,
-      id: Math.max(...tasks.map(t => t.id)) + 1,
+      id: `task-${Date.now()}`,
       name: `${task.name} (Copy)`,
       created: new Date().toISOString().split('T')[0],
       updated: new Date().toISOString().split('T')[0],
@@ -220,7 +220,7 @@ export default function TasksPageSheet({ open, onClose, onOpenTab, context }: {
 
   const handleCreateTask = () => {
       const newTask: Task = {
-        id: Math.max(...tasks.map(t => t.id)) + 1,
+        id: `task-${Date.now()}`,
       name: "New Task",
       status: "To Do",
       priority: "Medium",

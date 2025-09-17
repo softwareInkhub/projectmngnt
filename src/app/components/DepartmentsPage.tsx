@@ -156,7 +156,7 @@ const initialDepartments = [
 ];
 
 interface Department {
-  id: number;
+  id: string | number;
   name: string;
   manager: string;
   members: number;
@@ -171,7 +171,7 @@ interface Department {
   lastActivity: string;
   archived: boolean;
   subdepartments: Array<{
-    id: number;
+    id: string | number;
     name: string;
     manager: string;
     members: number;
@@ -189,8 +189,8 @@ export default function DepartmentsPage({ open, onClose, onOpenTab }: {
   const [departments, setDepartments] = useState<Department[]>(initialDepartments);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState<number | null>(null);
-  const [expandedDepartments, setExpandedDepartments] = useState<number[]>([]);
+  const [showMoreMenu, setShowMoreMenu] = useState<string | number | null>(null);
+  const [expandedDepartments, setExpandedDepartments] = useState<(string | number)[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   
   // Form states
@@ -207,12 +207,12 @@ export default function DepartmentsPage({ open, onClose, onOpenTab }: {
   });
 
   // Department actions
-  const deleteDepartment = (deptId: number) => {
+  const deleteDepartment = (deptId: string | number) => {
     setDepartments(prev => prev.filter(dept => dept.id !== deptId));
     setShowMoreMenu(null);
   };
 
-  const archiveDepartment = (deptId: number) => {
+  const archiveDepartment = (deptId: string | number) => {
     setDepartments(prev => prev.map(dept => 
       dept.id === deptId ? { ...dept, archived: true } : dept
     ));
@@ -222,7 +222,7 @@ export default function DepartmentsPage({ open, onClose, onOpenTab }: {
   const duplicateDepartment = (dept: Department) => {
     const newDept = {
       ...dept,
-      id: Math.max(...departments.map(d => d.id)) + 1,
+      id: `dept-${Date.now()}`,
       name: `${dept.name} (Copy)`,
       status: "Planning"
     };
@@ -257,7 +257,7 @@ export default function DepartmentsPage({ open, onClose, onOpenTab }: {
   };
 
   // Toggle expansion
-  const toggleDepartment = (deptId: number) => {
+  const toggleDepartment = (deptId: string | number) => {
     setExpandedDepartments(prev => 
       prev.includes(deptId) 
         ? prev.filter(id => id !== deptId)
@@ -297,7 +297,7 @@ export default function DepartmentsPage({ open, onClose, onOpenTab }: {
   const handleCreateDepartment = () => {
     if (formData.name && formData.company) {
       const newDepartment: Department = {
-        id: Math.max(...departments.map(d => d.id)) + 1,
+        id: `dept-${Date.now()}`,
         name: formData.name,
         manager: formData.manager || "Unassigned",
         members: formData.teamMembers.length,

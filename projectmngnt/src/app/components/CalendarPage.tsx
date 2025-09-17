@@ -3,7 +3,11 @@
 import React, { useState } from 'react';
 import { BarChart3, ChevronLeft, ChevronRight, Search, Settings, User, Users2, ChevronDown, Filter, MoreVertical, Grid3X3, List, Calendar, Clock, Plus, X, Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, AlignJustify, List as ListIcon, ListOrdered, IndentDecrease, IndentIncrease, Superscript, Subscript, Image, Link, Code, Type, Sun, Moon, Maximize2 } from 'lucide-react';
 
-export default function CalendarPage() {
+interface CalendarPageProps {
+  onOpenTab?: (type: string, title?: string) => void;
+}
+
+export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
   const [dateRange, setDateRange] = useState({
     start: new Date(2025, 8, 1), // September 1, 2025
     end: new Date(2025, 8, 30)   // September 30, 2025
