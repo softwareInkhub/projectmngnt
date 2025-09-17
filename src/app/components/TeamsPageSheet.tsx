@@ -210,7 +210,7 @@ const initialTeams = [
 ];
 
 interface Team {
-  id: number;
+  id: string | number;
   name: string;
   lead: string;
   members: number;
@@ -223,7 +223,7 @@ interface Team {
   lastActivity: string;
   archived: boolean;
   subteams: Array<{
-    id: number;
+    id: string | number;
     name: string;
     lead: string;
     members: number;
@@ -242,8 +242,8 @@ export default function TeamsPageSheet({ open, onClose, onOpenTab, context }: {
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState<number | null>(null);
-  const [expandedTeams, setExpandedTeams] = useState<number[]>([]);
+  const [showMoreMenu, setShowMoreMenu] = useState<string | number | null>(null);
+  const [expandedTeams, setExpandedTeams] = useState<(string | number)[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   
   // Form states
@@ -261,12 +261,12 @@ export default function TeamsPageSheet({ open, onClose, onOpenTab, context }: {
   });
 
   // Team actions
-  const deleteTeam = (teamId: number) => {
+  const deleteTeam = (teamId: string | number) => {
     setTeams(prev => prev.filter(team => team.id !== teamId));
     setShowMoreMenu(null);
   };
 
-  const archiveTeam = (teamId: number) => {
+  const archiveTeam = (teamId: string | number) => {
     setTeams(prev => prev.map(team => 
       team.id === teamId ? { ...team, archived: true } : team
     ));
@@ -276,7 +276,7 @@ export default function TeamsPageSheet({ open, onClose, onOpenTab, context }: {
   const duplicateTeam = (team: Team) => {
     const newTeam = {
       ...team,
-      id: Math.max(...teams.map(t => t.id)) + 1,
+      id: `team-${Date.now()}`,
       name: `${team.name} (Copy)`,
       status: "Planning"
     };
@@ -311,7 +311,7 @@ export default function TeamsPageSheet({ open, onClose, onOpenTab, context }: {
   };
 
   // Toggle expansion
-  const toggleTeam = (teamId: number) => {
+  const toggleTeam = (teamId: string | number) => {
     setExpandedTeams(prev => 
       prev.includes(teamId) 
         ? prev.filter(id => id !== teamId)
@@ -348,7 +348,7 @@ export default function TeamsPageSheet({ open, onClose, onOpenTab, context }: {
   const handleCreateTeam = () => {
     if (formData.name && formData.department) {
       const newTeam: Team = {
-        id: Math.max(...teams.map(t => t.id)) + 1,
+        id: `team-${Date.now()}`,
         name: formData.name,
         lead: formData.manager || "Unassigned", // Assuming lead is manager for new teams
         members: formData.teamMembers.length,

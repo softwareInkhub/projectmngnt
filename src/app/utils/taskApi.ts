@@ -45,7 +45,7 @@ export interface TaskWithUI extends Omit<TaskData, 'tags' | 'subtasks' | 'commen
   created: string;
   lastActivity: string;
   tags: string[];
-  subtasks: { id: number; title: string; completed: boolean }[];
+  subtasks: { id: string | number; title: string; completed: boolean }[];
   parentId?: string | null;
 }
 

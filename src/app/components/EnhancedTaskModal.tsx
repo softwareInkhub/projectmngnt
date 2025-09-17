@@ -82,9 +82,20 @@ export default function EnhancedTaskModal({
       }
 
       setFormData({
-        ...editingTask,
+        title: editingTask.title ?? "",
+        description: editingTask.description ?? "",
+        project: editingTask.project ?? "",
+        assignee: editingTask.assignee ?? assignees[0],
+        status: editingTask.status ?? statuses[0],
+        priority: editingTask.priority ?? priorities[1],
+        dueDate: editingTask.dueDate ?? "",
+        startDate: editingTask.startDate ?? "",
+        estimatedHours: editingTask.estimatedHours ?? 0,
+        tags: editingTask.tags ?? "",
         subtasks: subtasksText,
-        parentId: editingTask.parentId || null
+        comments: editingTask.comments ?? "",
+        parentId: editingTask.parentId ?? null,
+        id: editingTask.id
       });
       setSelectedParentId(editingTask.parentId || null);
     } else if (parentTaskId) {
@@ -130,19 +141,19 @@ export default function EnhancedTaskModal({
   const validateForm = (): boolean => {
     const newErrors: string[] = [];
 
-    if (!formData.title.trim()) {
+    if (!(formData.title ?? "").trim()) {
       newErrors.push('Title is required');
     }
 
-    if (!formData.project.trim()) {
+    if (!(formData.project ?? "").trim()) {
       newErrors.push('Project is required');
     }
 
-    if (!formData.assignee.trim()) {
+    if (!(formData.assignee ?? "").trim()) {
       newErrors.push('Assignee is required');
     }
 
-    if (!formData.status.trim()) {
+    if (!(formData.status ?? "").trim()) {
       newErrors.push('Status is required');
     }
 
@@ -167,7 +178,7 @@ export default function EnhancedTaskModal({
 
     // Convert subtasks text to JSON format
     let subtasksJson = "";
-    if (formData.subtasks && typeof formData.subtasks === 'string' && formData.subtasks.trim()) {
+    if ((formData.subtasks ?? "") && typeof formData.subtasks === 'string' && (formData.subtasks ?? "").trim()) {
       const subtasksArray = formData.subtasks
         .split('\n')
         .map(line => line.trim())

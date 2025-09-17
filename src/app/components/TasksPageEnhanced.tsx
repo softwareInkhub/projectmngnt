@@ -398,9 +398,9 @@ export default function TasksPageEnhanced({
             {/* Desktop search/filters */}
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
-              <input type="text" placeholder="Search tasks..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
+              <input type="text" placeholder="Search tasks..." value={searchTerm ?? ""} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
             </div>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
+            <select value={statusFilter ?? ""} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
               <option value="All">All Status</option>
               <option value="To Do">To Do</option>
               <option value="In Progress">In Progress</option>
@@ -408,7 +408,7 @@ export default function TasksPageEnhanced({
               <option value="Done">Done</option>
               <option value="Blocked">Blocked</option>
             </select>
-            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
+            <select value={priorityFilter ?? ""} onChange={(e) => setPriorityFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
               <option value="All">All Priority</option>
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
@@ -478,7 +478,7 @@ export default function TasksPageEnhanced({
               />
             </div>
             {/* Mobile filters */}
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
+            <select value={statusFilter ?? ""} onChange={(e) => setStatusFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
               <option value="All">Status</option>
               <option value="To Do">To Do</option>
               <option value="In Progress">In Progress</option>
@@ -486,7 +486,7 @@ export default function TasksPageEnhanced({
               <option value="Done">Done</option>
               <option value="Blocked">Blocked</option>
             </select>
-            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
+            <select value={priorityFilter ?? ""} onChange={(e) => setPriorityFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
               <option value="All">Priority</option>
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>

@@ -111,8 +111,6 @@ export default function ResponsiveSheetContent({
             data-sheet-height={height}
           >
             <CalendarPage
-              open={true}
-              onClose={() => {}}
               onOpenTab={onOpenTab}
             />
           </div>

@@ -1,3 +1,5 @@
+
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import UniversalDetailsModal from "./UniversalDetailsModal";
@@ -105,11 +107,11 @@ const getInitials = (name: string) => {
 };
 
 interface Team {
-  id: number;
+  id: string | number;
   name: string;
   description: string;
   members: Array<{
-    id: number;
+    id: string | number;
     name: string;
     role: string;
     avatar: string;
@@ -193,7 +195,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const [newProject, setNewProject] = useState("");
 
   const [formData, setFormData] = useState({
-    id: "", // Add ID field to preserve team ID when editing
+    id: "" as string | number, // Add ID field to preserve team ID when editing
     name: "",
     description: "",
     project: context?.company || projects[0],
@@ -289,8 +291,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
 
   // Open team details in UniversalDetailsModal
   const handleTeamClick = (team: Team) => {
-    // Get the original team data using the index
-    const originalTeam = originalTeams[team.id];
+    // Get the original team data by finding it by id
+    const originalTeam = originalTeams.find(t => t.id === team.id);
     if (!originalTeam || !originalTeam.id) {
       console.error('Invalid team ID:', team.id);
       return;
@@ -420,7 +422,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   };
 
   // Delete team
-  const handleDeleteTeam = async (teamId: number) => {
+  const handleDeleteTeam = async (teamId: string | number) => {
     try {
       // Optimistic update - remove team from UI immediately
       const deletedTeam = teams.find(t => t.id === teamId);
@@ -651,11 +653,11 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
     totalBudget: Array.isArray(teams) ? teams.reduce((sum, team) => sum + (typeof team.budget === 'string' ? parseFloat(team.budget.replace('$', '').replace(',', '')) : 0), 0) : 0
   };
 
-  const deleteTeam = (teamId: number) => {
+  const deleteTeam = (teamId: string | number) => {
     setTeams(teams.filter(team => team.id !== teamId));
   };
 
-  const archiveTeam = (teamId: number) => {
+  const archiveTeam = (teamId: string | number) => {
     setTeams(teams.map(team => 
       team.id === teamId ? { ...team, archived: !team.archived } : team
     ));
@@ -664,7 +666,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const duplicateTeam = (team: Team) => {
     const newTeam = {
       ...team,
-      id: Math.max(...teams.map(t => t.id)) + 1,
+      id: `team-${Date.now()}`,
       name: `${team.name} (Copy)`,
       archived: false,
       lastActivity: "Just now"
@@ -891,9 +893,9 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
             {/* Desktop search/filters */}
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
-              <input type="text" placeholder="Search teams..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
+              <input type="text" placeholder="Search teams..." value={searchTerm ?? ""} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
             </div>
-            <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
+            <select value={projectFilter ?? ""} onChange={(e) => setProjectFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
               <option value="All">All Projects</option>
               {projects.map((project) => (
                 <option key={project} value={project}>{project}</option>
@@ -962,7 +964,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           
           {/* Right side - Status and Priority filters (mobile only) */}
           <div className="flex md:hidden items-center gap-1.5">
-            <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
+            <select value={projectFilter ?? ""} onChange={(e) => setProjectFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
               <option value="All">All</option>
               {projects.slice(0, 3).map((project) => (
                 <option key={project} value={project}>{project.substring(0, 8)}</option>

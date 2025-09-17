@@ -265,7 +265,7 @@ const initialSprints = [
 ];
 
 interface Sprint {
-  id: number;
+  id: string | number;
   name: string;
   status: string;
   startDate: string;
@@ -279,7 +279,7 @@ interface Sprint {
   lastActivity: string;
   archived: boolean;
   stories: Array<{
-    id: number;
+    id: string | number;
     name: string;
     status: string;
     priority: string;
@@ -298,8 +298,8 @@ export default function SprintsPage({ open, onClose, onOpenTab }: {
   const [sprints, setSprints] = useState<Sprint[]>(initialSprints);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState<number | null>(null);
-  const [expandedSprints, setExpandedSprints] = useState<number[]>([]);
+  const [showMoreMenu, setShowMoreMenu] = useState<string | number | null>(null);
+  const [expandedSprints, setExpandedSprints] = useState<(string | number)[]>([]);
   const [selectedSprint, setSelectedSprint] = useState<Sprint | null>(null);
   
   // Form states
@@ -317,12 +317,12 @@ export default function SprintsPage({ open, onClose, onOpenTab }: {
   });
 
   // Sprint actions
-  const deleteSprint = (sprintId: number) => {
+  const deleteSprint = (sprintId: string | number) => {
     setSprints(prev => prev.filter(sprint => sprint.id !== sprintId));
     setShowMoreMenu(null);
   };
 
-  const archiveSprint = (sprintId: number) => {
+  const archiveSprint = (sprintId: string | number) => {
     setSprints(prev => prev.map(sprint => 
       sprint.id === sprintId ? { ...sprint, archived: true } : sprint
     ));
@@ -332,7 +332,7 @@ export default function SprintsPage({ open, onClose, onOpenTab }: {
   const duplicateSprint = (sprint: Sprint) => {
     const newSprint = {
       ...sprint,
-      id: Math.max(...sprints.map(s => s.id)) + 1,
+      id: `sprint-${Date.now()}`,
       name: `${sprint.name} (Copy)`,
       status: "Planning",
       completed: 0,
@@ -375,7 +375,7 @@ ${sprint.stories.map(story => `- ${story.name} (${story.status}) - ${story.assig
   };
 
   // Toggle expansion
-  const toggleSprint = (sprintId: number) => {
+  const toggleSprint = (sprintId: string | number) => {
     setExpandedSprints(prev => 
       prev.includes(sprintId) 
         ? prev.filter(id => id !== sprintId)
@@ -426,7 +426,7 @@ ${sprint.stories.map(story => `- ${story.name} (${story.status}) - ${story.assig
   const handleCreateSprint = () => {
     if (formData.name && formData.project) {
       const newSprint: Sprint = {
-        id: Math.max(...sprints.map(s => s.id)) + 1,
+        id: `sprint-${Date.now()}`,
         name: formData.name,
         status: formData.status || "Planning",
         startDate: formData.startDate,
