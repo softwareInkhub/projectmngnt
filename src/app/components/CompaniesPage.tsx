@@ -139,7 +139,9 @@ export default function CompaniesPage({ context }: { context?: { company: string
         }
         break;
       case 'website':
-        company.website && window.open(company.website, '_blank');
+        if (company.website) {
+          window.open(company.website, '_blank');
+        }
         break;
     }
   };

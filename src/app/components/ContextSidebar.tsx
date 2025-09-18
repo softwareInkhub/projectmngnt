@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import {
   FolderKanban,
   Plus,
@@ -40,6 +40,7 @@ import { TaskApiService, TaskData } from "../utils/taskApi";
 import { ProjectApiService, ProjectData } from "../utils/projectApi";
 import { TeamApiService, TeamData } from "../utils/teamApi";
 import UniversalDetailsModal from "./UniversalDetailsModal";
+import ProjectSelector from "./ProjectSelector";
 
 // Interface for company structure in the sidebar
 interface CompanySidebarData {
@@ -866,39 +867,12 @@ export default function ContextSidebar({
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Events</h3>
-                  {allCalendarEvents.length > 0 ? (
-                    <ul className="space-y-2">
-                      {allCalendarEvents.slice(0, 8).map((event, idx) => {
-                        const eventThemes = [
-                          { bg: 'bg-gradient-to-br from-slate-100 to-slate-200', border: 'border-slate-300', text: 'text-slate-700', dot: 'bg-slate-600' },
-                          { bg: 'bg-gradient-to-br from-slate-100 to-slate-200', border: 'border-slate-300', text: 'text-slate-700', dot: 'bg-slate-600' },
-                          { bg: 'bg-gradient-to-br from-slate-100 to-slate-200', border: 'border-slate-300', text: 'text-slate-700', dot: 'bg-slate-600' },
-                          { bg: 'bg-gradient-to-br from-slate-100 to-slate-200', border: 'border-slate-300', text: 'text-slate-700', dot: 'bg-slate-600' },
-                          { bg: 'bg-gradient-to-br from-slate-100 to-slate-200', border: 'border-slate-300', text: 'text-slate-700', dot: 'bg-slate-600' },
-                          { bg: 'bg-gradient-to-br from-slate-100 to-slate-200', border: 'border-slate-300', text: 'text-slate-700', dot: 'bg-slate-600' },
-                          { bg: 'bg-gradient-to-br from-slate-100 to-slate-200', border: 'border-slate-300', text: 'text-slate-700', dot: 'bg-slate-600' },
-                          { bg: 'bg-gradient-to-br from-slate-100 to-slate-200', border: 'border-slate-300', text: 'text-slate-700', dot: 'bg-slate-600' }
-                        ];
-                        const theme = eventThemes[idx % eventThemes.length];
-                        return (
-                        <li
-                          key={event.id || idx}
-                          className={`flex items-center px-2 py-1.5 rounded-lg border ${theme.border} ${theme.bg} ${theme.text} transition-colors cursor-pointer hover:shadow-sm`}
-                          title={event.title}
-                          role="button"
-                          tabIndex={0}
-                        >
-                          <div className={`w-2 h-2 rounded-full mr-2 ${theme.dot}`}></div>
-                          <span className="text-base font-medium truncate">{event.title}</span>
-                        </li>
-                      );})}
-                    </ul>
-                  ) : (
-                    <div className="text-base text-gray-500">No events</div>
-                  )}
-                </div>
+                <ProjectSelector 
+                  onProjectSelect={(project) => {
+                    console.log('Selected project:', project);
+                    // You can add navigation logic here if needed
+                  }}
+                />
               </div>
             )}
 
@@ -977,4 +951,4 @@ export default function ContextSidebar({
       />
     </>
   );
-} 
+}
