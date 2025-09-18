@@ -71,6 +71,23 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
   const [newProject, setNewProject] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingTasks, setExistingTasks] = useState<TaskData[]>([]);
+
+  // Fetch existing tasks when modal opens
+  useEffect(() => {
+    if (open) {
+      const fetchTasks = async () => {
+        try {
+          const response = await TaskApiService.getTasks();
+          const tasks = response.data || [];
+          setExistingTasks(tasks);
+        } catch (error) {
+          console.error('Error fetching tasks:', error);
+        }
+      };
+      fetchTasks();
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -207,14 +224,19 @@ export default function CreateTaskModal({ open, onClose, context, onTaskCreated 
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Task Title *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Enter task title"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     required
-                  />
+                  >
+                    <option value="">Select Existing Task</option>
+                    {existingTasks.map((task) => (
+                      <option key={task.id} value={task.title}>
+                        {task.title}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

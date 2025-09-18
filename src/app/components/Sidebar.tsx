@@ -85,14 +85,13 @@ export default function Sidebar({
         {/* Enhanced Sidebar Content */}
         <div className="relative h-full w-60 max-w-[85vw] bg-white shadow-2xl flex flex-col mobile-optimized" style={{ zIndex: 50 }}>
           {/* Enhanced Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex items-center justify-between p-3 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
-                <span className="text-white text-sm font-bold">N</span>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">B</span>
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Navigation</h2>
-                <p className="text-sm text-gray-500">Menu</p>
+                <h2 className="text-xl font-bold text-gray-800">Navigation</h2>
               </div>
             </div>
             <button 
@@ -185,12 +184,13 @@ export default function Sidebar({
     <aside
       className={`sticky left-0 top-0 h-screen z-30 flex flex-col items-center bg-gradient-to-b from-white to-gray-50 border-r border-neutral-200 transition-all duration-300 ease-in-out ${
         isExpanded ? 'w-52' : 'w-16'
-      } py-4 shadow-lg`}
+      } shadow-lg`}
     >
+
       {/* Expand/Collapse Button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="mb-6 p-2 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 text-neutral-500 hover:shadow-md"
+        className="mt-4 mb-2 p-2 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 text-neutral-500 hover:shadow-md"
         aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
       >
         {isExpanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}

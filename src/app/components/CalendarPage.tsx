@@ -5,6 +5,11 @@ import { BarChart3, ChevronLeft, ChevronRight, Search, Settings, User, Users2, C
 import { ProjectApiService, ProjectData } from '../utils/projectApi';
 import { TaskApiService, TaskData } from '../utils/taskApi';
 
+// Extended TaskData interface for calendar display
+interface CalendarTaskData extends TaskData {
+  scheduledDate?: string;
+}
+
 interface CalendarPageProps {
   onOpenTab?: (type: string, title?: string) => void;
 }
@@ -22,15 +27,16 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<'new' | 'existing'>('new');
   const [projects, setProjects] = useState<ProjectData[]>([]);
-  const [tasks, setTasks] = useState<TaskData[]>([]);
+  const [tasks, setTasks] = useState<CalendarTaskData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isDayView, setIsDayView] = useState(true); // true = day view with time slots, false = month view
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [taskName, setTaskName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [taskList, setTaskList] = useState<string>('');
   const [associatedTeam, setAssociatedTeam] = useState<string>('');
-  const [workHours, setWorkHours] = useState<string>('8:00');
-  const [startDate, setStartDate] = useState<string>('09-05-2025');
+  const [workHours, setWorkHours] = useState<string>('1');
+  const [startDate, setStartDate] = useState<string>('09:00');
   const [dueDate, setDueDate] = useState<string>('09-05-2025');
   const [priority, setPriority] = useState<string>('');
   const [tags, setTags] = useState<string>('');
@@ -160,8 +166,8 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
     setDescription('');
     setTaskList('');
     setAssociatedTeam('');
-    setWorkHours('8:00');
-    setStartDate('09-05-2025');
+    setWorkHours('1');
+    setStartDate('09:00');
     setDueDate('09-05-2025');
     setPriority('');
     setTags('');
@@ -191,26 +197,159 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
     setOwner('');
   };
 
-  const handleSubmitTask = () => {
-    // Here you would typically submit the task data to your API
-    console.log('Task submitted:', {
-      project: selectedProject,
-      taskName,
-      description,
-      taskList,
-      associatedTeam,
-      workHours,
-      startDate,
-      dueDate,
-      priority,
-      tags,
-      reminder,
-      recurrence,
-      billingType,
-      owner,
-      attachments: attachments.map(f => f.name)
+  const handleSubmitTask = async () => {
+    if (!taskName || !selectedProject || !selectedDate) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Create the meeting/event data
+      const meetingData = {
+        title: taskName,
+        description: description,
+        project: selectedProject,
+        assignee: owner,
+        status: 'pending',
+        priority: priority || 'medium',
+        dueDate: dueDate,
+        startDate: startDate,
+        estimatedHours: parseFloat(workHours) || 8,
+        tags: tags || '',
+        subtasks: '',
+        comments: ''
+      };
+
+      // Create the meeting using the API
+      const response = await TaskApiService.createTask(meetingData);
+      
+      console.log('API Response:', response); // Debug log
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to create meeting');
+      }
+      
+      // Handle different response structures
+      let meetingInfo: any = null;
+      
+      // Check for the item property first (from createItem response)
+      if ((response as any).item) {
+        meetingInfo = (response as any).item;
+      } else if (response.data) {
+        // If response.data is an array, take the first item
+        if (Array.isArray(response.data)) {
+          meetingInfo = response.data[0];
+        } else {
+          meetingInfo = response.data;
+        }
+      } else if (response.items && Array.isArray(response.items)) {
+        meetingInfo = response.items[0];
+      }
+      
+      // If no meeting info from API, create a local meeting object
+      if (!meetingInfo) {
+        console.warn('No meeting data from API, creating local meeting object');
+        meetingInfo = {
+          id: `meeting-${Date.now()}`,
+          title: taskName,
+          description: description,
+          project: selectedProject,
+          assignee: owner,
+          status: 'pending',
+          priority: priority || 'medium',
+          dueDate: dueDate,
+          startDate: startDate,
+          estimatedHours: parseFloat(workHours) || 1,
+          tags: tags || '',
+          subtasks: '',
+          comments: '',
+          progress: 0,
+          timeSpent: '0h',
+          parentId: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+      }
+      
+      // Add the new meeting to the local state with scheduled date
+      const newMeeting: CalendarTaskData = {
+        id: meetingInfo.id || `meeting-${Date.now()}`,
+        title: meetingInfo.title || taskName,
+        description: meetingInfo.description || description,
+        project: meetingInfo.project || selectedProject,
+        assignee: meetingInfo.assignee || owner,
+        status: meetingInfo.status || 'pending',
+        priority: meetingInfo.priority || priority || 'medium',
+        dueDate: meetingInfo.dueDate || dueDate,
+        startDate: meetingInfo.startDate || startDate,
+        estimatedHours: meetingInfo.estimatedHours || parseFloat(workHours) || 1,
+        tags: meetingInfo.tags || tags || '',
+        subtasks: meetingInfo.subtasks || '',
+        comments: meetingInfo.comments || '',
+        progress: meetingInfo.progress || 0,
+        timeSpent: meetingInfo.timeSpent || '0h',
+        parentId: meetingInfo.parentId || null,
+        createdAt: meetingInfo.createdAt || new Date().toISOString(),
+        updatedAt: meetingInfo.updatedAt || new Date().toISOString(),
+        scheduledDate: selectedDate.toISOString().split('T')[0] // Add scheduled date for calendar display
+      };
+      setTasks(prev => [...prev, newMeeting]);
+      
+      console.log('Meeting created successfully:', newMeeting);
+      handleCloseTaskForm();
+    } catch (error) {
+      console.error('Error creating meeting:', error);
+      
+      // Even if API fails, create a local meeting for immediate UI feedback
+      const localMeeting: CalendarTaskData = {
+        id: `meeting-${Date.now()}`,
+        title: taskName,
+        description: description,
+        project: selectedProject,
+        assignee: owner,
+        status: 'pending',
+        priority: priority || 'medium',
+        dueDate: dueDate,
+        startDate: startDate,
+        estimatedHours: parseFloat(workHours) || 1,
+        tags: tags || '',
+        subtasks: '',
+        comments: '',
+        progress: 0,
+        timeSpent: '0h',
+        parentId: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        scheduledDate: selectedDate.toISOString().split('T')[0]
+      };
+      
+      setTasks(prev => [...prev, localMeeting]);
+      console.log('Created local meeting as fallback:', localMeeting);
+      handleCloseTaskForm();
+      
+      // Show a warning instead of error
+      alert('Meeting created locally. Please check your connection and try again if needed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to get tasks for a specific date
+  const getTasksForDate = (date: Date): CalendarTaskData[] => {
+    const dateString = date.toISOString().split('T')[0];
+    return tasks.filter(task => {
+      // Check if task has a scheduled date or if it falls within the date range
+      if (task.scheduledDate) {
+        return task.scheduledDate === dateString;
+      }
+      // Fallback to due date if no scheduled date
+      if (task.dueDate) {
+        return task.dueDate === dateString;
+      }
+      return false;
     });
-    handleCloseTaskForm();
   };
 
   const dateColumns = generateDateColumns();
@@ -248,6 +387,30 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
             <span className="text-sm font-medium text-blue-600">Heatmap</span>
             <Filter className="h-4 w-4 text-gray-600" />
           </div>
+          
+          {/* View Toggle */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsDayView(true)}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                isDayView 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Day View
+            </button>
+            <button
+              onClick={() => setIsDayView(false)}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                !isDayView 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Month View
+            </button>
+          </div>
         </div>
               </div>
               
@@ -257,141 +420,285 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
 
           {/* Main Calendar Grid */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Calendar Header */}
-            <div className="border-b border-gray-200 bg-gray-50">
-              <div className="flex">
-                <div className="p-4 bg-yellow-50">
-                  <div className="text-sm font-medium text-gray-700">Sep 1-Sep 30</div>
-                  <div className="text-xs text-gray-500">176 hours</div>
+            {isDayView ? (
+              // Day View - Google Calendar Style with Time Slots
+              <>
+                {/* Calendar Header */}
+                <div className="border-b border-gray-200 bg-white">
+                  <div className="flex">
+                    <div className="w-16 p-3 border-r border-gray-200 bg-gray-50">
+                      <div className="text-xs font-medium text-gray-500 text-center">Time</div>
                     </div>
-                <div className="flex-1 overflow-x-auto">
-                  <div className="flex min-w-max">
-                    {dateColumns.map((date, index) => {
-                      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                      
-                      return (
-                        <div
-                          key={`header-${index}`}
-                          className={`w-16 p-2 text-center border-r border-gray-200 ${
-                            isWeekend ? 'bg-blue-50' : 'bg-white'
-                          }`}
-                        >
-                          <div className={`text-xs font-medium ${
-                            isWeekend ? 'text-red-600' : 'text-gray-600'
-                          }`}>
-                            {date.toLocaleDateString('en-US', { weekday: 'short' }).charAt(0)}
-            </div>
-                          <div className="text-sm font-bold text-gray-900">
-                            {date.getDate()}
-                      </div>
-                    </div>
-                      );
-                    })}
-                    </div>
-          </div>
-        </div>
-      </div>
-
-            {/* Calendar Body - Gantt Chart */}
-            <div className="flex-1 overflow-hidden">
-              <div className="flex">
-                <div className="border-r border-gray-200">
-                  {/* Inkhub Tattoos Row */}
-                  <div className="border-b border-gray-100">
-                    <div className="p-6">
-                      <div className="flex items-center space-x-2">
-                        <Users2 className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium text-gray-900">Inkhub Tattoos</span>
-                </div>
-                    </div>
-                </div>
-
-                  {/* IN-1 Explore Zoho Projects Row */}
-                  <div className="border-b border-gray-100">
-                    <div className="p-6">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 bg-blue-500 rounded text-white text-xs flex items-center justify-center">IN</div>
-                        <span className="text-sm font-medium text-gray-900">IN-1 Explore Zoho Projects 2</span>
-                </div>
-              </div>
-            </div>
-
-                  {/* EZ1-T1 Task 1 Row */}
-                  <div className="border-b border-gray-100">
-                    <div className="p-6">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 bg-orange-500 rounded text-white text-xs flex items-center justify-center">EZ</div>
-                        <span className="text-sm font-medium text-gray-900">EZ1-T1 Task 1</span>
-                  </div>
-                    </div>
-                </div>
-
-                  {/* EZ1-T3 Task 3 Row */}
-                  <div className="border-b border-gray-100">
-                    <div className="p-6">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 bg-orange-500 rounded text-white text-xs flex items-center justify-center">EZ</div>
-                        <span className="text-sm font-medium text-gray-900">EZ1-T3 Task 3</span>
+                    <div className="flex-1 overflow-x-auto">
+                      <div className="flex min-w-max">
+                        {dateColumns.map((date, index) => {
+                          const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                          const isToday = date.toDateString() === new Date().toDateString();
+                          
+                          return (
+                            <div
+                              key={`header-${index}`}
+                              className={`w-32 p-3 text-center border-r border-gray-200 ${
+                                isWeekend ? 'bg-blue-50' : 'bg-white'
+                              } ${isToday ? 'bg-blue-100' : ''}`}
+                            >
+                              <div className={`text-xs font-medium ${
+                                isWeekend ? 'text-red-600' : isToday ? 'text-blue-600' : 'text-gray-600'
+                              }`}>
+                                {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                              </div>
+                              <div className={`text-lg font-bold ${
+                                isToday ? 'text-blue-600' : 'text-gray-900'
+                              }`}>
+                                {date.getDate()}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {date.toLocaleDateString('en-US', { month: 'short' })}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Calendar Body - Google Calendar Style with Synchronized Scrolling */}
+                <div className="flex-1 overflow-auto">
+                  <div className="flex min-w-max">
+                    {/* Time Column - Scrolls with content */}
+                    <div className="w-16 border-r border-gray-200 bg-gray-50 flex-shrink-0">
+                      {Array.from({ length: 24 }, (_, hour) => (
+                        <div key={hour} className="h-12 border-b border-gray-100 flex items-center justify-center">
+                          <span className="text-xs text-gray-500">
+                            {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                          </span>
+                        </div>
+                      ))}
                     </div>
 
-                <div className="flex-1 overflow-x-auto">
-                  <div className="flex min-w-max">
+                    {/* Days Columns */}
                     {dateColumns.map((date, index) => {
                       const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                      const isToday = date.toDateString() === new Date().toDateString();
+                      const dayMeetings = getTasksForDate(date);
                       
                       return (
                         <div 
                           key={`column-${index}`} 
-                          className="w-16 border-r border-gray-200 relative"
+                          className={`w-32 border-r border-gray-200 relative ${
+                            isWeekend ? 'bg-blue-50' : 'bg-white'
+                          } ${isToday ? 'bg-blue-50' : ''}`}
                           onMouseEnter={(e) => handleDateHover(date, e)}
                           onMouseLeave={handleDateLeave}
                         >
-                          {/* Add Task Button */}
-                          <div className="absolute top-1 right-1 z-10">
-                          <button
-                              className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-blue-700 transition-colors"
+                          {/* Add Meeting Button */}
+                          <div className="absolute top-2 right-2 z-10">
+                            <button
+                              className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-blue-700 transition-colors shadow-sm"
                               onMouseEnter={(e) => handleButtonHover(date, e)}
                               onMouseLeave={handleButtonLeave}
                               onClick={() => handlePlusButtonClick(date)}
+                              title="Schedule Meeting"
                             >
                               <Plus className="h-3 w-3" />
-                          </button>
-                      </div>
+                            </button>
+                          </div>
 
-                          {/* Inkhub Tattoos Bar */}
-                          <div className={`h-20 border-b border-gray-100 ${
-                            isWeekend ? 'bg-blue-50' : 'bg-white'
-                          }`}>
-                    </div>
+                          {/* Hour Rows - Each row is 48px (h-12) to match time column */}
+                          {Array.from({ length: 24 }, (_, hour) => (
+                            <div 
+                              key={hour} 
+                              className="h-12 border-b border-gray-100 relative hover:bg-gray-50 transition-colors"
+                            >
+                              {/* Meeting Blocks */}
+                              {dayMeetings.map((meeting, meetingIndex) => {
+                                // Parse meeting time - handle different date formats
+                                let meetingHour = 9; // Default to 9 AM
+                                let meetingDuration = 1; // Default to 1 hour
+                                
+                                // Try to parse startDate for time
+                                if (meeting.startDate) {
+                                  // Handle formats like "09-05-2025" or "2025-09-05" or "09:00"
+                                  if (meeting.startDate.includes(':')) {
+                                    meetingHour = parseInt(meeting.startDate.split(':')[0]);
+                                  } else if (meeting.startDate.includes('-')) {
+                                    // For date formats, use a default time or parse if time is included
+                                    meetingHour = 9; // Default morning time
+                                  }
+                                }
+                                
+                                // Parse duration
+                                if (meeting.estimatedHours) {
+                                  meetingDuration = Math.max(parseInt(meeting.estimatedHours.toString()) || 1, 1);
+                                }
+                                
+                                // Only show meeting if it starts at this hour
+                                if (meetingHour === hour) {
+                                  return (
+                                    <div
+                                      key={`meeting-${meeting.id}-${meetingIndex}`}
+                                      className={`absolute left-1 right-1 top-0 rounded-md p-2 cursor-pointer transition-all hover:shadow-md ${
+                                        meeting.priority === 'high' ? 'bg-red-100 border-l-4 border-red-500' :
+                                        meeting.priority === 'medium' ? 'bg-yellow-100 border-l-4 border-yellow-500' :
+                                        meeting.priority === 'low' ? 'bg-green-100 border-l-4 border-green-500' :
+                                        'bg-blue-100 border-l-4 border-blue-500'
+                                      }`}
+                                      style={{ 
+                                        height: `${Math.max(meetingDuration * 48, 48)}px`,
+                                        zIndex: 10
+                                      }}
+                                      title={`${meeting.title} - ${meeting.project} - ${meetingHour}:00 - ${meetingDuration}h`}
+                                    >
+                                      <div className="text-xs font-semibold text-gray-900 truncate leading-tight">
+                                        {meeting.title}
+                                      </div>
+                                      <div className="text-xs text-gray-600 truncate mt-1 leading-tight">
+                                        {meeting.project}
+                                      </div>
+                                      {meeting.assignee && (
+                                        <div className="text-xs text-gray-500 truncate mt-1 leading-tight">
+                                          {meeting.assignee.split(' ')[0]}
+                                        </div>
+                                      )}
+                                      <div className="text-xs text-gray-500 mt-1 leading-tight">
+                                        {meetingHour}:00 - {meetingDuration}h
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })}
+                            </div>
+                          ))}
                           
-                          {/* IN-1 Explore Zoho Projects Bar */}
-                          <div className={`h-20 border-b border-gray-100 ${
-                            isWeekend ? 'bg-blue-50' : 'bg-white'
-                          }`}>
-                  </div>
-
-                          {/* EZ1-T1 Task 1 Bar */}
-                          <div className={`h-20 border-b border-gray-100 ${
-                            isWeekend ? 'bg-blue-50' : 'bg-white'
-                          }`}>
-                    </div>
-
-                          {/* EZ1-T3 Task 3 Bar */}
-                          <div className={`h-20 border-b border-gray-100 ${
-                            isWeekend ? 'bg-blue-50' : 'bg-white'
-                          }`}>
+                          {/* Empty State */}
+                          {dayMeetings.length === 0 && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="text-center text-gray-400">
+                                <Calendar className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                                <p className="text-xs">No meetings</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                    </div>
-                    );
-                  })}
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
-              </div>
+              </>
+            ) : (
+              // Month View - All dates in one screen
+              <>
+                {/* Month Header */}
+                <div className="border-b border-gray-200 bg-white">
+                  <div className="flex">
+                    {dateColumns.map((date, index) => {
+                      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                      const isToday = date.toDateString() === new Date().toDateString();
+                      
+                      return (
+                        <div
+                          key={`header-${index}`}
+                          className={`flex-1 p-3 text-center border-r border-gray-200 ${
+                            isWeekend ? 'bg-blue-50' : 'bg-white'
+                          } ${isToday ? 'bg-blue-100' : ''}`}
+                        >
+                          <div className={`text-xs font-medium ${
+                            isWeekend ? 'text-red-600' : isToday ? 'text-blue-600' : 'text-gray-600'
+                          }`}>
+                            {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                          </div>
+                          <div className={`text-lg font-bold ${
+                            isToday ? 'text-blue-600' : 'text-gray-900'
+                          }`}>
+                            {date.getDate()}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {date.toLocaleDateString('en-US', { month: 'short' })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Month Body - Compact View */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="flex h-full">
+                    {dateColumns.map((date, index) => {
+                      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                      const isToday = date.toDateString() === new Date().toDateString();
+                      const dayMeetings = getTasksForDate(date);
+                      
+                      return (
+                        <div 
+                          key={`column-${index}`} 
+                          className={`flex-1 border-r border-gray-200 relative ${
+                            isWeekend ? 'bg-blue-50' : 'bg-white'
+                          } ${isToday ? 'bg-blue-50' : ''}`}
+                          onMouseEnter={(e) => handleDateHover(date, e)}
+                          onMouseLeave={handleDateLeave}
+                        >
+                          {/* Add Meeting Button */}
+                          <div className="absolute top-2 right-2 z-10">
+                            <button
+                              className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-blue-700 transition-colors shadow-sm"
+                              onMouseEnter={(e) => handleButtonHover(date, e)}
+                              onMouseLeave={handleButtonLeave}
+                              onClick={() => handlePlusButtonClick(date)}
+                              title="Schedule Meeting"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+
+                          {/* Meetings List */}
+                          <div className="p-2 pt-8">
+                            {dayMeetings.length > 0 ? (
+                              <div className="space-y-1">
+                                {dayMeetings.map((meeting, meetingIndex) => (
+                                  <div
+                                    key={`meeting-${meeting.id}-${meetingIndex}`}
+                                    className={`p-2 rounded-md cursor-pointer transition-all hover:shadow-sm ${
+                                      meeting.priority === 'high' ? 'bg-red-100 border-l-2 border-red-500' :
+                                      meeting.priority === 'medium' ? 'bg-yellow-100 border-l-2 border-yellow-500' :
+                                      meeting.priority === 'low' ? 'bg-green-100 border-l-2 border-green-500' :
+                                      'bg-blue-100 border-l-2 border-blue-500'
+                                    }`}
+                                    title={`${meeting.title} - ${meeting.project}`}
+                                  >
+                                    <div className="text-xs font-semibold text-gray-900 truncate">
+                                      {meeting.title}
+                                    </div>
+                                    <div className="text-xs text-gray-600 truncate">
+                                      {meeting.project}
+                                    </div>
+                                    {meeting.assignee && (
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {meeting.assignee.split(' ')[0]}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center h-20 text-gray-400">
+                                <div className="text-center">
+                                  <Calendar className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                                  <p className="text-xs">No meetings</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Right Sidebar with toolbar icons */}
           <div className="w-16 border-l border-gray-200 bg-white flex flex-col items-center py-4 space-y-4">
@@ -432,7 +739,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
             transform: 'translateX(-50%)'
           }}
         >
-          Add Task
+           Schedule Meeting
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
                       </div>
       )}
@@ -454,7 +761,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                     </div>
           
           <div className="space-y-2 mb-3">
-            <div className="text-sm text-gray-600 mb-2">Select a project to assign task:</div>
+             <div className="text-sm text-gray-600 mb-2">Select a project to schedule meeting:</div>
             {projects.slice(0, 3).map((project) => (
               <div key={project.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -481,7 +788,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
 
           <div className="flex items-center space-x-2 mt-3 pt-2 border-t border-gray-100">
             <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-            <span className="text-sm text-gray-600">Click to assign task</span>
+             <span className="text-sm text-gray-600">Click to schedule meeting</span>
                           </div>
                         </div>
       )}
@@ -501,8 +808,8 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
             <div className="h-full flex flex-col">
               {/* Header */}
               <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Assign Task</h2>
+                 <div className="flex items-center justify-between mb-4">
+                   <h2 className="text-xl font-semibold text-gray-900">Schedule Meeting</h2>
               <button
                     onClick={handleCloseTaskForm}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -513,26 +820,26 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
 
                 {/* Tabs */}
                 <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                <button
-                    onClick={() => setActiveTab('new')}
-                    className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                      activeTab === 'new'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    New Task
-              </button>
-                  <button
-                    onClick={() => setActiveTab('existing')}
-                    className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                      activeTab === 'existing'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Existing Task
-                </button>
+                 <button
+                     onClick={() => setActiveTab('new')}
+                     className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                       activeTab === 'new'
+                         ? 'bg-blue-600 text-white'
+                         : 'text-gray-600 hover:text-gray-900'
+                     }`}
+                   >
+                     New Meeting
+               </button>
+                   <button
+                     onClick={() => setActiveTab('existing')}
+                     className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                       activeTab === 'existing'
+                         ? 'bg-blue-600 text-white'
+                         : 'text-gray-600 hover:text-gray-900'
+                     }`}
+                   >
+                     Existing Meeting
+                 </button>
                     </div>
                   </div>
 
@@ -558,19 +865,24 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                       </select>
                 </div>
 
-                  {/* Task Name */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Task Name <span className="text-red-500">*</span>
-                  </label>
-                    <input
-                      type="text"
-                      placeholder="Enter task name"
-                      value={taskName}
-                      onChange={(e) => setTaskName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-              </div>
+                   {/* Meeting Name */}
+                 <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                       Meeting Name <span className="text-red-500">*</span>
+                   </label>
+                     <select
+                       value={taskName}
+                       onChange={(e) => setTaskName(e.target.value)}
+                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                     >
+                       <option value="">Select Existing Meeting</option>
+                       {tasks.map((task) => (
+                         <option key={task.id} value={task.title}>
+                           {task.title}
+                         </option>
+                       ))}
+                     </select>
+               </div>
 
                   {/* Description */}
                   <div>
@@ -706,20 +1018,20 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                   {/* Additional fields when project is selected */}
                   {selectedProject && (
                     <>
-                      {/* Task List */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Task List
-                        </label>
+                       {/* Meeting List */}
+                       <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                           Meeting List
+                         </label>
                         <select 
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           value={taskList}
                           onChange={(e) => setTaskList(e.target.value)}
                         >
-                          <option value="">General (General)</option>
-                          <option value="list1">Development Tasks</option>
-                          <option value="list2">Design Tasks</option>
-                          <option value="list3">Testing Tasks</option>
+                           <option value="">General (General)</option>
+                           <option value="list1">Development Meetings</option>
+                           <option value="list2">Design Meetings</option>
+                           <option value="list3">Team Meetings</option>
                         </select>
         </div>
 
@@ -761,21 +1073,21 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                         )}
         </div>
 
-                      {/* Task Information Section */}
-              <div>
-                        <div 
-                          className="flex items-center space-x-2 mb-3 cursor-pointer"
-                          onClick={() => setIsTaskInfoExpanded(!isTaskInfoExpanded)}
-                        >
-                          <ChevronDown 
-                            className={`h-4 w-4 text-gray-500 transition-transform ${
-                              isTaskInfoExpanded ? 'rotate-0' : '-rotate-90'
-                            }`} 
-                          />
-                          <label className="text-sm font-medium text-gray-700">
-                            Task Information
-                          </label>
-                        </div>
+                       {/* Meeting Information Section */}
+               <div>
+                         <div 
+                           className="flex items-center space-x-2 mb-3 cursor-pointer"
+                           onClick={() => setIsTaskInfoExpanded(!isTaskInfoExpanded)}
+                         >
+                           <ChevronDown 
+                             className={`h-4 w-4 text-gray-500 transition-transform ${
+                               isTaskInfoExpanded ? 'rotate-0' : '-rotate-90'
+                             }`} 
+                           />
+                           <label className="text-sm font-medium text-gray-700">
+                             Meeting Information
+                           </label>
+                         </div>
                         
                         {isTaskInfoExpanded && (
                           <div className="space-y-4 pl-6">
@@ -894,43 +1206,50 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                       </div>
                     </div>
 
-                          {/* Start Date and Due Date in same row */}
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Start Date
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="text"
-                                  value={startDate}
-                                  onChange={(e) => setStartDate(e.target.value)}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  </div>
-              </div>
+                           {/* Start Time and Duration in same row */}
+                           <div className="grid grid-cols-2 gap-4">
+                             <div>
+                               <label className="block text-sm font-medium text-gray-700 mb-2">
+                                 Start Time
+                               </label>
+                               <select
+                                 value={startDate}
+                                 onChange={(e) => setStartDate(e.target.value)}
+                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               >
+                                 <option value="08:00">8:00 AM</option>
+                                 <option value="09:00">9:00 AM</option>
+                                 <option value="10:00">10:00 AM</option>
+                                 <option value="11:00">11:00 AM</option>
+                                 <option value="12:00">12:00 PM</option>
+                                 <option value="13:00">1:00 PM</option>
+                                 <option value="14:00">2:00 PM</option>
+                                 <option value="15:00">3:00 PM</option>
+                                 <option value="16:00">4:00 PM</option>
+                                 <option value="17:00">5:00 PM</option>
+                                 <option value="18:00">6:00 PM</option>
+                               </select>
+                             </div>
 
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Due Date
-                              </label>
-                              <div className="flex items-center space-x-2">
-                                <div className="relative flex-1">
-                                  <input
-                                    type="text"
-                                    value={dueDate}
-                                    onChange={(e) => setDueDate(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    </div>
-                                <button className="text-blue-600 text-sm hover:text-blue-800 whitespace-nowrap">
-                                  Enter Duration
-                                </button>
-                  </div>
-                  </div>
-                </div>
+                             <div>
+                               <label className="block text-sm font-medium text-gray-700 mb-2">
+                                 Duration
+                               </label>
+                               <select
+                                 value={workHours}
+                                 onChange={(e) => setWorkHours(e.target.value)}
+                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               >
+                                 <option value="0.5">30 minutes</option>
+                                 <option value="1">1 hour</option>
+                                 <option value="1.5">1.5 hours</option>
+                                 <option value="2">2 hours</option>
+                                 <option value="3">3 hours</option>
+                                 <option value="4">4 hours</option>
+                                 <option value="8">8 hours (Full day)</option>
+                               </select>
+                             </div>
+                           </div>
                 
                           {/* Priority */}
                           <div>
@@ -1048,22 +1367,24 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
               {/* Footer Actions */}
               <div className="p-6 border-t border-gray-200">
                 <div className="flex space-x-3">
-                <button
-                    onClick={handleSubmitTask}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    Add
-                  </button>
-                  <button 
-                    onClick={() => {
-                      handleSubmitTask();
-                      // Keep form open for adding more tasks
-                      setShowTaskForm(true);
-                    }}
-                    className="flex-1 border border-blue-600 text-blue-600 py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium"
-                  >
-                    Add More
-                  </button>
+                 <button
+                     onClick={handleSubmitTask}
+                     disabled={loading}
+                     className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     {loading ? 'Scheduling...' : 'Schedule'}
+                   </button>
+                   <button 
+                     onClick={() => {
+                       handleSubmitTask();
+                       // Keep form open for adding more meetings
+                       setShowTaskForm(true);
+                     }}
+                     disabled={loading}
+                     className="flex-1 border border-blue-600 text-blue-600 py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     {loading ? 'Scheduling...' : 'Schedule More'}
+                   </button>
                   <button 
                     onClick={handleCloseTaskForm}
                     className="flex-1 border border-blue-600 text-blue-600 py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors font-medium"

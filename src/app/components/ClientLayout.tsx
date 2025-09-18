@@ -950,6 +950,13 @@ export default function ClientLayout() {
         />
       )}
       <main className="flex-1 min-w-0 bg-background flex flex-col">
+        {/* App Header */}
+        <div className="w-full bg-white border-b border-gray-100 py-3 px-6">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
+            BRMH project management
+          </h1>
+        </div>
+        
         {/* Tab Bar Container */}
         <div className={`flex items-center bg-white border-b border-neutral-200 h-10 ${
           isGridMode ? 'border-blue-200 bg-blue-50' : ''
