@@ -14,7 +14,6 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
     start: new Date(2025, 8, 1), // September 1, 2025
     end: new Date(2025, 8, 30)   // September 30, 2025
   });
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [hoveredButton, setHoveredButton] = useState<Date | null>(null);
@@ -217,7 +216,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
   const dateColumns = generateDateColumns();
 
   return (
-    <div className="h-full w-full bg-white flex flex-col">
+    <div className="h-screen w-full bg-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center space-x-4">
@@ -255,72 +254,13 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         <div className="flex h-full">
-          {/* Left Sidebar with user/project/task hierarchy */}
-          <div className="w-80 border-r border-gray-200 bg-white flex flex-col">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-700">Status:</span>
-                <select className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  <option value="all">All Open</option>
-                </select>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <X className="h-4 w-4" />
-                </button>
-                <button className="text-sm text-gray-500 hover:text-gray-700">Clear filter</button>
-            </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-        </div>
-              </div>
-              
-            <div className="flex-1 overflow-y-auto">
-              <div className="p-4">
-                <div className="space-y-1">
-                <div 
-                  className="flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => setSelectedItem('existing-projects')}
-                >
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm text-gray-900">Existing Projects</span>
-            </div>
-                  <div className="w-16 h-2 bg-gray-200 rounded"></div>
-          </div>
-
-                   <div className="space-y-1">
-                     {loading && (
-                       <div className="p-2 text-xs text-gray-500">Loading…</div>
-                     )}
-                     {!loading && projects.map((project, index) => (
-                       <div key={project.id} className="flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors">
-                         <div className="flex items-center space-x-2">
-                           <ChevronDown className="h-4 w-4 text-gray-500" />
-                           <Users2 className="h-4 w-4 text-blue-600" />
-                           <span className="text-sm text-gray-900">{project.name}</span>
-                         </div>
-                         <div className="w-16 h-2 bg-green-400 rounded"></div>
-                       </div>
-                     ))}
-                     {!loading && projects.length === 0 && (
-                       <div className="p-2 text-xs text-gray-500">No projects found</div>
-                     )}
-                   </div>
-                </div>
-                      </div>
-        </div>
-      </div>
 
           {/* Main Calendar Grid */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Calendar Header */}
             <div className="border-b border-gray-200 bg-gray-50">
               <div className="flex">
-                <div className="w-80 p-4 border-r border-gray-200 bg-yellow-50">
+                <div className="p-4 bg-yellow-50">
                   <div className="text-sm font-medium text-gray-700">Sep 1-Sep 30</div>
                   <div className="text-xs text-gray-500">176 hours</div>
                     </div>
@@ -353,12 +293,12 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
       </div>
 
             {/* Calendar Body - Gantt Chart */}
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-hidden">
               <div className="flex">
-                <div className="w-80 border-r border-gray-200">
+                <div className="border-r border-gray-200">
                   {/* Inkhub Tattoos Row */}
                   <div className="border-b border-gray-100">
-                    <div className="p-4">
+                    <div className="p-6">
                       <div className="flex items-center space-x-2">
                         <Users2 className="h-4 w-4 text-blue-600" />
                         <span className="text-sm font-medium text-gray-900">Inkhub Tattoos</span>
@@ -368,7 +308,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
 
                   {/* IN-1 Explore Zoho Projects Row */}
                   <div className="border-b border-gray-100">
-                    <div className="p-4">
+                    <div className="p-6">
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-blue-500 rounded text-white text-xs flex items-center justify-center">IN</div>
                         <span className="text-sm font-medium text-gray-900">IN-1 Explore Zoho Projects 2</span>
@@ -378,7 +318,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
 
                   {/* EZ1-T1 Task 1 Row */}
                   <div className="border-b border-gray-100">
-                    <div className="p-4">
+                    <div className="p-6">
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-orange-500 rounded text-white text-xs flex items-center justify-center">EZ</div>
                         <span className="text-sm font-medium text-gray-900">EZ1-T1 Task 1</span>
@@ -388,7 +328,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
 
                   {/* EZ1-T3 Task 3 Row */}
                   <div className="border-b border-gray-100">
-                    <div className="p-4">
+                    <div className="p-6">
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-orange-500 rounded text-white text-xs flex items-center justify-center">EZ</div>
                         <span className="text-sm font-medium text-gray-900">EZ1-T3 Task 3</span>
@@ -422,25 +362,25 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                       </div>
 
                           {/* Inkhub Tattoos Bar */}
-                          <div className={`h-16 border-b border-gray-100 ${
+                          <div className={`h-20 border-b border-gray-100 ${
                             isWeekend ? 'bg-blue-50' : 'bg-white'
                           }`}>
                     </div>
                           
                           {/* IN-1 Explore Zoho Projects Bar */}
-                          <div className={`h-16 border-b border-gray-100 ${
+                          <div className={`h-20 border-b border-gray-100 ${
                             isWeekend ? 'bg-blue-50' : 'bg-white'
                           }`}>
                   </div>
 
                           {/* EZ1-T1 Task 1 Bar */}
-                          <div className={`h-16 border-b border-gray-100 ${
+                          <div className={`h-20 border-b border-gray-100 ${
                             isWeekend ? 'bg-blue-50' : 'bg-white'
                           }`}>
                     </div>
 
                           {/* EZ1-T3 Task 3 Bar */}
-                          <div className={`h-16 border-b border-gray-100 ${
+                          <div className={`h-20 border-b border-gray-100 ${
                             isWeekend ? 'bg-blue-50' : 'bg-white'
                           }`}>
                         </div>
@@ -546,53 +486,6 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                         </div>
       )}
 
-      {/* Popup Modal */}
-      {selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-6 w-6 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-900">Unassigned User</h3>
-                          </div>
-                          <button
-                onClick={() => setSelectedItem(null)}
-                className="text-gray-400 hover:text-gray-600"
-                          >
-                <X className="h-5 w-5" />
-                          </button>
-                        </div>
-                
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total Availability:</span>
-                <span className="text-sm font-medium text-gray-900">100% 8h 00m</span>
-                    </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Work Hours Assig...:</span>
-                <span className="text-sm font-medium text-gray-900">0% 0h 00m</span>
-                  </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Free time:</span>
-                <span className="text-sm font-medium text-gray-900">100% 8h 00m</span>
-                  </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Business Hours:</span>
-                <span className="text-sm font-medium text-blue-600 cursor-pointer">Standard Business Hours</span>
-                </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Time Period:</span>
-                <span className="text-sm font-medium text-gray-900">01 Sep 2025 - 30 Sep 2025</span>
-                </div>
-              </div>
-
-            <div className="mt-4 flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-              <span className="text-sm text-gray-600">Unallocated</span>
-                  </div>
-                </div>
-        </div>
-      )}
 
       {/* Task Form Slide-in Panel */}
       {showTaskForm && (
