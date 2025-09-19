@@ -32,7 +32,7 @@ import TasksPage from "./TasksPage";
 import TeamsPage from "./TeamsPage";
 import CalendarPage from "./CalendarPage";
 import ReportsPage from "./ReportsPage";
-import SettingsPage from "./SettingsPage";
+import SettingsPageComponent from "./SettingsPage";
 import NotificationsPage from "./NotificationsPage";
 import CompaniesPage from "./CompaniesPage";
 import { X, Pin, Plus, BarChart2, FolderKanban, ListChecks, Users, Calendar } from "lucide-react";
@@ -43,7 +43,7 @@ import CreateTeamPage from "./CreateTeamPage";
 import CreateSprintPage from "./CreateSprintPage";
 import CreateDepartmentPage from "./CreateDepartmentPage";
 import CreateStoryPage from "./CreateStoryPage";
-import GridDashboard from "./GridDashboard";
+import ZohoStyleDashboard from "./ZohoStyleDashboard";
 import { logout } from '../utils/auth';
 import { useUser } from '../contexts/UserContext';
 
@@ -514,7 +514,7 @@ export default function ClientLayout() {
   useEffect(() => {
     if (openTabs.length === 0) {
       setOpenTabs([
-        { type: "dashboard", key: `dashboard-${Math.random().toString(36).substr(2, 9)}`, title: "Dashboard", component: SimpleDashboard }
+        { type: "dashboard", key: `dashboard-${Math.random().toString(36).substr(2, 9)}`, title: "Dashboard", component: ZohoStyleDashboard }
       ]);
     }
   }, [openTabs.length]);
@@ -563,15 +563,14 @@ export default function ClientLayout() {
 
   // Map sidebar index to tab type and title
   const sidebarTabMap = [
-    { type: "dashboard", title: "Dashboard", component: SimpleDashboard },
+    { type: "dashboard", title: "Dashboard", component: ZohoStyleDashboard },
     { type: "projects", title: "All Projects", component: ProjectsAnalyticsPage },
     { type: "tasks", title: "Tasks", component: TasksPage },
     { type: "teams", title: "Teams", component: TeamsPage },
     { type: "companies", title: "Companies", component: CompaniesPage },
     { type: "calendar", title: "Calendar", component: CalendarPage },
     { type: "reports", title: "Reports", component: ReportsPage },
-    { type: "grid-dashboard", title: "Grid Dashboard", component: GridDashboard },
-    { type: "settings", title: "Settings", component: SettingsPage },
+    { type: "settings", title: "Settings", component: SettingsPageComponent },
     { type: "notifications", title: "Notifications", component: NotificationsPage },
   ];
 
@@ -629,7 +628,7 @@ export default function ClientLayout() {
         if (newTabs.length === 0) {
           // If no tabs left, open dashboard
           setActiveTabIdx(0);
-          return [{ type: "dashboard", key: `dashboard-${Math.random().toString(36).substr(2, 9)}`, title: "Dashboard", component: SimpleDashboard }];
+          return [{ type: "dashboard", key: `dashboard-${Math.random().toString(36).substr(2, 9)}`, title: "Dashboard", component: ZohoStyleDashboard }];
         } else {
           setActiveTabIdx(Math.max(0, idx - 1));
         }
@@ -674,6 +673,7 @@ export default function ClientLayout() {
     
     setOpenTabs((prev) => {
       const existingIdx = prev.findIndex((t) => t.type === tab.type);
+      
       if (existingIdx !== -1) {
         // If tab already exists, switch to it
         setActiveTabIdx(existingIdx);
@@ -799,6 +799,8 @@ export default function ClientLayout() {
             {sidebarActiveTab === 4 && "Companies"}
             {sidebarActiveTab === 5 && "Calendar"}
             {sidebarActiveTab === 6 && "Reports"}
+            {sidebarActiveTab === 7 && "Settings"}
+            {sidebarActiveTab === 8 && "Notifications"}
           </h1>
           <button 
             onClick={() => {
@@ -939,7 +941,7 @@ export default function ClientLayout() {
         isGridMode={isGridMode}
         onDragStart={handleSidebarDragStart}
       />
-      {/* Show ContextSidebar for all tabs except Dashboard */}
+      {/* Show ContextSidebar for all tabs except Dashboard, Grid Dashboard, Settings, and Notifications */}
       {(sidebarActiveTab === 1 || sidebarActiveTab === 2 || sidebarActiveTab === 3 || sidebarActiveTab === 4 || sidebarActiveTab === 5 || sidebarActiveTab === 6) && (
         <ContextSidebar
           activeTab={sidebarActiveTab}

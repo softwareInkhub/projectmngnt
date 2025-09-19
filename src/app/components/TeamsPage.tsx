@@ -291,19 +291,26 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
 
   // Open team details in UniversalDetailsModal
   const handleTeamClick = (team: Team) => {
-    // Get the original team data by finding it by id
-    const originalTeam = originalTeams.find(t => t.id === team.id);
-    if (!originalTeam || !originalTeam.id) {
-      console.error('Invalid team ID:', team.id);
-      return;
-    }
+    // Since team.id is the array index, use it to get the original team data
+    const teamIndex = typeof team.id === 'number' ? team.id : parseInt(team.id.toString());
     
-    // Open the UniversalDetailsModal with team details
-    setDetailsModal({
-      isOpen: true,
-      itemType: 'team',
-      itemId: originalTeam.id
-    });
+    if (teamIndex >= 0 && teamIndex < originalTeams.length) {
+      const originalTeam = originalTeams[teamIndex];
+      
+      // Check if originalTeam has a valid ID
+      if (originalTeam && originalTeam.id) {
+        // Open the UniversalDetailsModal with team details
+        setDetailsModal({
+          isOpen: true,
+          itemType: 'team',
+          itemId: originalTeam.id
+        });
+      } else {
+        console.error('Original team has no valid ID:', originalTeam);
+      }
+    } else {
+      console.error('Invalid team index:', teamIndex, 'Total teams:', originalTeams.length);
+    }
   };
 
   // Close UniversalDetailsModal

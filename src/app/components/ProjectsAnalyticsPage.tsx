@@ -335,23 +335,16 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
 
   // Close menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (openMenuId && !(event.target as Element).closest('.menu-container')) {
-        closeMenu();
-      }
-      if (openTaskDropdownId && !(event.target as Element).closest('.task-dropdown-container')) {
-        closeTaskDropdown();
-      }
-      if (showAllTasksDropdown && !(event.target as Element).closest('.all-tasks-dropdown-container')) {
-        setShowAllTasksDropdown(false);
-      }
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+      setDropdownPosition(null);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     };
-  }, [openMenuId, openTaskDropdownId, showAllTasksDropdown]);
+  }, []);
 
   // Filter projects based on search and filters
   const filteredProjects = projects.filter(project => {
@@ -448,15 +441,6 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     setSelectedMembers([]);
   };
 
-  // Menu management functions
-  const toggleMenu = (projectId: string) => {
-    setOpenMenuId(openMenuId === projectId ? null : projectId);
-  };
-
-  const closeMenu = () => {
-    setOpenMenuId(null);
-    setDropdownPosition(null);
-  };
 
   // Task dropdown functions
   const toggleTaskDropdown = async (projectId: string) => {
@@ -766,17 +750,36 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     }
   };
 
-  // Calculate dropdown position
+  // Calculate dropdown position - positioned directly below the button
   const calculateDropdownPosition = (buttonElement: HTMLButtonElement) => {
     const rect = buttonElement.getBoundingClientRect();
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
     
+    const dropdownWidth = 192; // w-48 = 192px
+    const viewportWidth = window.innerWidth;
+    const buttonRight = rect.right + scrollLeft;
+    const buttonLeft = rect.left + scrollLeft;
+    
+    // Calculate left position to keep dropdown in viewport
+    let left = buttonLeft;
+    
+    // If dropdown would go off the right edge, align it to the right edge of the button
+    if (buttonLeft + dropdownWidth > viewportWidth) {
+      left = buttonRight - dropdownWidth;
+    }
+    
+    // Ensure dropdown doesn't go off the left edge
+    if (left < 0) {
+      left = 8; // 8px margin from left edge
+    }
+    
     return {
-      top: rect.bottom + scrollTop + 4, // 4px gap
-      left: rect.right + scrollLeft - 192 // 192px is dropdown width, align to right edge
+      top: rect.bottom + scrollTop + 4, // 4px gap below button
+      left: left
     };
   };
+
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -804,7 +807,6 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     // Store the project being edited
     setEditingProject(project);
     setShowCreateForm(true);
-    closeMenu();
   };
 
   const handleDeleteProject = async (project: ProjectData) => {
@@ -821,7 +823,6 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
         console.error('Error deleting project:', error);
       }
     }
-    closeMenu();
   };
 
   const handleArchiveProject = async (project: ProjectData) => {
@@ -840,7 +841,6 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     } catch (error) {
       console.error('Error archiving project:', error);
     }
-    closeMenu();
   };
 
   const handleDuplicateProject = async (project: ProjectData) => {
@@ -869,7 +869,6 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     } catch (error) {
       console.error('Error duplicating project:', error);
     }
-    closeMenu();
   };
 
   const handleExportProject = (project: ProjectData) => {
@@ -888,7 +887,6 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
     link.click();
     
     console.log('Project exported successfully');
-    closeMenu();
   };
 
   const handleExportAll = () => {
@@ -1631,8 +1629,9 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                           key={project.id} 
                           className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`} 
                           onClick={(e) => {
-                            // Only handle row click if not clicking on an editable cell
-                            if (!(e.target as HTMLElement).closest('.editable-cell')) {
+                            // Only handle row click if not clicking on an editable cell or menu button
+                            if (!(e.target as HTMLElement).closest('.editable-cell') && 
+                                !(e.target as HTMLElement).closest('.menu-container')) {
                               handleProjectClick(project.id || '');
                             }
                           }}
@@ -1995,38 +1994,78 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                             style={{ width: `${columnWidths.actions}px` }}
                           >
                             <button
+                              ref={(el) => {
+                                if (project.id) {
+                                  buttonRefs.current[project.id] = el;
+                                }
+                              }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleMenu(project.id || '');
+                                e.preventDefault();
+                                e.nativeEvent.stopImmediatePropagation();
+                                console.log('🔍 Three dots clicked for project:', project.id);
+                                
+                                if (openMenuId === project.id) {
+                                  setOpenMenuId(null);
+                                  setDropdownPosition(null);
+                                } else {
+                                  setOpenMenuId(project.id || '');
+                                  if (project.id && buttonRefs.current[project.id]) {
+                                    const position = calculateDropdownPosition(buttonRefs.current[project.id]!);
+                                    console.log('🔍 Calculated position:', position);
+                                    setDropdownPosition(position);
+                                  }
+                                }
                               }}
-                              className="inline-flex items-center justify-center p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200 hover:scale-110"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.nativeEvent.stopImmediatePropagation();
+                              }}
+                              className="relative z-10 p-1 text-gray-400 hover:text-gray-600 transition-colors hover:scale-110"
+                              data-menu-button="true"
                               aria-label="Open menu"
                             >
-                              <MoreHorizontal size={18} />
+                              <MoreHorizontal className="w-5 h-5" />
                             </button>
-                            {openMenuId === project.id && (
+                            {openMenuId === project.id && dropdownPosition && createPortal(
                               <div
-                                className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 animate-in slide-in-from-top-2 duration-200"
+                                className="fixed w-48 bg-white rounded-lg shadow-2xl border border-gray-200 z-[99999] transform transition-all duration-200 ease-in-out"
+                                style={{
+                                  top: `${dropdownPosition.top}px`,
+                                  left: `${dropdownPosition.left}px`,
+                                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                                }}
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <div className="py-1">
                                   <button
-                                    onClick={() => handleEditProject(project)}
-                                    className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 flex items-center gap-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenMenuId(null);
+                                      setDropdownPosition(null);
+                                      handleEditProject(project);
+                                    }}
+                                    className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                                   >
                                     <Edit size={16} />
-                                    Edit
+                                    Edit Project
                                   </button>
-                                  <div className="border-t border-slate-200 my-1"></div>
+                                  <div className="border-t border-gray-100"></div>
                                   <button
-                                    onClick={() => handleDeleteProject(project)}
-                                    className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 flex items-center gap-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenMenuId(null);
+                                      setDropdownPosition(null);
+                                      handleDeleteProject(project);
+                                    }}
+                                    className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
                                   >
                                     <Trash2 size={16} />
-                                    Delete
+                                    Delete Project
                                   </button>
                                 </div>
-                              </div>
+                              </div>,
+                              document.body
                             )}
                           </td>
                         </tr>
@@ -2105,11 +2144,17 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
+                            e.preventDefault();
+                            e.nativeEvent.stopImmediatePropagation();
+                            console.log('🔍 Grid view three dots clicked for project:', project.id);
+                            console.log('🔍 Current openMenuId:', openMenuId);
                             
                             if (openMenuId === project.id) {
+                              console.log('🔍 Grid view closing menu');
                               setOpenMenuId(null);
                               setDropdownPosition(null);
                             } else {
+                              console.log('🔍 Grid view opening menu');
                               setOpenMenuId(project.id || '');
                               if (project.id && buttonRefs.current[project.id]) {
                                 const position = calculateDropdownPosition(buttonRefs.current[project.id]!);
@@ -2117,7 +2162,11 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                               }
                             }
                           }}
-                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            e.nativeEvent.stopImmediatePropagation();
+                          }}
+                          className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
                           aria-label="Open menu"
                         >
                           <MoreHorizontal size={16} />
@@ -2125,10 +2174,11 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
 
                         {openMenuId === project.id && dropdownPosition && createPortal(
                           <div
-                            className="fixed w-48 bg-white rounded-lg shadow-xl border border-slate-200 z-[9999] animate-in slide-in-from-top-2 duration-200"
+                            className="fixed w-48 bg-white rounded-lg shadow-2xl border border-gray-200 z-[99999] transform transition-all duration-200 ease-in-out"
                             style={{
                               top: `${dropdownPosition.top}px`,
-                              left: `${dropdownPosition.left}px`
+                              left: `${dropdownPosition.left}px`,
+                              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
                             }}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -2140,12 +2190,12 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                                   setDropdownPosition(null);
                                   handleEditProject(project);
                                 }}
-                                className="w-full px-4 py-2 text-left text-base text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 flex items-center gap-2"
+                                className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                               >
                                 <Edit size={16} />
                                 Edit
                               </button>
-                              <div className="border-t border-slate-200 my-1"></div>
+                              <div className="border-t border-gray-100"></div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -2153,7 +2203,7 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                                   setDropdownPosition(null);
                                   handleDeleteProject(project);
                                 }}
-                                className="w-full px-4 py-2 text-left text-base text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 flex items-center gap-2"
+                                className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
                               >
                                 <Trash2 size={16} />
                                 Delete

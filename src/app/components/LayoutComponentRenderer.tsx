@@ -7,7 +7,6 @@ import TeamsPage from './TeamsPage';
 // DashboardPage removed - using ProjectsAnalyticsPage as placeholder
 import CalendarPage from './CalendarPage';
 import ReportsPage from './ReportsPage';
-import GridDashboard from './GridDashboard';
 import GridTasksPage from './GridTasksPage';
 import GridLayoutDemo from './GridLayoutDemo';
 
@@ -38,8 +37,6 @@ export default function LayoutComponentRenderer({
         return <CalendarPage onOpenTab={onOpenTab || (() => {})} />;
       case 'reports':
         return <ReportsPage onOpenTab={onOpenTab || (() => {})} />;
-      case 'grid-dashboard':
-        return <GridDashboard onOpenTab={onOpenTab || (() => {})} />;
       case 'grid-tasks':
         return <GridTasksPage onOpenTab={onOpenTab || (() => {})} />;
       case 'grid-demo':
