@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   Download, 
@@ -19,7 +19,9 @@ import {
   MoreHorizontal,
   Edit,
   Copy,
-  Trash2
+  Trash2,
+  Grid3X3,
+  List
 } from 'lucide-react';
 
 interface Report {
@@ -90,6 +92,7 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const analytics = {
     totalReports: reports.length,
@@ -117,6 +120,21 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
   const toggleMenu = (reportId: string) => {
     setOpenMenuId(openMenuId === reportId ? null : reportId);
   };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.menu-container') && !target.closest('button[aria-label="Open menu"]')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -229,8 +247,41 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
           </div>
         </div>
 
-        {/* Reports Grid */}
-        <div className={`grid gap-3 md:gap-6 mx-2 md:mx-0 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3`}>
+        {/* View Mode Toggle */}
+        <div className="flex items-center justify-between mb-4 md:mb-6 mx-2 md:mx-0">
+          {/* Left side - Grid/List toggle and report count */}
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex items-center bg-slate-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 md:p-2 rounded-md transition-colors ${
+                  viewMode === "grid" 
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Grid3X3 size={14} className="md:w-4 md:h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 md:p-2 rounded-md transition-colors ${
+                  viewMode === "list" 
+                    ? "bg-white text-blue-600 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <List size={14} className="md:w-4 md:h-4" />
+              </button>
+            </div>
+            <span className="text-sm md:text-base text-slate-600">
+              {filteredReports.length} report{filteredReports.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
+
+        {/* Reports Display */}
+        {viewMode === 'grid' ? (
+          <div className={`grid gap-2 md:gap-3 mx-2 md:mx-0 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7`}>
           {filteredReports.map((report) => {
             const TypeIcon = reportTypes[report.type as keyof typeof reportTypes]?.icon || FileText;
             const typeColor = reportTypes[report.type as keyof typeof reportTypes]?.color || 'bg-slate-100 text-slate-700';
@@ -238,39 +289,38 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
             return (
               <div
                 key={report.id}
-                className="relative bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-300 flex flex-col h-full cursor-pointer p-2 md:p-3"
+                className="relative bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:border-blue-300 hover:from-blue-100 hover:to-blue-200 flex flex-col h-full cursor-pointer p-2"
               >
-                {/* Header - Title and Menu */}
-                <div className="mb-1 md:mb-4">
-                  <div className="flex items-start justify-between mb-0.5 md:mb-2">
-                    <div className="flex items-start gap-1.5 md:gap-3 flex-1 min-w-0">
-                      <div className={`p-1 md:p-2 rounded-lg flex-shrink-0 ${typeColor}`}>
-                        <TypeIcon className="w-3 h-3 md:w-4 md:h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-slate-900 text-[10px] md:text-lg mb-0.5 md:mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{report.title}</h3>
-                        <p className="text-[8px] md:text-sm text-slate-500 break-words">Report</p>
-                      </div>
-                    </div>
-                    <div className="relative flex-shrink-0 ml-2">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleMenu(report.id);
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-                        aria-label="Open menu"
-                      >
-                        <MoreHorizontal size={14} className="text-slate-400" />
-                      </button>
-                      <div className={`absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-[160px] menu-container ${openMenuId === report.id ? '' : 'hidden'}`}>
+                {/* Header - Icon and Menu */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`p-1.5 rounded-lg flex-shrink-0 ${typeColor}`}>
+                    <TypeIcon className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-semibold text-slate-900 truncate">{report.title}</h3>
+                    <p className="text-xs text-slate-600">Report</p>
+                  </div>
+                  <div className="relative flex-shrink-0 menu-container">
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setOpenMenuId(openMenuId === report.id ? null : report.id);
+                      }}
+                      className="p-1 rounded-lg hover:bg-slate-100 transition-colors text-gray-400"
+                      aria-label="Open menu"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                    {openMenuId === report.id && (
+                      <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-[99999] min-w-[160px]">
                         <div className="py-1">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDownload(report);
+                              setOpenMenuId(null);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                            className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3"
                           >
                             <Download className="w-4 h-4" />
                             Download
@@ -278,9 +328,9 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Add edit functionality here if needed
+                              setOpenMenuId(null);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                            className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3"
                           >
                             <Edit className="w-4 h-4" />
                             Edit Report
@@ -288,46 +338,57 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Add duplicate functionality here if needed
+                              setOpenMenuId(null);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                            className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3"
                           >
                             <Copy className="w-4 h-4" />
                             Duplicate
                           </button>
-                          <div className="border-t border-slate-200 my-1"></div>
+                          <div className="border-t border-gray-100 my-1"></div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDelete(report.id);
+                              setOpenMenuId(null);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
                           >
                             <Trash2 className="w-4 h-4" />
                             Delete
                           </button>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Report Stats */}
-                <div className="grid grid-cols-2 gap-1.5 md:gap-3 mb-1 md:mb-3">
-                  <div className="text-center">
-                    <div className="text-sm md:text-2xl font-bold text-slate-900">{report.size}</div>
-                    <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Size</div>
+                {/* Status and Type Tags */}
+                <div className="flex items-center gap-1 mb-2">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusColors[report.status as keyof typeof statusColors]}`}>
+                    {report.status}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${typeColor}`}>
+                    {report.type}
+                  </span>
+                </div>
+
+                {/* File Info */}
+                <div className="text-xs text-slate-600 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span>Size:</span>
+                    <span className="font-medium">{report.size}</span>
                   </div>
-                  <div className="text-center">
-                    <div className="text-sm md:text-2xl font-bold text-slate-900">{report.format.toUpperCase()}</div>
-                    <div className="text-[8px] md:text-[10px] text-slate-500 font-medium">Format</div>
+                  <div className="flex items-center justify-between">
+                    <span>Format:</span>
+                    <span className="font-medium">{report.format.toUpperCase()}</span>
                   </div>
                 </div>
 
-                {/* Status Bar */}
-                <div className="w-full bg-slate-200 rounded-full h-1 md:h-2 mb-0.5 md:mb-3">
+                {/* Progress Bar */}
+                <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2">
                   <div 
-                    className={`h-1 md:h-2 rounded-full transition-all duration-300 ${
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
                       report.status === 'completed' ? 'bg-green-500' :
                       report.status === 'in-progress' ? 'bg-yellow-500' :
                       'bg-slate-400'
@@ -335,42 +396,128 @@ export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: strin
                     style={{ width: report.status === 'completed' ? '100%' : report.status === 'in-progress' ? '60%' : '20%' }}
                   ></div>
                 </div>
-
-                {/* Status and Type Tags */}
-                <div className="flex items-center justify-center gap-1.5 md:gap-3 mb-0.5 md:mb-3">
-                  <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${statusColors[report.status as keyof typeof statusColors]}`}>
-                    {report.status}
-                  </span>
-                  <span className={`px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold ${typeColor}`}>
-                    {report.type}
-                  </span>
-                </div>
-
-                {/* Details grid: desktop 2x2 (Last Updated, Type | Size, Format), mobile hidden */}
-                <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-1.5 md:mb-3">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                    <span className="text-[10px] text-slate-700 font-medium break-words">{report.lastUpdated}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                    <span className="text-[10px] text-slate-700 font-medium">{report.type}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                    <span className="text-[10px] text-slate-700 font-medium">{report.size}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Download className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                    <span className="text-[10px] text-slate-700 font-medium">{report.format.toUpperCase()}</span>
-                  </div>
-                </div>
-
-
               </div>
             );
           })}
-        </div>
+          </div>
+        ) : (
+          /* List View */
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 mx-2 md:mx-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Report</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Size</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Format</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Last Updated</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-200">
+                  {filteredReports.map((report) => {
+                    const TypeIcon = reportTypes[report.type as keyof typeof reportTypes]?.icon || FileText;
+                    const typeColor = reportTypes[report.type as keyof typeof reportTypes]?.color || 'bg-slate-100 text-slate-700';
+                    
+                    return (
+                      <tr key={report.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className={`p-2 rounded-lg flex-shrink-0 ${typeColor}`}>
+                              <TypeIcon className="w-4 h-4" />
+                            </div>
+                            <div className="ml-3">
+                              <div className="text-sm font-medium text-slate-900">{report.title}</div>
+                              <div className="text-sm text-slate-500">Report</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${typeColor}`}>
+                            {report.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColors[report.status as keyof typeof statusColors]}`}>
+                            {report.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-900">{report.size}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-900">{report.format.toUpperCase()}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-900">{report.lastUpdated}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="relative">
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setOpenMenuId(openMenuId === report.id ? null : report.id);
+                              }}
+                              className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-gray-400"
+                              aria-label="Open menu"
+                            >
+                              <MoreHorizontal className="w-5 h-5" />
+                            </button>
+                            {openMenuId === report.id && (
+                              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-[99999] min-w-[160px]">
+                                <div className="py-1">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownload(report);
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    Download
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                    Edit Report
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                    Duplicate
+                                  </button>
+                                  <div className="border-t border-gray-100 my-1"></div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(report.id);
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Empty State */}
         {filteredReports.length === 0 && (

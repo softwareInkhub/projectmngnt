@@ -1037,11 +1037,6 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
           
           {/* Actions (responsive) */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Desktop search/filters as before */}
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
-              <input type="text" placeholder="Search projects..." value={searchTerm ?? ""} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
-            </div>
             <select value={statusFilter ?? ""} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
               <option value="All">All Status</option>
               <option value="Planning">Planning</option>
@@ -1069,17 +1064,6 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
 
                       {/* Mobile compact actions - optimized for better fit */}
             <div className="flex md:hidden items-center gap-2 w-full justify-end">
-              {/* Mobile search - moved to header area */}
-              <div className="relative flex-1 max-w-28">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
-                <input 
-                  type="text" 
-                  placeholder="Search..." 
-                  value={searchTerm} 
-                  onChange={(e) => setSearchTerm(e.target.value)} 
-                  className="pl-7 pr-2 py-2 border border-slate-300 rounded-md text-xl focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent w-full" 
-                />
-              </div>
               <button onClick={() => setShowCreateForm(true)} className="px-2 py-2 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-md text-xl font-medium">Create</button>
               <button onClick={handleExportAll} className="px-2 py-2 bg-white border border-slate-300 rounded-md text-xl">Export</button>
             </div>

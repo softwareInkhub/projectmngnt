@@ -138,7 +138,7 @@ export default function Sidebar({
                     <Icon size={16} className={isActive ? "text-white" : "text-gray-600"} />
                   </div>
                   <div className="flex-1 text-left">
-                    <span className={`text-lg font-medium transition-colors duration-300 ${
+                    <span className={`text-xl font-medium transition-colors duration-300 ${
                       isActive ? "text-white" : "text-gray-700"
                     }`}>
                       {item.label}
@@ -237,7 +237,7 @@ export default function Sidebar({
                 )}
               </div>
               {isExpanded && (
-                <span className="text-lg font-medium truncate transition-all duration-300">
+                <span className="text-xl font-medium truncate transition-all duration-300">
                   {item.label}
                 </span>
               )}
