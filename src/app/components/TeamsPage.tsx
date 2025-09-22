@@ -83,6 +83,7 @@ import {
 } from "lucide-react";
 
 import { TeamApiService, TeamData, TeamWithUI, transformTeamToUI, transformUIToTeam } from "../utils/teamApi";
+import { ProjectApiService } from "../utils/projectApi";
 
 // Empty initial teams - will be populated from API
 const initialTeams: any[] = [];
@@ -151,13 +152,7 @@ const members = [
   "Tom Anderson"
 ];
 
-const projects = [
-  "Whapi Project Management",
-  "E-commerce Platform", 
-  "Client Portal",
-  "Mobile App Development",
-  "API Integration"
-];
+// Projects will be fetched from API
 
 const roles = [
   "Team Lead",
@@ -179,6 +174,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
   const [originalTeams, setOriginalTeams] = useState<TeamData[]>([]); // Store original team data
+  const [projects, setProjects] = useState<any[]>([]); // Store fetched projects
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -193,6 +189,11 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
   const [newProject, setNewProject] = useState("");
+  
+  // Inline editing states
+  const [editingField, setEditingField] = useState<{teamId: string | number, field: string} | null>(null);
+  const [editingValue, setEditingValue] = useState<string>("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [formData, setFormData] = useState({
     id: "" as string | number, // Add ID field to preserve team ID when editing
@@ -225,6 +226,35 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
     { id: "team-option-4", name: "Sales Team" },
     { id: "team-option-5", name: "Support Team" }
   ];
+
+  // Fetch projects from API
+  const fetchProjects = async () => {
+    try {
+      const response = await ProjectApiService.getProjects();
+      console.log('Projects API response:', response);
+      
+      if (response.success) {
+        // Handle different response structures - check both data and items
+        const projectsData = response.data || response.items || [];
+        console.log('Projects data:', projectsData);
+        console.log('Projects count:', projectsData.length);
+        
+        if (Array.isArray(projectsData)) {
+          setProjects(projectsData);
+          console.log('✅ Projects loaded successfully:', projectsData.length, 'projects');
+        } else {
+          console.warn('Projects data is not an array:', projectsData);
+          setProjects([]);
+        }
+      } else {
+        console.error('Failed to fetch projects:', response.error);
+        setProjects([]);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setProjects([]);
+    }
+  };
 
   // Fetch teams from API
   const fetchTeams = async () => {
@@ -284,10 +314,19 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
     }
   };
 
-  // Load teams on component mount
+  // Load teams and projects on component mount
   useEffect(() => {
     fetchTeams();
+    fetchProjects();
   }, [context?.company]);
+
+  // Debug: Monitor projects state changes
+  useEffect(() => {
+    console.log('Projects state updated:', projects.length, 'projects');
+    if (projects.length > 0) {
+      console.log('Available projects:', projects.map(p => ({ id: p.id, name: p.name })));
+    }
+  }, [projects]);
 
   // Open team details in UniversalDetailsModal
   const handleTeamClick = (team: Team) => {
@@ -565,7 +604,130 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
     console.log('handleUpdateTeam completed, showEditForm should be false');
   };
 
+  // Inline editing functions
+  const startInlineEdit = (teamId: string | number, field: string, currentValue: string) => {
+    console.log('Starting inline edit:', { teamId, field, currentValue });
+    console.log('Available teams:', teams.length);
+    console.log('Available original teams:', originalTeams.length);
+    setEditingField({ teamId, field });
+    setEditingValue(currentValue);
+  };
 
+  const cancelInlineEdit = () => {
+    setEditingField(null);
+    setEditingValue("");
+  };
+
+  const saveInlineEdit = async () => {
+    if (!editingField) return;
+
+    try {
+      setIsUpdating(true);
+      setError(null);
+
+      // Find the team data - the teams array uses array indices as IDs, so we need to map back to originalTeams
+      const teamIndex = Number(editingField.teamId);
+      let teamToUpdate = null;
+      
+      if (!isNaN(teamIndex) && teamIndex >= 0 && teamIndex < originalTeams.length) {
+        // Use the array index to get the original team data
+        teamToUpdate = originalTeams[teamIndex];
+      } else {
+        // Fallback: try to find by ID in originalTeams
+        teamToUpdate = originalTeams.find(t => String(t.id) === String(editingField.teamId));
+      }
+      
+      if (!teamToUpdate) {
+        console.error('Team not found in originalTeams array');
+        console.log('Looking for team ID:', editingField.teamId);
+        console.log('Team index:', teamIndex);
+        console.log('Available original team IDs:', originalTeams.map(t => t.id));
+        console.log('Original teams length:', originalTeams.length);
+        throw new Error(`Team with ID ${editingField.teamId} not found`);
+      }
+
+      // Ensure team ID exists
+      if (!teamToUpdate.id) {
+        console.error('Team ID is missing');
+        throw new Error('Team ID is required for update');
+      }
+
+      // Prepare update data based on the field being edited
+      const updateData: any = {
+        updatedAt: new Date().toISOString()
+      };
+
+      // Map the field to the correct property name
+      switch (editingField.field) {
+        case 'name':
+          updateData.name = editingValue;
+          break;
+        case 'description':
+          updateData.description = editingValue;
+          break;
+        case 'project':
+          updateData.project = editingValue;
+          break;
+        case 'budget':
+          updateData.budget = editingValue;
+          break;
+        case 'startDate':
+          updateData.startDate = editingValue;
+          break;
+        default:
+          throw new Error(`Unknown field: ${editingField.field}`);
+      }
+
+      console.log('Inline update data:', updateData);
+      console.log('Updating team:', teamToUpdate);
+
+      const response = await TeamApiService.updateTeam(teamToUpdate.id, updateData);
+      console.log('Inline update response:', response);
+
+      if (response.success) {
+        console.log('✅ Team field updated successfully');
+        setSuccessMessage(`${editingField.field} updated successfully!`);
+        
+        // Update the local state using the array index
+        setTeams(prev => prev.map((team, index) => 
+          index === teamIndex
+            ? { ...team, ...updateData }
+            : team
+        ));
+        
+        // Clear editing state
+        setEditingField(null);
+        setEditingValue("");
+        
+        // Refresh the data to ensure consistency
+        setTimeout(() => {
+          fetchTeams();
+        }, 1000);
+      } else {
+        console.error('API update failed:', response.error);
+        throw new Error(response.error || 'Failed to update team field');
+      }
+    } catch (err) {
+      console.error('Error updating team field:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update team field';
+      setError(errorMessage);
+      
+      // Show error message for 5 seconds
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      saveInlineEdit();
+    } else if (e.key === 'Escape') {
+      cancelInlineEdit();
+    }
+  };
 
   // Additional team action functions
   const handleDuplicateTeam = async (team: Team) => {
@@ -904,8 +1066,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
             </div>
             <select value={projectFilter ?? ""} onChange={(e) => setProjectFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
               <option value="All">All Projects</option>
-              {projects.map((project) => (
-                <option key={project} value={project}>{project}</option>
+              {projects.map((project, index) => (
+                <option key={project.id || `project-${index}`} value={project.name}>{project.name}</option>
               ))}
             </select>
             <button onClick={() => setShowCreateForm(true)} className="hidden md:flex items-center gap-2 px-2 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md text-xl">
@@ -973,8 +1135,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           <div className="flex md:hidden items-center gap-1.5">
             <select value={projectFilter ?? ""} onChange={(e) => setProjectFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
               <option value="All">All</option>
-              {projects.slice(0, 3).map((project) => (
-                <option key={project} value={project}>{project.substring(0, 8)}</option>
+              {projects.slice(0, 3).map((project, index) => (
+                <option key={project.id || `project-${index}`} value={project.name}>{project.name.substring(0, 8)}</option>
               ))}
             </select>
           </div>
@@ -1097,9 +1259,15 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none text-sm"
                           required
                         >
-                          {projects.map(project => (
-                            <option key={project} value={project}>{project}</option>
-                          ))}
+                          {projects.length > 0 ? (
+                            projects.map((project, index) => (
+                              <option key={project.id || `project-${index}`} value={project.name}>
+                                {project.name}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="">Loading projects...</option>
+                          )}
                         </select>
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                           <Building className="w-4 h-4 text-slate-400" />
@@ -1177,8 +1345,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                       Select Members
                     </label>
                     <div className="space-y-2 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3">
-                      {members.map(member => (
-                        <div key={member} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded">
+                      {members.map((member, index) => (
+                        <div key={`member-${index}-${member}`} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded">
                           <div className="flex items-center space-x-3">
                             <input
                               type="checkbox"
@@ -1195,8 +1363,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                               className="text-xs border border-slate-200 rounded px-2 py-1"
                             >
                               <option value="">Select Role</option>
-                              {roles.map(role => (
-                                <option key={role} value={role}>{role}</option>
+                              {roles.map((role, index) => (
+                                <option key={`role-${index}-${role}`} value={role}>{role}</option>
                               ))}
                             </select>
                           )}
@@ -1210,8 +1378,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                       Selected Members ({formData.members.length})
                     </label>
                     <div className="space-y-2">
-                      {formData.members.map(member => (
-                        <div key={member} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                      {formData.members.map((member, index) => (
+                        <div key={`selected-member-${index}-${member}`} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
                           <div className="flex items-center space-x-2">
                             <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
                               <span className="text-xs font-medium text-purple-600">
@@ -1276,8 +1444,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                         className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
                       >
                         <option value="">Select WhatsApp Group</option>
-                        {whatsappGroups.map(group => (
-                          <option key={`whatsapp-${group.id}`} value={group.id}>{group.name}</option>
+                        {whatsappGroups.map((group, index) => (
+                          <option key={`whatsapp-${index}-${group.id}`} value={group.id}>{group.name}</option>
                         ))}
                       </select>
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -1298,9 +1466,9 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {tags.map(tag => (
+                  {tags.map((tag, index) => (
                     <button
-                      key={tag}
+                      key={`tag-${index}-${tag}`}
                       type="button"
                       onClick={() => toggleTag(tag)}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
@@ -1394,7 +1562,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                 
                 return (
                   <div
-                    key={`${team.id}-grid-${index}`}
+                    key={`team-grid-${index}`}
                     className={`relative ${theme.bg} border ${theme.border} rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 ${theme.hoverBorder} ${theme.hoverBg} flex flex-col h-full cursor-pointer p-3`}
                     onClick={() => handleTeamClick(team)}
                   >
@@ -1489,13 +1657,33 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                   <ResizableTableHeader>
                     <tr>
                       <ResizableTableHeaderCell columnKey="id" className="text-lg font-bold text-slate-900">ID</ResizableTableHeaderCell>
-                      <ResizableTableHeaderCell columnKey="name" className="text-lg font-bold text-slate-900">Team Name</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="name" className="text-lg font-bold text-slate-900">
+                        <div className="flex items-center gap-2">
+                          Team Name
+                          <span className="text-xs text-slate-500 font-normal">(click to edit)</span>
+                        </div>
+                      </ResizableTableHeaderCell>
                       <ResizableTableHeaderCell columnKey="progress" className="text-lg font-bold text-slate-900">%</ResizableTableHeaderCell>
-                      <ResizableTableHeaderCell columnKey="project" className="text-lg font-bold text-slate-900">Project</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="project" className="text-lg font-bold text-slate-900">
+                        <div className="flex items-center gap-2">
+                          Project
+                          <span className="text-xs text-slate-500 font-normal">(click to edit)</span>
+                        </div>
+                      </ResizableTableHeaderCell>
                       <ResizableTableHeaderCell columnKey="members" className="text-lg font-bold text-slate-900">Members</ResizableTableHeaderCell>
                       <ResizableTableHeaderCell columnKey="health" className="text-lg font-bold text-slate-900">Health</ResizableTableHeaderCell>
-                      <ResizableTableHeaderCell columnKey="budget" className="text-lg font-bold text-slate-900">Budget</ResizableTableHeaderCell>
-                      <ResizableTableHeaderCell columnKey="startDate" className="text-lg font-bold text-slate-900">Start Date</ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="budget" className="text-lg font-bold text-slate-900">
+                        <div className="flex items-center gap-2">
+                          Budget
+                          <span className="text-xs text-slate-500 font-normal">(click to edit)</span>
+                        </div>
+                      </ResizableTableHeaderCell>
+                      <ResizableTableHeaderCell columnKey="startDate" className="text-lg font-bold text-slate-900">
+                        <div className="flex items-center gap-2">
+                          Start Date
+                          <span className="text-xs text-slate-500 font-normal">(click to edit)</span>
+                        </div>
+                      </ResizableTableHeaderCell>
                       <ResizableTableHeaderCell columnKey="tags" className="text-lg font-bold text-slate-900">Tags</ResizableTableHeaderCell>
                       <ResizableTableHeaderCell columnKey="actions" className="text-right text-lg font-bold text-slate-900">Actions</ResizableTableHeaderCell>
                     </tr>
@@ -1504,20 +1692,114 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                     {uniqueTeams.map((team, idx) => {
                       const theme = { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' };
                       return (
-                        <tr key={`${team.id}-list-${idx}`} className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`} onClick={() => handleTeamClick(team)}>
+                        <tr key={`team-list-${idx}`} className={`cursor-pointer border ${theme.border} ${theme.bg} rounded-lg shadow-sm hover:shadow-md transition-all duration-200`} onClick={() => handleTeamClick(team)}>
                           <ResizableTableCell columnKey="id" className="text-slate-600 text-lg">{team.id || '-'}</ResizableTableCell>
                           <ResizableTableCell columnKey="name" className="align-middle">
-                            <div className="text-slate-900 font-semibold text-2xl truncate">{team.name}</div>
-                            <div className="text-lg text-slate-500 line-clamp-1 truncate">{team.description || 'No description'}</div>
+                            {editingField?.teamId === team.id && editingField?.field === 'name' ? (
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={editingValue}
+                                  onChange={(e) => setEditingValue(e.target.value)}
+                                  onKeyDown={handleKeyPress}
+                                  onBlur={saveInlineEdit}
+                                  className="w-full px-2 py-1 text-slate-900 font-semibold text-2xl border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  autoFocus
+                                  disabled={isUpdating}
+                                />
+                                {isUpdating && (
+                                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div 
+                                className="text-slate-900 font-semibold text-2xl truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startInlineEdit(team.id, 'name', team.name);
+                                }}
+                                title="Click to edit"
+                              >
+                                {team.name}
+                              </div>
+                            )}
+                            {editingField?.teamId === team.id && editingField?.field === 'description' ? (
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={editingValue}
+                                  onChange={(e) => setEditingValue(e.target.value)}
+                                  onKeyDown={handleKeyPress}
+                                  onBlur={saveInlineEdit}
+                                  className="w-full px-2 py-1 text-lg text-slate-500 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  autoFocus
+                                  disabled={isUpdating}
+                                />
+                                {isUpdating && (
+                                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div 
+                                className="text-lg text-slate-500 line-clamp-1 truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startInlineEdit(team.id, 'description', team.description || 'No description');
+                                }}
+                                title="Click to edit"
+                              >
+                                {team.description || 'No description'}
+                              </div>
+                            )}
                           </ResizableTableCell>
                           <ResizableTableCell columnKey="progress" className="text-slate-900 font-semibold text-2xl">{team.performance || 0}%</ResizableTableCell>
                           <ResizableTableCell columnKey="project" className="align-middle">
-                            <div className="flex items-center gap-2">
-                              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 text-white text-base flex items-center justify-center font-bold flex-shrink-0">
-                                {getInitials(team.project || '')}
+                            {editingField?.teamId === team.id && editingField?.field === 'project' ? (
+                              <div className="relative">
+                                <select
+                                  value={editingValue}
+                                  onChange={(e) => setEditingValue(e.target.value)}
+                                  onKeyDown={handleKeyPress}
+                                  onBlur={saveInlineEdit}
+                                  className="w-full px-2 py-1 text-slate-700 text-lg border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  autoFocus
+                                  disabled={isUpdating}
+                                >
+                                  {projects.length > 0 ? (
+                                    projects.map((project, index) => (
+                                      <option key={project.id || `project-${index}`} value={project.name}>
+                                        {project.name}
+                                      </option>
+                                    ))
+                                  ) : (
+                                    <option value="">Loading projects...</option>
+                                  )}
+                                </select>
+                                {isUpdating && (
+                                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                  </div>
+                                )}
                               </div>
-                              <span className="text-slate-700 text-lg truncate">{team.project || '—'}</span>
-                            </div>
+                            ) : (
+                              <div 
+                                className="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startInlineEdit(team.id, 'project', team.project || '');
+                                }}
+                                title="Click to edit"
+                              >
+                                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 text-white text-base flex items-center justify-center font-bold flex-shrink-0">
+                                  {getInitials(team.project || '')}
+                                </div>
+                                <span className="text-slate-700 text-lg truncate">{team.project || '—'}</span>
+                              </div>
+                            )}
                           </ResizableTableCell>
                           <ResizableTableCell columnKey="members" className="align-middle">
                             <div className="flex items-center gap-2">
@@ -1536,13 +1818,74 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                             }`}>{team.health || '—'}</span>
                           </ResizableTableCell>
                           <ResizableTableCell columnKey="budget" className="align-middle">
-                            <span className="text-lg text-slate-600 font-medium">{team.budget || '—'}</span>
+                            {editingField?.teamId === team.id && editingField?.field === 'budget' ? (
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={editingValue}
+                                  onChange={(e) => setEditingValue(e.target.value)}
+                                  onKeyDown={handleKeyPress}
+                                  onBlur={saveInlineEdit}
+                                  className="w-full px-2 py-1 text-lg text-slate-600 font-medium border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="e.g., $50,000"
+                                  autoFocus
+                                  disabled={isUpdating}
+                                />
+                                {isUpdating && (
+                                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span 
+                                className="text-lg text-slate-600 font-medium cursor-pointer hover:bg-blue-50 px-2 py-1 rounded block"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startInlineEdit(team.id, 'budget', team.budget || '');
+                                }}
+                                title="Click to edit"
+                              >
+                                {team.budget || '—'}
+                              </span>
+                            )}
                           </ResizableTableCell>
-                          <ResizableTableCell columnKey="startDate" className="text-slate-600 text-lg">{team.startDate || '—'}</ResizableTableCell>
+                          <ResizableTableCell columnKey="startDate" className="text-slate-600 text-lg">
+                            {editingField?.teamId === team.id && editingField?.field === 'startDate' ? (
+                              <div className="relative">
+                                <input
+                                  type="date"
+                                  value={editingValue}
+                                  onChange={(e) => setEditingValue(e.target.value)}
+                                  onKeyDown={handleKeyPress}
+                                  onBlur={saveInlineEdit}
+                                  className="w-full px-2 py-1 text-slate-600 text-lg border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  autoFocus
+                                  disabled={isUpdating}
+                                />
+                                {isUpdating && (
+                                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span 
+                                className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded block"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startInlineEdit(team.id, 'startDate', team.startDate || '');
+                                }}
+                                title="Click to edit"
+                              >
+                                {team.startDate || '—'}
+                              </span>
+                            )}
+                          </ResizableTableCell>
                           <ResizableTableCell columnKey="tags" className="align-middle">
                             <div className="flex flex-nowrap gap-1.5 overflow-hidden">
                               {team.tags && team.tags.length > 0 ? team.tags.slice(0, 2).map((tag, idx) => (
-                                <span key={`team-table-tag-${idx}`} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">{tag}</span>
+                                <span key={`team-${idx}-tag-${tag}`} className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium flex-shrink-0">{tag}</span>
                               )) : (
                                 <span className="px-2 py-0.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 border border-slate-300 rounded-full text-base font-medium">No tags</span>
                               )}

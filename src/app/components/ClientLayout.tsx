@@ -18,10 +18,6 @@ interface Project {
   activity?: Array<{ user: string; action: string; target: string; time: string }>;
   attachments?: Array<{ name: string; size: string; type: string }>;
 }
-
-
-
-
 import ProjectsAnalyticsPage from "./ProjectsAnalyticsPage";
 import DepartmentsPage from "./DepartmentsPage";
 import TeamsPageSheet from "./TeamsPageSheet";
@@ -1083,6 +1079,21 @@ export default function ClientLayout() {
               <Grid3X3 size={16} />
               <span className="text-sm font-medium">Grid View</span>
               </button>
+          </div>
+
+          {/* Invite Button */}
+          <div className="flex items-center px-2 border-l border-neutral-200">
+            <button
+              onClick={() => {
+                // Trigger invite modal from dashboard
+                const event = new CustomEvent('open-invite-modal');
+                window.dispatchEvent(event);
+              }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
+              aria-label="Invite user"
+            >
+              <span>Invite User</span>
+            </button>
           </div>
 
           {/* User Profile Display */}
