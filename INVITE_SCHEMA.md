@@ -168,3 +168,4 @@ This invite system integrates with:
 - **DynamoDB**: For data persistence using existing CRUD APIs
 - **AWS SES**: For email delivery
 - **Existing Project Management**: Seamlessly adds invite functionality to projects
+

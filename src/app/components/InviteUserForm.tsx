@@ -46,6 +46,40 @@ export default function InviteUserForm({
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Build a Google Calendar template URL that opens event create UI
+  const buildGoogleCalendarUrl = (params: {
+    title: string;
+    details?: string;
+    location?: string;
+    start?: Date; // optional; if omitted, Google will ask
+    end?: Date;   // optional
+  }) => {
+    const base = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+    const search = new URLSearchParams();
+    search.set('text', params.title);
+    if (params.details) search.set('details', params.details);
+    if (params.location) search.set('location', params.location);
+    if (params.start && params.end) {
+      const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      search.set('dates', `${fmt(params.start)}/${fmt(params.end)}`);
+    }
+    return `${base}&${search.toString()}`;
+  };
+
+  const handleOpenGoogleCalendar = () => {
+    const inviteInfo = `You're invited to join ${projectName} by ${currentUserName}.\n\nOpen the app to collaborate: ${process.env.NEXT_PUBLIC_APP_URL || 'https://myapp.com'}`;
+    const url = buildGoogleCalendarUrl({
+      title: `Project invite: ${projectName}`,
+      details: inviteInfo
+    });
+    window.open(url, '_blank', 'noopener');
+  };
+
+  const handleOpenCalCom = () => {
+    const calLink = process.env.NEXT_PUBLIC_CAL_LINK || 'https://cal.com/';
+    window.open(calLink, '_blank', 'noopener');
+  };
+
   // Email validation
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -168,6 +202,27 @@ export default function InviteUserForm({
             <X className="w-4 h-4" />
           </button>
         )}
+      </div>
+
+      {/* Scheduling options */}
+      <div className="px-6 pt-4">
+        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-lg p-3">
+          <span className="text-sm text-slate-600 mr-1">Schedule a meeting:</span>
+          <button
+            type="button"
+            onClick={handleOpenGoogleCalendar}
+            className="px-3 py-1.5 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-100"
+          >
+            Google Calendar
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenCalCom}
+            className="px-3 py-1.5 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-100"
+          >
+            Cal.com
+          </button>
+        </div>
       </div>
 
       {/* Form */}

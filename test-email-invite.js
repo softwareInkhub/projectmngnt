@@ -44,3 +44,4 @@ async function testEmailInvite() {
 
 // Run the test
 testEmailInvite().catch(console.error);
+

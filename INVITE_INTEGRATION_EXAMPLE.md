@@ -285,3 +285,4 @@ Test the complete flow:
 6. Verify the user was added to the project
 
 This integration provides a complete, production-ready user invitation system that works seamlessly with your existing infrastructure!
+

@@ -111,6 +111,10 @@ interface Team {
   id: string | number;
   name: string;
   description: string;
+  // Optional metadata used by filters/UI. Many existing records may not have these
+  // so we keep them optional and handle gracefully in the UI.
+  status?: string;   // e.g., "Active", "In Progress", "Completed"
+  priority?: string; // e.g., "High", "Medium", "Low"
   members: Array<{
     id: string | number;
     name: string;
@@ -183,6 +187,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const [showEditForm, setShowEditForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [priorityFilter, setPriorityFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [showFilters, setShowFilters] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Set<number>>(new Set());
@@ -869,6 +875,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   const clearFilters = () => {
     setSearchTerm("");
     setProjectFilter("All");
+    setStatusFilter("All");
+    setPriorityFilter("All");
   };
 
   const toggleTeam = (teamId: number) => {
@@ -891,8 +899,12 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                          team.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (Array.isArray(team.members) ? team.members.some(member => member.name.toLowerCase().includes(searchTerm.toLowerCase())) : false);
     const matchesProject = projectFilter === "All" || team.project === projectFilter;
+    const teamStatus = team.status ?? "";
+    const teamPriority = team.priority ?? "";
+    const matchesStatus = statusFilter === "All" || teamStatus === statusFilter;
+    const matchesPriority = priorityFilter === "All" || teamPriority === priorityFilter;
     
-    return matchesSearch && matchesProject;
+    return matchesSearch && matchesProject && matchesStatus && matchesPriority;
   });
 
   // Use filtered teams directly (no duplicates expected from API)
@@ -1059,23 +1071,58 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           
           {/* Actions (responsive) */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Desktop search/filters */}
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
-              <input type="text" placeholder="Search teams..." value={searchTerm ?? ""} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-xl" />
+            {/* Desktop search/filters - Improved UI */}
+            <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg">
+              {/* Search Input */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Search teams..." 
+                  value={searchTerm ?? ""} 
+                  onChange={(e) => setSearchTerm(e.target.value)} 
+                  className="pl-9 pr-4 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 text-sm bg-white" 
+                />
+              </div>
+              
+              {/* Status Filter */}
+              <select 
+                value={statusFilter ?? ""} 
+                onChange={(e) => setStatusFilter(e.target.value)} 
+                className={`px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white ${
+                  statusFilter !== "All" ? "border-blue-500 bg-blue-50" : "border-slate-200"
+                }`}
+              >
+                <option value="All">All Status</option>
+                <option value="Active">Active</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="On Hold">On Hold</option>
+                <option value="Planning">Planning</option>
+              </select>
+              
+              {/* Priority Filter */}
+              <select 
+                value={priorityFilter ?? ""} 
+                onChange={(e) => setPriorityFilter(e.target.value)} 
+                className={`px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white ${
+                  priorityFilter !== "All" ? "border-blue-500 bg-blue-50" : "border-slate-200"
+                }`}
+              >
+                <option value="All">All Priority</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
             </div>
-            <select value={projectFilter ?? ""} onChange={(e) => setProjectFilter(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32">
-              <option value="All">All Projects</option>
-              {projects.map((project, index) => (
-                <option key={project.id || `project-${index}`} value={project.name}>{project.name}</option>
-              ))}
-            </select>
-            <button onClick={() => setShowCreateForm(true)} className="hidden md:flex items-center gap-2 px-2 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md text-xl">
-              <Download size={18} />
+            
+            {/* Action Buttons */}
+            <button onClick={() => setShowCreateForm(true)} className="hidden md:flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 text-slate-700 font-medium transition-all duration-200 hover:shadow-md text-sm">
+              <Download size={16} />
               Export All
             </button>
-            <button className="hidden md:flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-xl" onClick={() => setShowCreateForm(true)}>
-              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-200" />
+            <button className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 font-semibold text-sm" onClick={() => setShowCreateForm(true)}>
+              <Plus size={16} className="group-hover:rotate-90 transition-transform duration-200" />
               Create Team
             </button>
           </div>
@@ -1133,11 +1180,29 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           
           {/* Right side - Status and Priority filters (mobile only) */}
           <div className="flex md:hidden items-center gap-1.5">
-            <select value={projectFilter ?? ""} onChange={(e) => setProjectFilter(e.target.value)} className="px-1.5 py-1.5 border border-slate-300 rounded-md text-xs bg-white w-16">
+            <select 
+              value={statusFilter ?? ""} 
+              onChange={(e) => setStatusFilter(e.target.value)} 
+              className={`px-1.5 py-1.5 border rounded-md text-xs bg-white w-16 ${
+                statusFilter !== "All" ? "border-blue-500 bg-blue-50" : "border-slate-300"
+              }`}
+            >
               <option value="All">All</option>
-              {projects.slice(0, 3).map((project, index) => (
-                <option key={project.id || `project-${index}`} value={project.name}>{project.name.substring(0, 8)}</option>
-              ))}
+              <option value="Active">Active</option>
+              <option value="In Progress">Progress</option>
+              <option value="Completed">Done</option>
+            </select>
+            <select 
+              value={priorityFilter ?? ""} 
+              onChange={(e) => setPriorityFilter(e.target.value)} 
+              className={`px-1.5 py-1.5 border rounded-md text-xs bg-white w-16 ${
+                priorityFilter !== "All" ? "border-blue-500 bg-blue-50" : "border-slate-300"
+              }`}
+            >
+              <option value="All">All</option>
+              <option value="High">High</option>
+              <option value="Medium">Med</option>
+              <option value="Low">Low</option>
             </select>
           </div>
         </div>
@@ -1145,7 +1210,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
         {/* Filters Panel - Compact */}
           {showFilters && (
             <div className="pt-3 border-t border-gray-200 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Project</label>
                   <select
@@ -1154,9 +1219,39 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                   >
                     <option value="All">All Projects</option>
-                    {projects.map(project => (
-                      <option key={project} value={project}>{project}</option>
+                    {projects.map((project, index) => (
+                      <option key={project.id || `project-${index}`} value={project.name}>{project.name}</option>
                     ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  >
+                    <option value="All">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="On Hold">On Hold</option>
+                    <option value="Planning">Planning</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
+                  <select
+                    value={priorityFilter}
+                    onChange={(e) => setPriorityFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  >
+                    <option value="All">All Priority</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
                   </select>
                 </div>
                 
@@ -1177,6 +1272,8 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
                   onClick={() => {
                     setSearchTerm("");
                     setProjectFilter("All");
+                    setStatusFilter("All");
+                    setPriorityFilter("All");
                     setShowFilters(false);
                   }}
                   className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
