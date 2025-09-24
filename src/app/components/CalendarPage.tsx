@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { BarChart3, ChevronLeft, ChevronRight, Search, Settings, User, Users2, ChevronDown, Filter, MoreVertical, Grid3X3, List, Calendar, Clock, Plus, X, Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, AlignJustify, List as ListIcon, ListOrdered, IndentDecrease, IndentIncrease, Superscript, Subscript, Image, Link, Code, Type, Sun, Moon, Maximize2 } from 'lucide-react';
 import { ProjectApiService, ProjectData } from '../utils/projectApi';
 import { TaskApiService, TaskData } from '../utils/taskApi';
+import { createEvent as createGoogleCalendarEvent } from '../utils/googleCalendarApi';
 
 // Extended TaskData interface for calendar display
 interface CalendarTaskData extends TaskData {
@@ -54,6 +55,94 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
   const ownerDropdownRef = useRef<HTMLDivElement>(null);
   const workHoursDropdownRef = useRef<HTMLDivElement>(null);
   const tagsDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Refs to synchronize scroll between header, grid and time column
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const bodyScrollRef = useRef<HTMLDivElement>(null); // days grid (horizontal + vertical)
+  const timeScrollRef = useRef<HTMLDivElement>(null); // time column (vertical only)
+
+  // Keep header and body horizontal scroll positions in sync
+  useEffect(() => {
+    const headerEl = headerScrollRef.current;
+    const bodyEl = bodyScrollRef.current;
+    if (!headerEl || !bodyEl) return;
+
+    let isSyncingFromHeader = false;
+    let isSyncingFromBody = false;
+
+    const onHeaderScroll = () => {
+      if (isSyncingFromBody) return;
+      isSyncingFromHeader = true;
+      bodyEl.scrollLeft = headerEl.scrollLeft;
+      isSyncingFromHeader = false;
+    };
+
+    const onBodyScroll = () => {
+      if (isSyncingFromHeader) return;
+      isSyncingFromBody = true;
+      headerEl.scrollLeft = bodyEl.scrollLeft;
+      isSyncingFromBody = false;
+    };
+
+    headerEl.addEventListener('scroll', onHeaderScroll, { passive: true });
+    bodyEl.addEventListener('scroll', onBodyScroll, { passive: true });
+    return () => {
+      headerEl.removeEventListener('scroll', onHeaderScroll as EventListener);
+      bodyEl.removeEventListener('scroll', onBodyScroll as EventListener);
+    };
+  }, [isDayView]);
+
+  // Keep vertical scroll positions in sync between time column and grid (Day View)
+  useEffect(() => {
+    if (!isDayView) return;
+    const timeEl = timeScrollRef.current;
+    const gridEl = bodyScrollRef.current;
+    if (!timeEl || !gridEl) return;
+
+    let syncingFromTime = false;
+    let syncingFromGrid = false;
+
+    const onTimeScroll = () => {
+      if (syncingFromGrid) return;
+      syncingFromTime = true;
+      gridEl.scrollTop = timeEl.scrollTop;
+      syncingFromTime = false;
+    };
+    const onGridScroll = () => {
+      if (syncingFromTime) return;
+      syncingFromGrid = true;
+      timeEl.scrollTop = gridEl.scrollTop;
+      syncingFromGrid = false;
+    };
+
+    timeEl.addEventListener('scroll', onTimeScroll, { passive: true });
+    gridEl.addEventListener('scroll', onGridScroll, { passive: true });
+    return () => {
+      timeEl.removeEventListener('scroll', onTimeScroll as EventListener);
+      gridEl.removeEventListener('scroll', onGridScroll as EventListener);
+    };
+  }, [isDayView]);
+
+  // Auto-scroll Day View to the current date column
+  useEffect(() => {
+    if (!isDayView) return;
+    const headerEl = headerScrollRef.current;
+    const bodyEl = bodyScrollRef.current;
+    if (!headerEl || !bodyEl) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const index = dateColumns.findIndex((d) => d.toDateString() === today.toDateString());
+    if (index < 0) return;
+
+    // Measure a column width from the body grid if available; fallback to 96px (~w-24)
+    const sampleCol = bodyEl.querySelector('[data-day-col]') as HTMLElement | null;
+    const colWidth = sampleCol?.offsetWidth || 96;
+    const target = Math.max(0, index * colWidth - (bodyEl.clientWidth / 2) + (colWidth / 2));
+
+    bodyEl.scrollLeft = target;
+    headerEl.scrollLeft = target;
+  }, [isDayView, dateRange.start, dateRange.end]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -298,6 +387,29 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
       setTasks(prev => [...prev, newMeeting]);
       
       console.log('Meeting created successfully:', newMeeting);
+
+      // Attempt to sync with Google Calendar (non-blocking)
+      try {
+        if (selectedDate) {
+          // Build start and end ISO strings from selectedDate, startDate and workHours
+          const [startHourStr, startMinuteStr] = (startDate || '09:00').split(':');
+          const start = new Date(selectedDate);
+          start.setHours(parseInt(startHourStr || '9', 10), parseInt(startMinuteStr || '0', 10), 0, 0);
+
+          const durationHours = Math.max(parseFloat(String(workHours)) || 1, 0.5);
+          const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);
+
+          void createGoogleCalendarEvent({
+            title: newMeeting.title,
+            description: newMeeting.description,
+            start: start.toISOString(),
+            end: end.toISOString(),
+            externalId: newMeeting.id,
+          });
+        }
+      } catch (e) {
+        console.warn('Google Calendar sync failed (non-blocking):', e);
+      }
       handleCloseTaskForm();
     } catch (error) {
       console.error('Error creating meeting:', error);
@@ -353,6 +465,24 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
   };
 
   const dateColumns = generateDateColumns();
+
+  // Month grid helpers
+  const monthGridDays = useMemo(() => {
+    const firstOfMonth = new Date(dateRange.start.getFullYear(), dateRange.start.getMonth(), 1);
+    const lastOfMonth = new Date(dateRange.start.getFullYear(), dateRange.start.getMonth() + 1, 0);
+    const startOfGrid = new Date(firstOfMonth);
+    startOfGrid.setDate(firstOfMonth.getDate() - firstOfMonth.getDay()); // back to Sunday
+    const endOfGrid = new Date(lastOfMonth);
+    endOfGrid.setDate(lastOfMonth.getDate() + (6 - lastOfMonth.getDay())); // forward to Saturday
+
+    const days: Date[] = [];
+    const d = new Date(startOfGrid);
+    while (d <= endOfGrid) {
+      days.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return { days, firstOfMonth, lastOfMonth };
+  }, [dateRange.start]);
 
   return (
     <div className="h-screen w-full bg-white flex flex-col">
@@ -411,6 +541,26 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
               Month View
             </button>
           </div>
+
+          {/* Quick Schedule Actions */}
+          <div className="hidden md:flex items-center space-x-2 ml-2">
+            <button
+              onClick={() => { setSelectedDate(new Date()); setShowTaskForm(true); }}
+              className="px-3 py-1 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-100"
+              title="Schedule a meeting"
+            >
+              Schedule
+            </button>
+            <a
+              href={(process.env.NEXT_PUBLIC_CAL_LINK || 'https://cal.com/')}
+              target="_blank"
+              rel="noopener"
+              className="px-3 py-1 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-100"
+              title="Open Cal.com"
+            >
+              Cal.com
+            </a>
+          </div>
         </div>
               </div>
               
@@ -427,9 +577,9 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                 <div className="border-b border-gray-200 bg-white">
                   <div className="flex">
                     <div className="w-16 p-3 border-r border-gray-200 bg-gray-50">
-                      <div className="text-xs font-medium text-gray-500 text-center">Time</div>
+                      <div className="text-sm font-medium text-gray-500 text-center">Time</div>
                     </div>
-                    <div className="flex-1 overflow-x-auto">
+                    <div className="flex-1 overflow-x-auto" ref={headerScrollRef}>
                       <div className="flex min-w-max">
                         {dateColumns.map((date, index) => {
                           const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -438,11 +588,12 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                           return (
                             <div
                               key={`header-${index}`}
-                              className={`w-32 p-3 text-center border-r border-gray-200 ${
+                              data-day-col="true"
+                              className={`w-24 p-2 text-center border-r border-gray-200 ${
                                 isWeekend ? 'bg-blue-50' : 'bg-white'
                               } ${isToday ? 'bg-blue-100' : ''}`}
                             >
-                              <div className={`text-xs font-medium ${
+                              <div className={`text-sm font-medium ${
                                 isWeekend ? 'text-red-600' : isToday ? 'text-blue-600' : 'text-gray-600'
                               }`}>
                                 {date.toLocaleDateString('en-US', { weekday: 'short' })}
@@ -452,7 +603,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                               }`}>
                                 {date.getDate()}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-sm text-gray-500">
                                 {date.toLocaleDateString('en-US', { month: 'short' })}
                               </div>
                             </div>
@@ -464,21 +615,25 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                 </div>
 
                 {/* Calendar Body - Google Calendar Style with Synchronized Scrolling */}
-                <div className="flex-1 overflow-auto">
-                  <div className="flex min-w-max">
-                    {/* Time Column - Scrolls with content */}
-                    <div className="w-16 border-r border-gray-200 bg-gray-50 flex-shrink-0">
-                      {Array.from({ length: 24 }, (_, hour) => (
-                        <div key={hour} className="h-12 border-b border-gray-100 flex items-center justify-center">
-                          <span className="text-xs text-gray-500">
-                            {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
-                          </span>
-                        </div>
-                      ))}
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex">
+                    {/* Time Column - Fixed horizontally, synced vertical scroll */}
+                    <div className="w-16 border-r border-gray-200 bg-gray-50 flex-shrink-0 overflow-y-auto" ref={timeScrollRef}>
+                      <div>
+                        {Array.from({ length: 24 }, (_, hour) => (
+                          <div key={hour} className="h-12 border-b border-gray-100 flex items-center justify-center">
+                            <span className="text-sm text-gray-500">
+                              {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    {/* Days Columns */}
-                    {dateColumns.map((date, index) => {
+                    {/* Days Grid - Horizontal + vertical scroll */}
+                    <div className="flex-1 overflow-auto" ref={bodyScrollRef}>
+                      <div className="flex min-w-max">
+                        {dateColumns.map((date, index) => {
                       const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                       const isToday = date.toDateString() === new Date().toDateString();
                       const dayMeetings = getTasksForDate(date);
@@ -486,7 +641,8 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                       return (
                         <div 
                           key={`column-${index}`} 
-                          className={`w-32 border-r border-gray-200 relative ${
+                          data-day-col="true"
+                          className={`w-24 border-r border-gray-200 relative ${
                             isWeekend ? 'bg-blue-50' : 'bg-white'
                           } ${isToday ? 'bg-blue-50' : ''}`}
                           onMouseEnter={(e) => handleDateHover(date, e)}
@@ -550,18 +706,18 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                                       }}
                                       title={`${meeting.title} - ${meeting.project} - ${meetingHour}:00 - ${meetingDuration}h`}
                                     >
-                                      <div className="text-xs font-semibold text-gray-900 truncate leading-tight">
+                                      <div className="text-sm font-semibold text-gray-900 truncate leading-tight">
                                         {meeting.title}
                                       </div>
-                                      <div className="text-xs text-gray-600 truncate mt-1 leading-tight">
+                                      <div className="text-sm text-gray-600 truncate mt-1 leading-tight">
                                         {meeting.project}
                                       </div>
                                       {meeting.assignee && (
-                                        <div className="text-xs text-gray-500 truncate mt-1 leading-tight">
+                                        <div className="text-sm text-gray-500 truncate mt-1 leading-tight">
                                           {meeting.assignee.split(' ')[0]}
                                         </div>
                                       )}
-                                      <div className="text-xs text-gray-500 mt-1 leading-tight">
+                                      <div className="text-sm text-gray-500 mt-1 leading-tight">
                                         {meetingHour}:00 - {meetingDuration}h
                                       </div>
                                     </div>
@@ -584,114 +740,53 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
                         </div>
                       );
                     })}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
             ) : (
-              // Month View - All dates in one screen
+              // Month View - 7-column grid like the screenshot
               <>
                 {/* Month Header */}
-                <div className="border-b border-gray-200 bg-white">
-                  <div className="flex">
-                    {dateColumns.map((date, index) => {
-                      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                      const isToday = date.toDateString() === new Date().toDateString();
-                      
-                      return (
-                        <div
-                          key={`header-${index}`}
-                          className={`flex-1 p-3 text-center border-r border-gray-200 ${
-                            isWeekend ? 'bg-blue-50' : 'bg-white'
-                          } ${isToday ? 'bg-blue-100' : ''}`}
-                        >
-                          <div className={`text-xs font-medium ${
-                            isWeekend ? 'text-red-600' : isToday ? 'text-blue-600' : 'text-gray-600'
-                          }`}>
-                            {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                          </div>
-                          <div className={`text-lg font-bold ${
-                            isToday ? 'text-blue-600' : 'text-gray-900'
-                          }`}>
-                            {date.getDate()}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {date.toLocaleDateString('en-US', { month: 'short' })}
-                          </div>
-                        </div>
-                      );
-                    })}
+                <div className="border-b border-gray-200 bg-white px-4 py-2">
+                  <div className="grid grid-cols-7 gap-2 text-sm md:text-base text-gray-600">
+                    {['SUN','MON','TUE','WED','THU','FRI','SAT'].map((d) => (
+                      <div key={d} className="text-center">{d}</div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Month Body - Compact View */}
-                <div className="flex-1 overflow-y-auto">
-                  <div className="flex h-full">
-                    {dateColumns.map((date, index) => {
-                      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                {/* Month Grid */}
+                <div className="flex-1 overflow-auto px-4 py-3">
+                  <div className="grid grid-cols-7 gap-2 auto-rows-[minmax(64px,1fr)]">
+                    {monthGridDays.days.map((date) => {
+                      const isCurrentMonth = date.getMonth() === dateRange.start.getMonth();
                       const isToday = date.toDateString() === new Date().toDateString();
+                      const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
                       const dayMeetings = getTasksForDate(date);
-                      
-                      return (
-                        <div 
-                          key={`column-${index}`} 
-                          className={`flex-1 border-r border-gray-200 relative ${
-                            isWeekend ? 'bg-blue-50' : 'bg-white'
-                          } ${isToday ? 'bg-blue-50' : ''}`}
-                          onMouseEnter={(e) => handleDateHover(date, e)}
-                          onMouseLeave={handleDateLeave}
-                        >
-                          {/* Add Meeting Button */}
-                          <div className="absolute top-2 right-2 z-10">
-                            <button
-                              className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-blue-700 transition-colors shadow-sm"
-                              onMouseEnter={(e) => handleButtonHover(date, e)}
-                              onMouseLeave={handleButtonLeave}
-                              onClick={() => handlePlusButtonClick(date)}
-                              title="Schedule Meeting"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
-                          </div>
 
-                          {/* Meetings List */}
-                          <div className="p-2 pt-8">
-                            {dayMeetings.length > 0 ? (
-                              <div className="space-y-1">
-                                {dayMeetings.map((meeting, meetingIndex) => (
-                                  <div
-                                    key={`meeting-${meeting.id}-${meetingIndex}`}
-                                    className={`p-2 rounded-md cursor-pointer transition-all hover:shadow-sm ${
-                                      meeting.priority === 'high' ? 'bg-red-100 border-l-2 border-red-500' :
-                                      meeting.priority === 'medium' ? 'bg-yellow-100 border-l-2 border-yellow-500' :
-                                      meeting.priority === 'low' ? 'bg-green-100 border-l-2 border-green-500' :
-                                      'bg-blue-100 border-l-2 border-blue-500'
-                                    }`}
-                                    title={`${meeting.title} - ${meeting.project}`}
-                                  >
-                                    <div className="text-xs font-semibold text-gray-900 truncate">
-                                      {meeting.title}
-                                    </div>
-                                    <div className="text-xs text-gray-600 truncate">
-                                      {meeting.project}
-                                    </div>
-                                    {meeting.assignee && (
-                                      <div className="text-xs text-gray-500 truncate">
-                                        {meeting.assignee.split(' ')[0]}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-center h-20 text-gray-400">
-                                <div className="text-center">
-                                  <Calendar className="h-6 w-6 mx-auto mb-1 opacity-50" />
-                                  <p className="text-xs">No meetings</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                      return (
+                        <button
+                          key={date.toISOString()}
+                          onClick={() => { setSelectedDate(date); setShowTaskForm(true); }}
+                          className={`relative w-full h-full rounded-lg border text-left p-3 transition-colors
+                            ${isSelected ? 'bg-blue-600 text-white border-blue-600' : ''}
+                            ${!isSelected && isToday ? 'bg-blue-50 border-blue-200' : ''}
+                            ${!isSelected && !isToday ? 'bg-gray-50 border-gray-200' : ''}
+                            ${!isCurrentMonth ? 'opacity-60' : ''}
+                          `}
+                        >
+                          <div className="text-xl font-extrabold">{date.getDate()}</div>
+                          {isToday && !isSelected && (
+                            <div className="absolute top-1/2 left-2 -mt-1 w-1 h-1 bg-gray-800 rounded-full"></div>
+                          )}
+                          {dayMeetings.length > 0 && (
+                            <div className={`mt-2 text-sm ${isSelected ? 'text-white/90' : 'text-gray-600'}`}>
+                              {Math.min(dayMeetings.length, 2)} meeting{dayMeetings.length > 1 ? 's' : ''}
+                            </div>
+                          )}
+                        </button>
                       );
                     })}
                   </div>
