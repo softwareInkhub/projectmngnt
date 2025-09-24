@@ -25,6 +25,7 @@ const nextConfig = {
         source: '/authPage/browser-callback',
         destination: '/authPage/oauth2callback',
       },
+      // Keep query parameters
     ];
   },
   
