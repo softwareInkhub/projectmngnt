@@ -407,7 +407,22 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
       // Attempt to sync with Google Calendar (non-blocking)
       try {
         if (selectedDate) {
-          // Build start and end ISO strings from selectedDate, startDate and workHours
+          // Build start and end RFC3339 strings with explicit timezone offset (prevents UTC shift)
+          const fmtWithOffset = (d: Date) => {
+            const pad = (n: number) => String(n).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            const mm = pad(d.getMonth() + 1);
+            const dd = pad(d.getDate());
+            const hh = pad(d.getHours());
+            const mi = pad(d.getMinutes());
+            const ss = pad(d.getSeconds());
+            const tz = -d.getTimezoneOffset(); // minutes east of UTC
+            const sign = tz >= 0 ? '+' : '-';
+            const tzh = pad(Math.floor(Math.abs(tz) / 60));
+            const tzm = pad(Math.abs(tz) % 60);
+            return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}${sign}${tzh}:${tzm}`;
+          };
+
           const [startHourStr, startMinuteStr] = (startDate || '09:00').split(':');
           const start = new Date(selectedDate);
           start.setHours(parseInt(startHourStr || '9', 10), parseInt(startMinuteStr || '0', 10), 0, 0);
@@ -417,10 +432,11 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
 
           void createGoogleCalendarEvent({
             title: newMeeting.title,
-            description: newMeeting.description,
-            start: start.toISOString(),
-            end: end.toISOString(),
+            description: `${newMeeting.description || ''}\nProject: ${newMeeting.project || ''}`.trim(),
+            start: fmtWithOffset(start),
+            end: fmtWithOffset(end),
             externalId: newMeeting.id,
+            location: owner ? `Owner: ${owner}` : undefined,
           });
         }
       } catch (e) {
