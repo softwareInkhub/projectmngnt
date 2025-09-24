@@ -79,15 +79,12 @@ export async function handleGoogleCalendarCallback(currentUserId: string) {
   if (error) throw new Error(error);
   if (!code || !state || state !== savedState) throw new Error('Invalid OAuth response');
 
-  const body = new URLSearchParams({
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: redirectUri,
-    client_id: clientId,
-    code_verifier: codeVerifier,
+  // Exchange token via Next server route to attach client_secret securely
+  const res = await fetch('/api/google/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, redirect_uri: redirectUri, code_verifier: codeVerifier }),
   });
-
-  const res = await fetch(GC_TOKEN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
   if (!res.ok) throw new Error(`Token exchange failed: ${await res.text()}`);
   const tokens = await res.json();
 
