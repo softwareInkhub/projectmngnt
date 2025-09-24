@@ -41,6 +41,7 @@ import CreateDepartmentPage from "./CreateDepartmentPage";
 import CreateStoryPage from "./CreateStoryPage";
 import ZohoStyleDashboard from "./ZohoStyleDashboard";
 import { logout } from '../utils/auth';
+import Image from 'next/image';
 import { useUser } from '../contexts/UserContext';
 
 // Industry-Level Dashboard Component with Real Data
@@ -948,13 +949,8 @@ export default function ClientLayout() {
         />
       )}
       <main className="flex-1 min-w-0 bg-background flex flex-col">
-        {/* App Header */}
-        <div className="w-full bg-white border-b border-gray-100 py-3 px-6">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
-            BRMH project management
-          </h1>
-        </div>
-        
+        {/* Header removed per request; branding moved to Sidebar */}
+
         {/* Tab Bar Container */}
         <div className={`flex items-center bg-white border-b border-neutral-200 h-10 ${
           isGridMode ? 'border-blue-200 bg-blue-50' : ''
@@ -1140,3 +1136,44 @@ export default function ClientLayout() {
     </div>
   );
 } 
+
+// Inline header logo component with graceful fallback
+function HeaderLogo() {
+  // We rely on the browser to attempt to load /brand.png; if it fails, we render a fallback SVG
+  // Using a small trick: render the image and overlay fallback hidden behind; on error, swap state
+  const [error, setError] = React.useState(false);
+  if (!error) {
+    return (
+      <Image
+        src="/Screenshot_2025-09-24_131002-removebg-preview.png"
+        alt="App logo"
+        fill
+        sizes="32px"
+        className="object-contain"
+        priority
+        onError={() => setError(true)}
+      />
+    );
+  }
+  // Fallback simple shield-like SVG if /brand.png is missing
+  return (
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#2563eb" />
+          <stop offset="100%" stopColor="#7c3aed" />
+        </linearGradient>
+      </defs>
+      <path d="M32 2c8 3 16 3 24 0v26c0 12-9.5 22.3-24 34C17.5 50.3 8 40 8 28V2c8 3 16 3 24 0z" fill="url(#g)"/>
+      <g fill="#fff" opacity="0.9">
+        <rect x="18" y="18" width="10" height="10" rx="1.5"/>
+        <polygon points="42,18 50,26 42,34 34,26" fill="#fff"/>
+        <circle cx="30" cy="36" r="4"/>
+        <rect x="18" y="42" width="4" height="8" rx="1"/>
+        <rect x="24" y="40" width="4" height="10" rx="1"/>
+        <rect x="30" y="38" width="4" height="12" rx="1"/>
+        <rect x="36" y="36" width="4" height="14" rx="1"/>
+      </g>
+    </svg>
+  );
+}

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -84,14 +85,14 @@ export default function Sidebar({
         
         {/* Enhanced Sidebar Content */}
         <div className="relative h-full w-60 max-w-[85vw] bg-white shadow-2xl flex flex-col mobile-optimized" style={{ zIndex: 50 }}>
-          {/* Enhanced Header */}
+          {/* Enhanced Header with branding */}
           <div className="flex items-center justify-between p-3 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center">
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">B</span>
+            <div className="flex items-center gap-0">
+              <div className="relative h-8 w-8 ml-2">
+                <Image src="/Screenshot_2025-09-24_131002-removebg-preview.png" alt="Logo" fill sizes="32px" className="object-contain"/>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">Navigation</h2>
+              <div className="relative h-7 w-[140px] -ml-2">
+                <Image src="/Screenshot 2025-09-24 131821.png" alt="BRMH Project Management" fill sizes="140px" className="object-contain"/>
               </div>
             </div>
             <button 
@@ -186,6 +187,18 @@ export default function Sidebar({
         isExpanded ? 'w-52' : 'w-16'
       } shadow-lg`}
     >
+
+      {/* Brand at top */}
+      <div className="flex items-center gap-0 mt-3 mb-0">
+        <div className="relative h-18 w-18 ml-3">
+          <Image src="/Screenshot_2025-09-24_131002-removebg-preview.png" alt="Logo" fill sizes="36px" className="object-contain"/>
+        </div>
+        {isExpanded && (
+          <div className="relative h-18 w-[150px] -ml-3">
+            <Image src="/Screenshot 2025-09-24 131821.png" alt="BRMH Project Management" fill sizes="160px" className="object-contain"/>
+          </div>
+        )}
+      </div>
 
       {/* Expand/Collapse Button */}
       <button

@@ -5,6 +5,8 @@ import { BarChart3, ChevronLeft, ChevronRight, Search, Settings, User, Users2, C
 import { ProjectApiService, ProjectData } from '../utils/projectApi';
 import { TaskApiService, TaskData } from '../utils/taskApi';
 import { createEvent as createGoogleCalendarEvent } from '../utils/googleCalendarApi';
+import { startGoogleCalendarAuth, getGoogleCalendarStatus, disconnectGoogleCalendar } from '../utils/googleCalendarClient';
+import { useUser } from '../contexts/UserContext';
 
 // Extended TaskData interface for calendar display
 interface CalendarTaskData extends TaskData {
@@ -16,6 +18,7 @@ interface CalendarPageProps {
 }
 
 export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
+  const { currentUser } = useUser();
   const [dateRange, setDateRange] = useState({
     start: new Date(2025, 8, 1), // September 1, 2025
     end: new Date(2025, 8, 30)   // September 30, 2025
@@ -50,6 +53,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
   const [isOwnerDropdownOpen, setIsOwnerDropdownOpen] = useState<boolean>(false);
   const [isWorkHoursDropdownOpen, setIsWorkHoursDropdownOpen] = useState<boolean>(false);
   const [isTagsDropdownOpen, setIsTagsDropdownOpen] = useState<boolean>(false);
+  const [googleStatus, setGoogleStatus] = useState<{ connected: boolean } | null>(null);
   
   // Refs for dropdowns
   const ownerDropdownRef = useRef<HTMLDivElement>(null);
@@ -163,6 +167,18 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Load Google Calendar connect status
+  useEffect(() => {
+    let mounted = true;
+    async function loadStatus() {
+      if (!currentUser?.id) return;
+      const s = await getGoogleCalendarStatus(currentUser.id);
+      if (mounted) setGoogleStatus({ connected: !!s.connected });
+    }
+    void loadStatus();
+    return () => { mounted = false; };
+  }, [currentUser?.id]);
 
   useEffect(() => {
     let mounted = true;
@@ -551,6 +567,23 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
             >
               Schedule
             </button>
+            {googleStatus?.connected ? (
+              <button
+                onClick={async () => { if (currentUser?.id) { await disconnectGoogleCalendar(currentUser.id); setGoogleStatus({ connected: false }); } }}
+                className="px-3 py-1 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-100"
+                title="Disconnect Google Calendar"
+              >
+                Disconnect Google
+              </button>
+            ) : (
+              <button
+                onClick={() => startGoogleCalendarAuth('/oauth2callback')}
+                className="px-3 py-1 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-100"
+                title="Connect Google Calendar"
+              >
+                Connect Google
+              </button>
+            )}
             <a
               href={(process.env.NEXT_PUBLIC_CAL_LINK || 'https://cal.com/')}
               target="_blank"

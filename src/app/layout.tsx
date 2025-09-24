@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Project Management App",
-  description: "A modern project management application",
+  title: "BRMH Project Management",
+  description: "BRMH Project Management platform",
 };
 
 export default function RootLayout({
