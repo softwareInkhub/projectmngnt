@@ -19,6 +19,14 @@ const nextConfig = {
   
   // Experimental features (none required for Next.js 15 app router)
   experimental: {},
+  async rewrites() {
+    return [
+      {
+        source: '/authPage/browser-callback',
+        destination: '/authPage/oauth2callback',
+      },
+    ];
+  },
   
   // Webpack configuration
   webpack: (config, { isServer }) => {
