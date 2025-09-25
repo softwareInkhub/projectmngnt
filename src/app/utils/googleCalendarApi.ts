@@ -3,14 +3,20 @@
 
 import { apiService } from './apiService';
 
+export interface CalendarDateTime {
+    dateTime: string;
+    timeZone?: string;
+}
+
 export interface CalendarEventInput {
 	title: string;
 	description?: string;
 	location?: string;
-	start: string; // ISO string
-	end: string;   // ISO string
+	start: string | CalendarDateTime; // RFC3339 string or object with timezone
+	end: string | CalendarDateTime;   // RFC3339 string or object with timezone
 	externalId?: string; // id from our app (e.g., task id)
 	attendees?: { email: string; optional?: boolean }[];
+	userId?: string; // current user id for server to locate tokens
 }
 
 export interface CalendarEventResponse {
@@ -56,8 +62,9 @@ export function getConnectUrl(redirectUri?: string) {
 }
 
 export async function createEvent(input: CalendarEventInput): Promise<CalendarEventResponse | null> {
-	try {
-		const res = await fetch(`${getBaseUrl()}/google/calendar/events`, {
+    try {
+        // Use Next.js API route to ensure proper server-side token handling and timezone payload
+        const res = await fetch(`/api/google/calendar/events`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

@@ -437,6 +437,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
             end: fmtWithOffset(end),
             externalId: newMeeting.id,
             location: owner ? `Owner: ${owner}` : undefined,
+            userId: currentUser?.id,
           });
         }
       } catch (e) {
