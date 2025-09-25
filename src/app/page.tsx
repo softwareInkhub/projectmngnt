@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ClientLayout from './components/ClientLayout';
+import { UserProvider } from './contexts/UserContext';
 import { validateToken } from './utils/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://brmh.in";
@@ -53,5 +54,9 @@ export default function Home() {
     return null; // Will redirect to auth page
   }
 
-  return <ClientLayout />;
+  return (
+    <UserProvider>
+      <ClientLayout />
+    </UserProvider>
+  );
 }
