@@ -37,18 +37,6 @@ export default function Sidebar({
   isMobileOpen, 
   onMobileClose 
 }: SidebarProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, type: "dashboard" },
@@ -68,234 +56,62 @@ export default function Sidebar({
     }
   };
 
-  // Mobile sidebar - Enhanced
-  if (isMobile) {
-    return (
-      <aside className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out ${
-        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        {/* Enhanced Backdrop */}
-        <div 
-          className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
-            isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-          onClick={onMobileClose}
-          style={{ zIndex: 49 }}
-        />
-        
-        {/* Enhanced Sidebar Content */}
-        <div className="relative h-full w-60 max-w-[85vw] bg-white shadow-2xl flex flex-col mobile-optimized" style={{ zIndex: 50 }}>
-          {/* Enhanced Header with branding */}
-          <div className="flex items-center justify-between p-3 border-b border-gray-100">
-            <div className="flex items-center gap-0">
-              <div className="relative h-8 w-8 ml-2">
-                <Image src="/Screenshot_2025-09-24_131002-removebg-preview.png" alt="Logo" fill sizes="32px" className="object-contain"/>
-              </div>
-              <div className="relative h-7 w-[140px] -ml-2">
-                <Image src="/Screenshot 2025-09-24 131821.png" alt="BRMH Project Management" fill sizes="140px" className="object-contain"/>
-              </div>
-            </div>
-            <button 
-              onClick={onMobileClose}
-              className="p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700 relative z-10 mobile-haptic"
-              style={{ zIndex: 51 }}
-              aria-label="Close navigation"
-            >
-              <X size={18} />
-            </button>
-          </div>
-          
-          {/* Enhanced Navigation Items */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin">
-            {navItems.map((item, index) => {
-              const Icon = item.icon;
-              const isDraggable = isGridMode;
-              const isActive = activeTab === index;
-              
-              return (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    onNavClick(index);
-                    // Close mobile sidebar after navigation
-                    if (onMobileClose) {
-                      onMobileClose();
-                    }
-                  }}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 text-left font-medium group mobile-haptic ${
-                    isActive
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25"
-                      : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 border border-transparent hover:border-gray-200"
-                  }`}
-                  draggable={isDraggable}
-                  onDragStart={(e) => handleDragStart(e, item)}
-                  aria-label={item.label}
-                >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                    isActive 
-                      ? "bg-white/20 backdrop-blur-sm" 
-                      : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
-                  }`}>
-                    <Icon size={16} className={isActive ? "text-white" : "text-gray-600"} />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <span className={`text-xl font-medium transition-colors duration-300 ${
-                      isActive ? "text-white" : "text-gray-700"
-                    }`}>
-                      {item.label}
-                    </span>
-                  </div>
-                  {isDraggable && (
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronRight size={14} className="text-gray-400" />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-          
-          {/* Logout Button */}
-          <div className="px-3 pb-3 pt-1">
-            <button 
-              onClick={async () => {
-                try {
-                  await logout();
-                  window.location.href = '/authPage';
-                } catch (error) {
-                  console.error('Logout failed:', error);
-                  window.location.href = '/authPage';
-                }
-              }}
-              className="w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 text-left font-medium bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 hover:border-red-300"
-              aria-label="Sign Out"
-            >
-              <LogOut size={16} />
-              <span className="text-base font-medium">Sign Out</span>
-            </button>
-          </div>
-          
-        </div>
-      </aside>
-    );
-  }
+  // Fixed compact sidebar (no expandable behavior)
 
   // Desktop sidebar (existing code)
   return (
     <aside
-      className={`sticky left-0 top-0 h-screen z-30 flex flex-col items-center bg-gradient-to-b from-white to-gray-50 border-r border-neutral-200 transition-all duration-300 ease-in-out ${
-        isExpanded ? 'w-52' : 'w-16'
-      } shadow-lg`}
+      className={"sticky left-0 top-0 h-screen z-30 flex flex-col items-center bg-gradient-to-b from-white to-gray-50 border-r border-neutral-200 w-20 shadow-lg"}
     >
-
-      {/* Brand at top */}
-      <div className="flex items-center gap-0 mt-3 mb-0">
-        <div className="relative h-18 w-18 ml-3">
-          <Image src="/Screenshot_2025-09-24_131002-removebg-preview.png" alt="Logo" fill sizes="36px" className="object-contain"/>
+      {/* Brand badge */}
+      <div className="mt-3 mb-4">
+        <div className="w-10 h-10 rounded-xl text-[25px] bg-gradient-to-br from-yellow-300 to-amber-400 flex items-center justify-center text-white font-bold shadow-md">
+          B
         </div>
-        {isExpanded && (
-          <div className="relative h-18 w-[150px] -ml-3">
-            <Image src="/Screenshot 2025-09-24 131821.png" alt="BRMH Project Management" fill sizes="160px" className="object-contain"/>
-          </div>
-        )}
       </div>
 
-      {/* Expand/Collapse Button */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="mt-4 mb-2 p-2 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 text-neutral-500 hover:shadow-md"
-        aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
-      >
-        {isExpanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-      </button>
-
-      {/* Navigation Items */}
-      <nav className="flex flex-col gap-3 flex-1 w-full items-center px-2">
+      {/* Navigation Items - compact icons with labels */}
+      <nav className="flex flex-col items-center gap-4 flex-1 w-full px-2">
         {navItems.map((item, idx) => {
           const Icon = item.icon;
-          const isDraggable = isGridMode;
           const isActive = activeTab === idx;
-          
+          const isDraggable = isGridMode;
           return (
             <button
               key={item.label}
-              className={`group flex items-center w-full px-3 py-3 rounded-xl transition-all duration-300 ${
-                isActive 
-                  ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25" 
-                  : "hover:bg-neutral-100 hover:text-neutral-700 text-neutral-500 hover:shadow-md"
-              } ${isExpanded ? 'justify-start gap-3' : 'justify-center'} ${
-                isDraggable ? 'cursor-grab active:cursor-grabbing hover:shadow-lg' : ''
-              }`}
-              onClick={() => {
-                onNavClick(idx);
-              }}
+              className={`flex flex-col items-center gap-1 w-full py-2 rounded-xl transition-all duration-300 ${
+                isActive ? 'text-blue-600' : 'text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100'
+              } ${isDraggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
+              onClick={() => onNavClick(idx)}
               draggable={isDraggable}
-              onDragStart={(e) => handleDragStart(e, item)}
+              onDragStart={(e) => onDragStart && onDragStart(e, item)}
               aria-label={item.label}
             >
-              <div className={`flex items-center justify-center rounded-lg transition-all duration-300 ${
-                isActive
-                  ? "bg-white/20 backdrop-blur-sm p-1"
-                  : "p-1"
-              }`}>
-                <Icon 
-                  className={`transition-all duration-300 ${
-                    isExpanded ? 'flex-shrink-0' : 'mx-auto'
-                  }`} 
-                  size={20} 
-                  strokeWidth={isActive ? 2.5 : 1.5} 
-                />
-                {isDraggable && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                )}
-              </div>
-              {isExpanded && (
-                <span className="text-xl font-medium truncate transition-all duration-300">
-                  {item.label}
-                </span>
-              )}
-              {isDraggable && isExpanded && (
-                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                </div>
-              )}
+              <Icon size={24} strokeWidth={isActive ? 2.4 : 1.8} />
+              <span className={`leading-none ${isActive ? 'text-blue-600' : ''} text-[12px] font-semibold`}>{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      {/* Logout Button */}
-      <div className="mt-1">
+      {/* Logout at bottom */}
+      <div className="mb-3 w-full px-2">
         <button
-        onClick={async () => {
-          try {
-            await logout();
-            window.location.href = '/authPage';
-          } catch (error) {
-            console.error('Logout failed:', error);
-            window.location.href = '/authPage';
-          }
-        }}
-        className={`group flex items-center w-full px-3 py-3 rounded-xl transition-all duration-300 hover:bg-red-50 hover:text-red-600 text-neutral-500 hover:shadow-md ${
-          isExpanded ? 'justify-start gap-3' : 'justify-center'
-        }`}
-        aria-label="Logout"
-      >
-        <div className="flex items-center justify-center rounded-lg transition-all duration-300 p-1">
-          <LogOut 
-            className={`transition-all duration-300 ${
-              isExpanded ? 'flex-shrink-0' : 'mx-auto'
-            }`} 
-            size={20} 
-            strokeWidth={1.5} 
-          />
-        </div>
-        {isExpanded && (
-          <span className="text-lg font-medium truncate transition-all duration-300">
-            Logout
-          </span>
-         )}
-       </button>
+          onClick={async () => {
+            try {
+              await logout();
+              window.location.href = '/authPage';
+            } catch (error) {
+              console.error('Logout failed:', error);
+              window.location.href = '/authPage';
+            }
+          }}
+          className="w-full flex flex-col items-center gap-1 py-2 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+          aria-label="Logout"
+        >
+          <LogOut size={20} />
+          <span className="text-[12px] font-semibold">Logout</span>
+        </button>
       </div>
     </aside>
   );

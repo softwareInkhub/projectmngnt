@@ -28,17 +28,17 @@ import ResponsiveSheetContent from './ResponsiveSheetContent';
 
 // Import actual sheet components
 // DashboardPage removed - using SimpleDashboard from ClientLayout
-import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
-import TeamsPageSheet from './TeamsPageSheet';
-import DepartmentsPage from './DepartmentsPage';
+import ProjectsAnalyticsPage from '../projects/page';
+import TeamsPageSheet from '../teams/components/TeamsPageSheet';
+// import DepartmentsPage from './DepartmentsPage';
 import SprintsPage from './SprintsPage';
 import StoriesPage from './StoriesPage';
-import CalendarPage from './CalendarPage';
-import ReportsPage from './ReportsPage';
-import SettingsPage from './SettingsPage';
-import NotificationsPage from './NotificationsPage';
-import CompaniesPage from './CompaniesPage';
-import TasksPage from './TasksPage';
+import CalendarPage from '../calander/page';
+import ReportsPage from '../reports/page';
+import SettingsPage from '../setting/page';
+import NotificationsPage from '../notification/page';
+import CompaniesPage from '../companies/page';
+import TasksPage from '../tasks/page';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -89,7 +89,7 @@ export default function GridLayoutManager({ onOpenTab, draggedItem, onDropItem }
     { type: 'projects', title: 'Projects Analytics', component: ProjectsAnalyticsPage },
     { type: 'tasks', title: 'Tasks', component: TasksPage },
     { type: 'teams', title: 'Teams', component: TeamsPageSheet },
-    { type: 'departments', title: 'Departments', component: DepartmentsPage },
+    // { type: 'departments', title: 'Departments', component: DepartmentsPage },
     { type: 'sprints', title: 'Sprints', component: SprintsPage },
     { type: 'stories', title: 'Stories', component: StoriesPage },
     { type: 'calendar', title: 'Calendar', component: CalendarPage },

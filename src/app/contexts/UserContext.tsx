@@ -55,40 +55,38 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
       let userData = null;
 
-      // First, try to get user info from the auth/me endpoint (Cognito)
+      // First, try to get user info from an optional auth endpoint (tolerate 404)
       try {
-        console.log('🔄 Trying /auth/me endpoint...');
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+        const AUTH_ENDPOINT = (process.env.NEXT_PUBLIC_AUTH_ENDPOINT || '/auth').trim();
+        console.log(`🔄 Trying AUTH endpoint: ${AUTH_ENDPOINT}`);
+        const response = await fetch(`${API_BASE_URL}${AUTH_ENDPOINT}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
         });
-
-        console.log('🔄 /auth/me response status:', response.status);
-        
+        console.log(`🔄 AUTH endpoint response status:`, response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log('🔄 /auth/me response data:', data);
-          userData = data.user || data;
-          
-          // If we got data from Cognito, use it directly
+          console.log(`🔄 AUTH endpoint response data:`, data);
+          userData = (data && (data.user || data)) || null;
           if (userData) {
-            console.log('✅ Got user data from Cognito /auth/me:', userData);
+            console.log(`✅ Got user data from AUTH endpoint:`, userData);
             setCurrentUser(userData);
             setLoading(false);
             return;
           }
-        } else {
+        } else if (response.status !== 404) {
+          // Only log non-404 issues; 404 just means endpoint not present on this backend
           const errorText = await response.text();
-          console.log('❌ /auth/me failed with status:', response.status, errorText);
+          console.log(`❌ AUTH endpoint failed with status:`, response.status, errorText);
         }
-      } catch (authMeError) {
-        console.log('❌ /auth/me error:', authMeError);
+      } catch (authProbeError) {
+        console.log('❌ Auth probe error:', authProbeError);
       }
 
-      // If /auth/me doesn't work, try to decode JWT token for user info
+      // If /auth doesn't work, try to decode JWT token for user info
       if (!userData) {
         try {
           const idToken = localStorage.getItem('id_token');
@@ -117,7 +115,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         }
       }
 
-      // If /auth/me doesn't work, try to get user by email from localStorage
+      // If /auth doesn't work, try to get user by email from localStorage
       if (!userData) {
         const email = localStorage.getItem('user_email');
         if (email) {

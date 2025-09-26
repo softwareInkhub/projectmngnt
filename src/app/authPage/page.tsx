@@ -1,20 +1,9 @@
 "use client";
-
-
-
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-
-
-
 const API_BASE_URL = "https://brmh.in";
 const REDIRECT_URI = "https://projectmngnt.vercel.app/authPage";
-
-
-
-
 
 
 export default function AuthPage() {

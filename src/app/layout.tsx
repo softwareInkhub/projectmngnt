@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthGuard from "./components/AuthGuard";
 import { UserProvider } from "./contexts/UserContext";
+// Shell is mounted from AuthGuard only when authed
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

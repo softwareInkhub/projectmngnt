@@ -2,29 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import ClientLayout from "./ClientLayout";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isAuthed, setIsAuthed] = useState<boolean>(false);
 
   useEffect(() => {
-    // Allow unauthenticated access to the auth page itself
-    if (pathname?.startsWith("/authPage")) {
-      setCheckingAuth(false);
-      return;
-    }
+    const onAuthCheck = () => {
+      // Allow unauthenticated access to the auth page itself
+      if (pathname?.startsWith('/authPage')) {
+        setIsAuthed(false);
+        setCheckingAuth(false);
+        return;
+      }
 
-    try {
       const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       const idToken = typeof window !== 'undefined' ? localStorage.getItem('id_token') : null;
-
-      if (!accessToken || !idToken || accessToken === 'mock-token-disabled') {
+      const authed = !!accessToken && !!idToken && accessToken !== 'mock-token-disabled';
+      setIsAuthed(authed);
+      if (!authed) {
         router.push('/authPage');
       }
-    } finally {
       setCheckingAuth(false);
-    }
+    };
+
+    onAuthCheck();
   }, [pathname, router]);
 
   if (checkingAuth) {
@@ -38,6 +43,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  // On auth routes, show the page content without shell
+  if (pathname?.startsWith('/authPage')) return <>{children}</>;
+
+  // On app routes, only render shell when authed
+  if (!isAuthed) return null;
+
+  return (
+    <ClientLayout>
+      {children}
+    </ClientLayout>
+  );
 }
 

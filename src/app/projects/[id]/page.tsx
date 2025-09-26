@@ -16,38 +16,13 @@ import {
   AlertCircle,
   FileText,
   Tag,
-  Edit,
   Share2,
-  Download,
   MoreHorizontal,
   Folder,
-  Clock,
-  MapPin,
-  Phone,
-  Mail,
-  Globe,
-  Star,
-  Award,
-  TrendingUp,
   BarChart3,
-  PieChart,
-  Activity,
-  Zap,
-  Layers,
-  GitCommit,
-  Timer,
-  Flag,
-  Heart,
-  ExternalLink,
-  MessageSquare,
-  Bell,
-  Settings,
-  Search,
-  Filter,
   Grid3X3,
-  List,
   Eye,
-  Loader
+  
 } from "lucide-react";
 import { ProjectApiService, ProjectData, transformProjectToUI } from "../../utils/projectApi";
 import { TABLE_NAMES } from "../../config/environment";
@@ -203,23 +178,7 @@ export default function ProjectDetailPage() {
     return "bg-red-500";
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "In Progress": return "bg-blue-100 text-blue-700";
-      case "Planning": return "bg-yellow-100 text-yellow-700";
-      case "Almost Done": return "bg-green-100 text-green-700";
-      default: return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "High": return "bg-red-100 text-red-700";
-      case "Medium": return "bg-yellow-100 text-yellow-700";
-      case "Low": return "bg-green-100 text-green-700";
-      default: return "bg-gray-100 text-gray-700";
-    }
-  };
+  
 
   if (loading) {
     return (
