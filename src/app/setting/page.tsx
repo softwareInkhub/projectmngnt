@@ -5,15 +5,7 @@ import {
   Settings, User, Bell, Shield, Palette, Globe, Mail, Smartphone, Monitor, Moon, Sun, Eye, EyeOff, ChevronRight, Star, FilterX, Grid3X3, List, Heart, ExternalLink, GitCommit, DollarSign, UserCheck, Timer, Flag, Layers, Zap, SortAsc, CheckSquare, Square, Play, Pause, StopCircle, RotateCcw, LineChart, Crown, Trophy, Medal, Users2, UserX, UserCheck2, UserMinus, UserPlus2, Video, Phone, MessageSquare, AlertCircle, Info, Award, TrendingUp, Paperclip, FileText, BarChart, PieChart, ScatterChart, AreaChart, Gauge, Target, TrendingDown, Activity, Filter, Share2, Archive, Copy, Trash2, ArrowUpRight, ArrowDownRight, Minus, Building, MapPin, Home, School, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Folder, HardDrive, Cpu, HardDriveIcon, Network, WifiIcon, Bluetooth, BluetoothSearching, SmartphoneIcon, Tablet, Upload, Key, Lock, Unlock, Database, Server, Cloud, Wifi, WifiOff, Volume2, VolumeX, Languages, Briefcase
 } from "lucide-react";
 
-interface SettingsPageProps {
-  open?: boolean;
-  onClose?: () => void;
-  onOpenTab?: (tabName: string, context?: any) => void;
-  project?: any;
-  context?: any;
-}
-
-export default function SettingsPageComponent({ open = true, onClose, onOpenTab, project, context }: SettingsPageProps = {}) {
+export default function SettingsPageComponent() {
   const { currentUser, loading, refreshUserData } = useUser();
   const [activeTab, setActiveTab] = useState("profile");
 

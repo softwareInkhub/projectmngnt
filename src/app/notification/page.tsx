@@ -153,15 +153,7 @@ const analytics = {
   todayNotifications: notifications.filter(n => n.timestamp.includes("hours ago") || n.timestamp.includes("hour ago")).length
 };
 
-interface NotificationsPageProps {
-  open?: boolean;
-  onClose?: () => void;
-  onOpenTab?: (tabName: string, context?: any) => void;
-  project?: any;
-  context?: any;
-}
-
-export default function NotificationsPage({ open = true, onClose, onOpenTab, project, context }: NotificationsPageProps = {}) {
+export default function NotificationsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");

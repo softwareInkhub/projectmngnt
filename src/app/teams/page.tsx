@@ -174,7 +174,7 @@ const tags = [
   "QA", "Marketing", "Sales", "Support", "Research"
 ];
 
-export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: string, title?: string, context?: any) => void; context?: { company: string } }) {
+export default function TeamsPage() {
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
   const [originalTeams, setOriginalTeams] = useState<TeamData[]>([]); // Store original team data
@@ -205,7 +205,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
     id: "" as string | number, // Add ID field to preserve team ID when editing
     name: "",
     description: "",
-    project: context?.company || projects[0],
+    project: projects[0] || "",
     members: [] as string[],
     roles: {} as Record<string, string>,
     budget: "",
@@ -324,7 +324,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
   useEffect(() => {
     fetchTeams();
     fetchProjects();
-  }, [context?.company]);
+  }, []);
 
   // Debug: Monitor projects state changes
   useEffect(() => {
@@ -586,7 +586,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           id: "",
           name: "",
           description: "",
-          project: context?.company || projects[0],
+          project: projects[0] || "",
           members: [],
           roles: {},
           budget: "",
@@ -891,9 +891,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
 
   const filteredTeams = teams.filter(team => {
     // Filter by company if context is provided
-    if (context?.company && team.project !== context.company) {
-      return false;
-    }
+    // Removed context filter since context prop was removed
     
     const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          team.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -994,7 +992,7 @@ export default function TeamsPage({ onOpenTab, context }: { onOpenTab?: (type: s
           id: "",
           name: "",
           description: "",
-          project: context?.company || projects[0],
+          project: projects[0] || "",
           members: [],
           roles: {},
           budget: "",

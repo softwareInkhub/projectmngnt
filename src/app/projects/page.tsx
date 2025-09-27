@@ -113,11 +113,6 @@ const statusPillClass = (status: string) =>
     { bg: 'bg-gradient-to-r from-blue-50 to-blue-100', border: 'border-blue-200' }
   ];
 
-interface ProjectsAnalyticsPageProps {
-  onOpenTab?: (tabType: string, context?: Record<string, unknown>) => void;
-  onViewProject?: (project: any) => void;
-}
-
 // Helper function to safely parse project tasks
 const parseProjectTasks = (tasksString: string | number | undefined): string[] => {
   if (!tasksString) return [];
@@ -136,7 +131,7 @@ const parseProjectTasks = (tasksString: string | number | undefined): string[] =
   }
 };
 
-export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: ProjectsAnalyticsPageProps = {}) {
+export default function ProjectsAnalyticsPage() {
   const router = useRouter();
   
   // API state
@@ -1226,13 +1221,8 @@ export default function ProjectsAnalyticsPage({ onOpenTab, onViewProject }: Proj
                             <button
                               type="button"
                               onClick={() => {
-                                    // Open companies page using the app's tab system
-                                    if (onOpenTab) {
-                                      onOpenTab("companies");
-                                    } else {
-                                      // Fallback to window location if onOpenTab is not available
-                                      window.location.href = '/?tab=companies';
-                                    }
+                                    // Navigate to companies page
+                                    window.location.href = '/companies';
                                 setShowCompanyDropdown(false);
                               }}
                                   className="w-full text-left px-2 py-1.5 hover:bg-blue-50 text-base text-blue-600 font-medium transition-colors"

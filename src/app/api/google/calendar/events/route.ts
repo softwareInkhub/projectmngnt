@@ -63,17 +63,17 @@ export async function POST(req: NextRequest) {
     if (!tokenRes.success || !tokenRes.data) {
       return NextResponse.json({ error: 'Google not connected', needsConnect: true }, { status: 401 });
     }
-    let { access_token, refresh_token, expiry_date } = tokenRes.data as { access_token?: string; refresh_token?: string; expiry_date?: number | null };
+    let { access_token, refresh_token: refreshToken, expiry_date } = tokenRes.data as { access_token?: string; refresh_token?: string; expiry_date?: number | null };
 
-    if (!refresh_token && !access_token) {
+    if (!refreshToken && !access_token) {
       return NextResponse.json({ error: 'Google not connected', needsConnect: true }, { status: 401 });
     }
 
     const now = Date.now();
     const isExpired = !access_token || (typeof expiry_date === 'number' && expiry_date <= now + 60_000);
-    if (isExpired && refresh_token) {
+    if (isExpired && refreshToken) {
       try {
-        const refreshed = await refreshAccessToken(refresh_token);
+        const refreshed = await refreshAccessToken(refreshToken);
         access_token = refreshed.access_token;
         const newExpiry = refreshed.expires_in ? now + refreshed.expires_in * 1000 : null;
         // Persist updated tokens

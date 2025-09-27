@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
-import TasksPage from './TasksPage';
-import TeamsPage from './TeamsPage';
+// import ProjectsAnalyticsPage from './ProjectsAnalyticsPage'; // File is commented out
+// import TasksPage from './TasksPage'; // File is commented out
+// import TeamsPage from './TeamsPage'; // File is commented out
 // DashboardPage removed - using ProjectsAnalyticsPage as placeholder
-import CalendarPage from './CalendarPage';
-import ReportsPage from './ReportsPage';
+// import CalendarPage from './CalendarPage'; // File is commented out
+// import ReportsPage from './ReportsPage'; // File is commented out
 import GridTasksPage from './GridTasksPage';
-import GridLayoutDemo from './GridLayoutDemo';
+// import GridLayoutDemo from './GridLayoutDemo'; // File is commented out
 
 interface LayoutComponentRendererProps {
   componentId: string;
@@ -26,21 +26,21 @@ export default function LayoutComponentRenderer({
   const renderComponent = () => {
     switch (componentId) {
       case 'projects':
-        return <ProjectsAnalyticsPage onOpenTab={onOpenTab} onViewProject={onViewProject || (() => {})} />;
+        return <div className="flex items-center justify-center h-full text-slate-500"><p>Projects component not available</p></div>;
       case 'tasks':
-        return <TasksPage context={{ company: 'Default Company' }} />;
+        return <div className="flex items-center justify-center h-full text-slate-500"><p>Tasks component not available</p></div>;
       case 'teams':
-        return <TeamsPage onOpenTab={onOpenTab} context={{ company: 'Default Company' }} />;
+        return <div className="flex items-center justify-center h-full text-slate-500"><p>Teams component not available</p></div>;
       case 'analytics':
-        return <ProjectsAnalyticsPage onOpenTab={onOpenTab || (() => {})} />; // Using ProjectsAnalyticsPage as placeholder
+        return <div className="flex items-center justify-center h-full text-slate-500"><p>Analytics component not available</p></div>;
       case 'calendar':
-        return <CalendarPage onOpenTab={onOpenTab || (() => {})} />;
+        return <div className="flex items-center justify-center h-full text-slate-500"><p>Calendar component not available</p></div>;
       case 'reports':
-        return <ReportsPage onOpenTab={onOpenTab || (() => {})} />;
+        return <div className="flex items-center justify-center h-full text-slate-500"><p>Reports component not available</p></div>;
       case 'grid-tasks':
-        return <GridTasksPage onOpenTab={onOpenTab || (() => {})} />;
+        return <GridTasksPage />;
       case 'grid-demo':
-        return <GridLayoutDemo />;
+        return <div className="flex items-center justify-center h-full text-slate-500"><p>Grid demo component not available</p></div>;
       default:
         return (
           <div className="flex items-center justify-center h-full text-slate-500">

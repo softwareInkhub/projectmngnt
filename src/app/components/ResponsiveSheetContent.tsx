@@ -3,16 +3,16 @@
 
 import React from 'react';
 // DashboardPage removed - using ProjectsAnalyticsPage as placeholder
-import ProjectsAnalyticsPage from './ProjectsAnalyticsPage';
-import TeamsPageSheet from './TeamsPageSheet';
-import TasksPage from './TasksPage';
-import CalendarPage from './CalendarPage';
-import ReportsPage from './ReportsPage';
-import NotificationsPage from './NotificationsPage';
-import SettingsPage from './SettingsPage';
-import CompaniesPage from './CompaniesPage';
-import DepartmentsPage from './DepartmentsPage';
-import SprintsPage from './SprintsPage';
+// import ProjectsAnalyticsPage from './ProjectsAnalyticsPage'; // File is commented out
+// // import TeamsPageSheet from './TeamsPageSheet'; // File is commented out // File is commented out
+// import TasksPage from './TasksPage'; // File is commented out
+// import CalendarPage from './CalendarPage'; // File is commented out
+// import ReportsPage from './ReportsPage'; // File is commented out
+// import NotificationsPage from './NotificationsPage'; // File is commented out
+// import SettingsPage from './SettingsPage'; // File is commented out
+// import CompaniesPage from './CompaniesPage'; // File is commented out
+// import DepartmentsPage from './DepartmentsPage'; // File is commented out
+// import SprintsPage from './SprintsPage'; // File is commented out
 import StoriesPage from './StoriesPage';
 
 interface ResponsiveSheetContentProps {
@@ -57,9 +57,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-                        <ProjectsAnalyticsPage
-              onOpenTab={onOpenTab ? (type: string) => onOpenTab(type, sheetTitle, context) : (() => {})}
-            />
+                        <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Projects component not available</p>
+            </div>
           </div>
         );
       case 'projects':
@@ -69,11 +69,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-                        <ProjectsAnalyticsPage
-              onOpenTab={onOpenTab ? (tabType: string, context?: Record<string, unknown>) => {
-                onOpenTab(tabType, undefined, context);
-              } : undefined}
-            />
+                        <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Projects component not available</p>
+            </div>
           </div>
         );
       case 'teams':
@@ -83,12 +81,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <TeamsPageSheet 
-              open={true}
-              onClose={() => {}}
-              onOpenTab={onOpenTab}
-              context={context as { company: string } | undefined}
-            />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Teams component not available</p>
+            </div>
           </div>
         );
       case 'tasks':
@@ -98,9 +93,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <TasksPage 
-              context={context as { company: string } | undefined}
-            />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Tasks component not available</p>
+            </div>
           </div>
         );
       case 'calendar':
@@ -110,9 +105,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <CalendarPage
-              onOpenTab={onOpenTab}
-            />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Calendar component not available</p>
+            </div>
           </div>
         );
       case 'reports':
@@ -122,7 +117,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <ReportsPage />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Reports component not available</p>
+            </div>
           </div>
         );
       case 'notifications':
@@ -132,7 +129,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <NotificationsPage />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Notifications component not available</p>
+            </div>
           </div>
         );
       case 'settings':
@@ -142,7 +141,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <SettingsPage />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Settings component not available</p>
+            </div>
           </div>
         );
       case 'companies':
@@ -152,9 +153,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <CompaniesPage 
-              context={context as { company: string } | undefined}
-            />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Companies component not available</p>
+            </div>
           </div>
         );
       case 'projects-analytics':
@@ -164,11 +165,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <ProjectsAnalyticsPage 
-              onOpenTab={onOpenTab ? (tabType: string, context?: Record<string, unknown>) => {
-                onOpenTab(tabType, undefined, context);
-              } : undefined}
-            />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Projects component not available</p>
+            </div>
           </div>
         );
       case 'departments':
@@ -178,11 +177,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <DepartmentsPage 
-              open={true}
-              onClose={() => {}}
-              onOpenTab={onOpenTab}
-            />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Departments component not available</p>
+            </div>
           </div>
         );
       case 'sprints':
@@ -192,11 +189,9 @@ export default function ResponsiveSheetContent({
             data-sheet-width={width}
             data-sheet-height={height}
           >
-            <SprintsPage 
-              open={true}
-              onClose={() => {}}
-              onOpenTab={onOpenTab}
-            />
+            <div className="flex items-center justify-center h-full text-slate-500">
+              <p>Sprints component not available</p>
+            </div>
           </div>
         );
       case 'stories':

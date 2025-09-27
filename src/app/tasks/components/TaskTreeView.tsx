@@ -26,7 +26,7 @@ import {
   FolderOpen,
   X
 } from 'lucide-react';
-import { TaskTreeNode } from '../utils/taskApi';
+import { TaskTreeNode } from '../../utils/taskApi';
 
 interface TaskTreeViewProps {
   tasks: TaskTreeNode[];

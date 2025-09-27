@@ -39,7 +39,7 @@ const priorities = ["Low", "Medium", "High", "Critical"];
 const companySizes = ["Small", "Medium", "Large"];
 const companyStatuses = ["Active", "Inactive", "On Hold"];
 
-export default function CompaniesPage({ context }: { context?: { company: string } }) {
+export default function CompaniesPage() {
   const router = useRouter();
   const [selectedCompany, setSelectedCompany] = useState(1);
   const [view, setView] = useState("overview");

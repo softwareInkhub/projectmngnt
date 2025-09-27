@@ -86,7 +86,7 @@ const statusColors = {
   scheduled: 'bg-slate-100 text-slate-700'
 };
 
-export default function ReportsPage({ onOpenTab }: { onOpenTab?: (tabType: string, context?: any) => void }) {
+export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>(mockReports);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');

@@ -13,11 +13,7 @@ interface CalendarTaskData extends TaskData {
   scheduledDate?: string;
 }
 
-interface CalendarPageProps {
-  onOpenTab?: (type: string, title?: string) => void;
-}
-
-export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
+export default function CalendarPage() {
   const { currentUser } = useUser();
   const [dateRange, setDateRange] = useState({
     start: new Date(2025, 8, 1), // September 1, 2025
@@ -136,6 +132,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const dateColumns = generateDateColumns();
     const index = dateColumns.findIndex((d) => d.toDateString() === today.toDateString());
     if (index < 0) return;
 
