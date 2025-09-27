@@ -7,7 +7,11 @@ import { env } from '../config/environment';
 
 const GC_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GC_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
-const SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
+const SCOPES = [
+  'https://www.googleapis.com/auth/calendar.events',
+  'https://www.googleapis.com/auth/calendar',
+  'https://www.googleapis.com/auth/meetings.space.created'
+];
 const TABLE_NAME = 'project-management-calendar';
 
 function base64UrlEncode(buffer: ArrayBuffer): string {

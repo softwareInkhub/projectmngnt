@@ -23,6 +23,8 @@ export interface CalendarEventResponse {
 	googleEventId: string;
 	status: string;
 	link?: string;
+	meetLink?: string;
+	meetPhoneNumber?: string;
 }
 
 function getAuthHeaders(): Record<string, string> {

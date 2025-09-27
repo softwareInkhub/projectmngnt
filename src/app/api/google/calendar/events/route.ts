@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     const payloadStart = normalize(start);
     const payloadEnd = normalize(end);
 
-    // Create the Calendar event via Google API
+    // Create the Calendar event via Google API with Google Meet
     const eventPayload: Record<string, any> = {
       summary: title,
       description,
@@ -109,9 +109,20 @@ export async function POST(req: NextRequest) {
       end: payloadEnd,
       attendees: attendees?.map(a => ({ email: a.email, optional: !!a.optional })),
       extendedProperties: externalId ? { private: { externalId } } : undefined,
+      // Add Google Meet conference data
+      conferenceData: {
+        createRequest: {
+          requestId: `meet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          conferenceSolutionKey: {
+            type: 'hangoutsMeet'
+          }
+        }
+      },
+      // Ensure the event is created with conference data
+      conferenceDataVersion: 1
     };
 
-    const createRes = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+    const createRes = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -136,6 +147,8 @@ export async function POST(req: NextRequest) {
       googleEventId: eventJson.id,
       status: eventJson.status,
       link: eventJson.htmlLink,
+      meetLink: eventJson.conferenceData?.entryPoints?.[0]?.uri || null,
+      meetPhoneNumber: eventJson.conferenceData?.entryPoints?.[0]?.pin || null,
     });
   } catch (e: any) {
     return NextResponse.json({ error: 'unexpected_error', message: e?.message || 'Unknown error' }, { status: 500 });

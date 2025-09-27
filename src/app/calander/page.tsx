@@ -11,6 +11,8 @@ import { useUser } from '../contexts/UserContext';
 // Extended TaskData interface for calendar display
 interface CalendarTaskData extends TaskData {
   scheduledDate?: string;
+  meetLink?: string | null;
+  meetPhoneNumber?: string | null;
 }
 
 export default function CalendarPage() {
@@ -395,10 +397,13 @@ export default function CalendarPage() {
         parentId: meetingInfo.parentId || null,
         createdAt: meetingInfo.createdAt || new Date().toISOString(),
         updatedAt: meetingInfo.updatedAt || new Date().toISOString(),
-        scheduledDate: selectedDate.toISOString().split('T')[0] // Add scheduled date for calendar display
+        scheduledDate: selectedDate.toISOString().split('T')[0], // Add scheduled date for calendar display
+        meetLink: null, // Will be updated after Google Calendar sync
+        meetPhoneNumber: null // Will be updated after Google Calendar sync
       };
-      setTasks(prev => [...prev, newMeeting]);
       
+      // Add meeting to state first
+      setTasks(prev => [...prev, newMeeting]);
       console.log('Meeting created successfully:', newMeeting);
 
       // Attempt to sync with Google Calendar (non-blocking)
@@ -430,7 +435,7 @@ export default function CalendarPage() {
           // Get user's timezone
           const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-          void createGoogleCalendarEvent({
+          const googleEvent = await createGoogleCalendarEvent({
             title: newMeeting.title,
             description: `${newMeeting.description || ''}\nProject: ${newMeeting.project || ''}`.trim(),
             start: { 
@@ -445,6 +450,21 @@ export default function CalendarPage() {
             location: owner ? `Owner: ${owner}` : undefined,
             userId: currentUser?.id,
           });
+
+          // Show Google Meet link if available and update the meeting in state
+          if (googleEvent?.meetLink) {
+            console.log('Google Meet link created:', googleEvent.meetLink);
+            
+            // Update the meeting in state with the Meet link
+            setTasks(prev => prev.map(task => 
+              task.id === newMeeting.id 
+                ? { ...task, meetLink: googleEvent.meetLink, meetPhoneNumber: googleEvent.meetPhoneNumber }
+                : task
+            ));
+            
+            // Show notification
+            alert(`Meeting scheduled with Google Meet!\nJoin link: ${googleEvent.meetLink}`);
+          }
         }
       } catch (e) {
         console.warn('Google Calendar sync failed (non-blocking):', e);
@@ -473,7 +493,9 @@ export default function CalendarPage() {
         parentId: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        scheduledDate: selectedDate.toISOString().split('T')[0]
+        scheduledDate: selectedDate.toISOString().split('T')[0],
+        meetLink: null, // No Meet link for fallback meetings
+        meetPhoneNumber: null
       };
       
       setTasks(prev => [...prev, localMeeting]);
@@ -776,6 +798,22 @@ export default function CalendarPage() {
                                       <div className="text-sm text-gray-500 mt-1 leading-tight">
                                         {meetingHour}:00 - {meetingDuration}h
                                       </div>
+                                      {meeting.meetLink && (
+                                        <div className="mt-1">
+                                          <a 
+                                            href={meeting.meetLink} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
+                                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                            </svg>
+                                            Join Meet
+                                          </a>
+                                        </div>
+                                      )}
                                     </div>
                                   );
                                 }
