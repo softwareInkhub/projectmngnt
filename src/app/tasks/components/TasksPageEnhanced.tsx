@@ -26,7 +26,8 @@ import {
 } from "../../utils/taskApi";
 import TaskTreeView from "./TaskTreeView";
 import TaskListView from "./TaskListView";
-// import EnhancedTaskModal from "../../components/EnhancedTaskModal"; // File is commented out
+import EnhancedTaskModal from "./EnhancedTaskModal";
+import TasksPage from "./TasksPageSheet";
 import UniversalDetailsModal from "../../components/UniversalDetailsModal";
 import { useTaskUpdates } from "../../hooks/useTaskUpdates";
 
@@ -537,9 +538,19 @@ export default function TasksPageEnhanced({
           {/* Inline Task Form - Show at top of page when editing */}
           {showEnhancedModal && (
             <div className="px-3 md:px-8 py-4">
-              <div className="flex items-center justify-center h-full text-slate-500">
-                <p>Enhanced Task Modal not available</p>
-              </div>
+              <EnhancedTaskModal
+                isOpen={showEnhancedModal}
+                onClose={() => {
+                  setShowEnhancedModal(false);
+                  setEditingTask(null);
+                  setParentTaskId(null);
+                }}
+                onSubmit={handleSubmitTask}
+                editingTask={editingTask}
+                parentTaskId={parentTaskId}
+                allTasks={tasks}
+                isLoading={isSubmittingTask}
+              />
             </div>
           )}
 

@@ -5,4 +5,4 @@ import TasksPageEnhanced from "./components/TasksPageEnhanced";
 
 export default function TasksPage() {
   return <TasksPageEnhanced />;
-} 
+}

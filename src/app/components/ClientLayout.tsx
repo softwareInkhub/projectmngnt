@@ -25,7 +25,7 @@ import TeamsPageSheet from "../teams/components/TeamsPageSheet";
 import SprintsPage from "./SprintsPage";
 import StoriesPage from "./StoriesPage";
 import TasksPageSheet from "../tasks/components/TasksPageSheet";
-import TasksPage from "../tasks/page";
+import TasksPage from "../tasks/components/EnhancedTaskModal";
 import TeamsPage from "../teams/page";
 import CalendarPage from "../calander/page";
 import ReportsPage from "../reports/page";
@@ -188,28 +188,28 @@ export default function ClientLayout({ children }: { children?: React.ReactNode 
 
     // Resolve component and title
     let component: React.ComponentType<any> | undefined;
-    let tabTitle = title || type.charAt(0).toUpperCase() + type.slice(1);
-
-    if (SHEET_COMPONENTS[type]) {
-      component = SHEET_COMPONENTS[type];
+      let tabTitle = title || type.charAt(0).toUpperCase() + type.slice(1);
+      
+      if (SHEET_COMPONENTS[type]) {
+        component = SHEET_COMPONENTS[type];
       if (!title) tabTitle = type.charAt(0).toUpperCase() + type.slice(1);
-    } else {
-      const sidebarTab = sidebarTabMap.find(tab => tab.type === type);
-      if (sidebarTab) {
-        component = sidebarTab.component;
+      } else {
+        const sidebarTab = sidebarTabMap.find(tab => tab.type === type);
+        if (sidebarTab) {
+          component = sidebarTab.component;
         if (!title) tabTitle = sidebarTab.title;
+        }
       }
-    }
-
-    if (!component) {
-      console.warn(`No component found for type: ${type}`);
+      
+      if (!component) {
+        console.warn(`No component found for type: ${type}`);
       return;
-    }
-
+      }
+      
     const uniqueKey = context ? `${type}-${JSON.stringify(context)}-${Math.random().toString(36).substr(2, 9)}` : `${type}-${Math.random().toString(36).substr(2, 9)}`;
     const newTabs = [...openTabs, { type, key: uniqueKey, title: tabTitle || type, component, context }];
     setOpenTabs(newTabs);
-    setActiveTabIdx(newTabs.length - 1);
+      setActiveTabIdx(newTabs.length - 1);
 
     // Navigate after state updates scheduled
     if (route) router.push(route);
@@ -258,14 +258,14 @@ export default function ClientLayout({ children }: { children?: React.ReactNode 
   const onSidebarNavClick = (idx: number) => {
     const tab = sidebarTabMap[idx];
     const route = routeMap[tab.type];
-
+    
     let customTitle = tab.title;
     if (tab.type === "projects") customTitle = "All Projects";
     if (tab.type === "companies") customTitle = "Companies";
 
     const existingIdx = openTabs.findIndex((t) => t.type === tab.type);
-    if (existingIdx !== -1) {
-      setActiveTabIdx(existingIdx);
+      if (existingIdx !== -1) {
+        setActiveTabIdx(existingIdx);
       if (route) router.push(route);
       return;
     }

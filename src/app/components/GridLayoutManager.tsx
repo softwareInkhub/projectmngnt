@@ -38,7 +38,7 @@ import ReportsPage from '../reports/page';
 import SettingsPage from '../setting/page';
 import NotificationsPage from '../notification/page';
 import CompaniesPage from '../companies/page';
-import TasksPage from '../tasks/page';
+import TasksPage from '../tasks/components/EnhancedTaskModal';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
