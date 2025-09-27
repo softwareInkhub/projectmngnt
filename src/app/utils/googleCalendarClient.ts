@@ -106,6 +106,10 @@ export async function handleGoogleCalendarCallback(currentUserId: string) {
     await apiService.createItem<Record<string, any>>(TABLE_NAME, item);
   }
 
+  // Also store in localStorage for immediate access
+  localStorage.setItem('google_calendar_connected', 'true');
+  localStorage.setItem('google_calendar_user_id', currentUserId);
+
   // Clean temp
   sessionStorage.removeItem('gc_state');
   sessionStorage.removeItem('gc_code_verifier');
@@ -115,6 +119,20 @@ export async function handleGoogleCalendarCallback(currentUserId: string) {
 }
 
 export async function getGoogleCalendarStatus(currentUserId: string) {
+  // Check localStorage first for immediate status
+  const localConnected = localStorage.getItem('google_calendar_connected') === 'true';
+  const localUserId = localStorage.getItem('google_calendar_user_id');
+  
+  if (localConnected && localUserId === currentUserId) {
+    // Also verify with backend
+    const r = await apiService.getItem<any>(TABLE_NAME, currentUserId);
+    if (r.success && r.data) {
+      const data = r.data as any;
+      return { connected: !!(data.refresh_token || data.access_token), provider: 'google', data };
+    }
+  }
+  
+  // Fallback to backend check
   const r = await apiService.getItem<any>(TABLE_NAME, currentUserId);
   if (!r.success || !r.data) return { connected: false };
   const data = r.data as any;
@@ -122,6 +140,10 @@ export async function getGoogleCalendarStatus(currentUserId: string) {
 }
 
 export async function disconnectGoogleCalendar(currentUserId: string) {
+  // Clear localStorage
+  localStorage.removeItem('google_calendar_connected');
+  localStorage.removeItem('google_calendar_user_id');
+  
   // Soft disconnect: remove tokens fields
   return apiService.updateItem<any>(TABLE_NAME, currentUserId, {
     access_token: '',

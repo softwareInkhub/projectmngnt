@@ -430,11 +430,20 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
           const durationHours = Math.max(parseFloat(String(workHours)) || 1, 0.5);
           const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);
 
+          // Get user's timezone
+          const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
           void createGoogleCalendarEvent({
             title: newMeeting.title,
             description: `${newMeeting.description || ''}\nProject: ${newMeeting.project || ''}`.trim(),
-            start: fmtWithOffset(start),
-            end: fmtWithOffset(end),
+            start: { 
+              dateTime: fmtWithOffset(start), 
+              timeZone: userTimezone 
+            },
+            end: { 
+              dateTime: fmtWithOffset(end), 
+              timeZone: userTimezone 
+            },
             externalId: newMeeting.id,
             location: owner ? `Owner: ${owner}` : undefined,
             userId: currentUser?.id,
@@ -594,7 +603,7 @@ export default function CalendarPage({ onOpenTab }: CalendarPageProps) {
               </button>
             ) : (
               <button
-                onClick={() => startGoogleCalendarAuth('https://projectmngnt.vercel.app/authPage/browser-callback')}
+                onClick={() => startGoogleCalendarAuth('/authPage/oauth2callback')}
                 className="px-3 py-1 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-100"
                 title="Connect Google Calendar"
               >
