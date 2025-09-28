@@ -39,16 +39,29 @@ const sendTaskNotification = async (taskData: TaskData) => {
   try {
     console.log('🔍 Starting task notification process for:', taskData.title);
     console.log('🔍 Endpoint:', TASK_NOTIFICATION_ENDPOINT);
+    console.log('🔍 Task data received:', taskData);
+    
+    // Validate task data
+    if (!taskData || !taskData.title) {
+      console.error('❌ Invalid task data provided for notification:', taskData);
+      return false;
+    }
     
     // Format dates
     const formatDate = (dateString: string) => {
       if (!dateString) return 'Not specified';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Invalid date';
+        return date.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      } catch (error) {
+        console.warn('Date formatting error:', error);
+        return 'Invalid date';
+      }
     };
 
     // Build the notification message
@@ -69,7 +82,16 @@ const sendTaskNotification = async (taskData: TaskData) => {
 
     console.log('🔍 Message to send:', message);
 
-    // Send the notification
+    // Validate endpoint
+    if (!TASK_NOTIFICATION_ENDPOINT || TASK_NOTIFICATION_ENDPOINT.trim() === '') {
+      console.error('❌ Notification endpoint is not configured');
+      return false;
+    }
+
+    // Send the notification with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const response = await fetch(TASK_NOTIFICATION_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -77,11 +99,15 @@ const sendTaskNotification = async (taskData: TaskData) => {
       },
       body: JSON.stringify({
         message: message
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     console.log('🔍 Response status:', response.status);
     console.log('🔍 Response ok:', response.ok);
+    console.log('🔍 Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (response.ok) {
       const responseData = await response.json();
@@ -89,11 +115,28 @@ const sendTaskNotification = async (taskData: TaskData) => {
       return true;
     } else {
       const errorText = await response.text();
-      console.error('❌ Failed to send task notification:', response.status, response.statusText, errorText);
+      console.error('❌ Failed to send task notification:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText: errorText,
+        url: TASK_NOTIFICATION_ENDPOINT
+      });
       return false;
     }
   } catch (error) {
-    console.error('❌ Error sending task notification:', error);
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('❌ Notification request timed out after 10 seconds');
+      } else {
+        console.error('❌ Error sending task notification:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      }
+    } else {
+      console.error('❌ Unknown error sending task notification:', error);
+    }
     return false;
   }
 };
@@ -129,6 +172,29 @@ export default function TasksPageEnhanced({
     itemId: ''
   });
   const [notification, setNotification] = useState<string | null>(null);
+  const [notificationQueue, setNotificationQueue] = useState<TaskData[]>([]);
+
+  // Retry failed notifications
+  const retryFailedNotifications = async () => {
+    if (notificationQueue.length === 0) return;
+    
+    console.log('🔄 Retrying failed notifications:', notificationQueue.length);
+    const queue = [...notificationQueue];
+    setNotificationQueue([]);
+    
+    for (const taskData of queue) {
+      try {
+        const result = await sendTaskNotification(taskData);
+        if (!result) {
+          // Re-queue if still failing
+          setNotificationQueue(prev => [...prev, taskData]);
+        }
+      } catch (error) {
+        console.error('❌ Retry notification failed:', error);
+        setNotificationQueue(prev => [...prev, taskData]);
+      }
+    }
+  };
 
   // Task updates hook with fallback
   const { updateTaskField, isUpdating, retryFailedUpdates } = useTaskUpdates({
@@ -196,6 +262,17 @@ export default function TasksPageEnhanced({
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  // Auto-retry failed notifications every 30 seconds
+  useEffect(() => {
+    if (notificationQueue.length === 0) return;
+    
+    const interval = setInterval(() => {
+      retryFailedNotifications();
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [notificationQueue.length]);
 
   // Calculate dropdown position
   const calculateDropdownPosition = (buttonElement: HTMLButtonElement) => {
@@ -316,20 +393,42 @@ export default function TasksPageEnhanced({
         await TaskApiService.updateTask(editingTask.id!, safeUpdate);
         setSuccessMessage("Task updated successfully");
       } else {
+        console.log('🔄 Creating new task with data:', taskData);
         const newTask = await TaskApiService.createTask(taskData);
-        setSuccessMessage("Task created successfully");
+        console.log('🔄 Task creation response:', newTask);
         
-        // Send task creation notification
-        if (newTask.success && newTask.data) {
-          console.log('📤 Sending task creation notification for:', newTask.data.title);
-          const notificationResult = await sendTaskNotification(newTask.data);
-          console.log('📤 Notification result:', notificationResult);
+        if (newTask.success) {
+          setSuccessMessage("Task created successfully");
+          
+          // Send task creation notification
+          // Use the task data from the response (which now includes the API-provided ID)
+          const taskDataForNotification = newTask.data || taskData;
+          console.log('📤 Sending task creation notification for:', taskDataForNotification.title);
+          console.log('📤 Task data for notification:', taskDataForNotification);
+          console.log('📤 API response:', newTask);
+          
+          try {
+            const notificationResult = await sendTaskNotification(taskDataForNotification);
+            console.log('📤 Notification result:', notificationResult);
+            
+            if (notificationResult) {
+              console.log('✅ Notification sent successfully');
+            } else {
+              console.warn('⚠️ Notification failed but task was created - adding to retry queue');
+              setNotificationQueue(prev => [...prev, taskDataForNotification]);
+            }
+          } catch (notificationError) {
+            console.error('❌ Notification error (task still created):', notificationError);
+            console.warn('⚠️ Adding to retry queue for later attempt');
+            setNotificationQueue(prev => [...prev, taskDataForNotification]);
+          }
         } else {
-          console.log('❌ Cannot send notification - task creation failed or no data:', newTask);
+          console.error('❌ Task creation failed:', newTask.error);
+          setError(`Failed to create task: ${newTask.error || 'Unknown error'}`);
         }
         
         // If this is a subtask (has parentTaskId), update the parent task's subtasks list
-        if (parentTaskId && newTask.success && newTask.data) {
+        if (parentTaskId && newTask.success) {
           try {
             // Find the parent task to get its current subtasks
             const parentTask = tasks.find(task => task.id === parentTaskId);
@@ -350,9 +449,10 @@ export default function TasksPageEnhanced({
               }
 
               // Add the new subtask
+              const taskDataForSubtask = newTask.data || taskData;
               const newSubtask = {
-                id: newTask.data.id,
-                title: newTask.data.title || 'Untitled Task',
+                id: taskDataForSubtask.id || `task-${Date.now()}`,
+                title: taskDataForSubtask.title || 'Untitled Task',
                 completed: false
               };
 
@@ -371,7 +471,7 @@ export default function TasksPageEnhanced({
               });
 
               if (response.ok) {
-                console.log(`✅ Parent task updated with new subtask: ${newTask.data.title}`);
+                console.log(`✅ Parent task updated with new subtask: ${taskDataForSubtask.title}`);
               } else {
                 console.warn(`⚠️ Failed to update parent task with new subtask:`, response.status, response.statusText);
               }
@@ -431,6 +531,38 @@ export default function TasksPageEnhanced({
                 className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
               >
                 Retry Updates
+              </button>
+              {notificationQueue.length > 0 && (
+                <button 
+                  onClick={retryFailedNotifications}
+                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                >
+                  Retry Notifications ({notificationQueue.length})
+                </button>
+              )}
+              <button 
+                onClick={async () => {
+                  const testTask: TaskData = {
+                    id: 'test-task',
+                    title: 'Test Notification',
+                    description: 'This is a test notification',
+                    project: 'Test Project',
+                    assignee: 'Test User',
+                    status: 'To Do',
+                    priority: 'Medium',
+                    dueDate: new Date().toISOString().split('T')[0],
+                    startDate: new Date().toISOString().split('T')[0],
+                    estimatedHours: 1,
+                    tags: 'test',
+                    subtasks: '[]',
+                    comments: 'Test comment'
+                  };
+                  const result = await sendTaskNotification(testTask);
+                  console.log('Test notification result:', result);
+                }}
+                className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors"
+              >
+                Test Notification
               </button>
             </div>
           </div>

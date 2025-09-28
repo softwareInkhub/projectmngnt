@@ -111,10 +111,17 @@ export class ApiService {
     });
     
     // Handle the specific response structure from the backend
+    // The API returns {success: true, id: "item-id"} for create operations
     if (response.success && (response as any).item) {
       return {
         ...response,
         data: (response as any).item
+      };
+    } else if (response.success && (response as any).id) {
+      // If the API only returns the ID, we return the original item with the API-provided ID
+      return {
+        ...response,
+        data: { ...item, id: (response as any).id }
       };
     }
     
