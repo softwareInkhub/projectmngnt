@@ -31,6 +31,63 @@ import TasksPage from "./TasksPageSheet";
 import UniversalDetailsModal from "../../components/UniversalDetailsModal";
 import { useTaskUpdates } from "../../hooks/useTaskUpdates";
 
+// Task notification endpoint configuration
+const TASK_NOTIFICATION_ENDPOINT = 'https://brmh.in/notify/46af115b-0704-463d-a1c4-b3e8b8094670';
+
+// Function to send task creation notification
+const sendTaskNotification = async (taskData: TaskData) => {
+  try {
+    // Format dates
+    const formatDate = (dateString: string) => {
+      if (!dateString) return 'Not specified';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    };
+
+    // Build the notification message
+    let message = `Task Created ✅\n\n`;
+    message += `Title: ${taskData.title}\n`;
+    message += `Description: ${taskData.description || 'No description'}\n`;
+    message += `Project: ${taskData.project || 'No project'}\n`;
+    message += `Assignee: ${taskData.assignee || 'Unassigned'}\n`;
+    message += `Status: ${taskData.status || 'To Do'}\n`;
+    message += `Priority: ${taskData.priority || 'Medium'}\n`;
+    message += `Start Date: ${formatDate(taskData.startDate)}\n`;
+    message += `Due Date: ${formatDate(taskData.dueDate)}\n`;
+    message += `Estimated Hours: ${taskData.estimatedHours || 0}\n`;
+    message += `Tags: ${taskData.tags || 'None'}\n`;
+    message += `Subtasks: ${taskData.subtasks || 'None'}\n`;
+    message += `Comments: ${taskData.comments || 'None'}\n\n`;
+    message += `Please review and take necessary action.`;
+
+    // Send the notification
+    const response = await fetch(TASK_NOTIFICATION_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message
+      })
+    });
+
+    if (response.ok) {
+      console.log('✅ Task creation notification sent successfully');
+      return true;
+    } else {
+      console.error('❌ Failed to send task notification:', response.status, response.statusText);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error sending task notification:', error);
+    return false;
+  }
+};
+
 const initialTasks: any[] = [];
 
 
@@ -251,6 +308,11 @@ export default function TasksPageEnhanced({
       } else {
         const newTask = await TaskApiService.createTask(taskData);
         setSuccessMessage("Task created successfully");
+        
+        // Send task creation notification
+        if (newTask.success && newTask.data) {
+          await sendTaskNotification(newTask.data);
+        }
         
         // If this is a subtask (has parentTaskId), update the parent task's subtasks list
         if (parentTaskId && newTask.success && newTask.data) {
