@@ -8,6 +8,91 @@ import { createEvent as createGoogleCalendarEvent } from '../utils/googleCalenda
 import { startGoogleCalendarAuth, getGoogleCalendarStatus, disconnectGoogleCalendar } from '../utils/googleCalendarClient';
 import { useUser } from '../contexts/UserContext';
 
+// Notification endpoint configuration
+const NOTIFICATION_ENDPOINT = 'https://brmh.in/notify/6d436846-0f7f-4a3a-92ef-4867e33ae7da';
+
+// Function to send meeting notification
+const sendMeetingNotification = async (meetingData: {
+  title: string;
+  description?: string;
+  startDate: Date;
+  endDate: Date;
+  meetLink?: string;
+  project?: string;
+  owner?: string;
+}) => {
+  try {
+    // Format the meeting time
+    const startTime = meetingData.startDate.toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+
+    const endTime = meetingData.endDate.toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+
+    // Calculate duration
+    const durationMs = meetingData.endDate.getTime() - meetingData.startDate.getTime();
+    const durationHours = Math.round((durationMs / (1000 * 60 * 60)) * 10) / 10;
+    const durationText = durationHours >= 1 ? `${durationHours} hours` : `${Math.round(durationMs / (1000 * 60))} minutes`;
+
+    // Build the notification message
+    let message = `📅 Meeting Scheduled!\n\n`;
+    message += `**${meetingData.title}**\n`;
+    message += `📅 Date & Time: ${startTime} - ${endTime}\n`;
+    message += `⏱️ Duration: ${durationText}\n`;
+    
+    if (meetingData.project) {
+      message += `📋 Project: ${meetingData.project}\n`;
+    }
+    
+    if (meetingData.owner) {
+      message += `👤 Organizer: ${meetingData.owner}\n`;
+    }
+    
+    if (meetingData.description) {
+      message += `📝 Description: ${meetingData.description}\n`;
+    }
+    
+    if (meetingData.meetLink) {
+      message += `🔗 Meeting Link: ${meetingData.meetLink}\n`;
+      message += `\nClick the link above to join the meeting!`;
+    } else {
+      message += `\nMeeting details will be shared separately.`;
+    }
+
+    // Send the notification
+    const response = await fetch(NOTIFICATION_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message
+      })
+    });
+
+    if (response.ok) {
+      console.log('✅ Meeting notification sent successfully');
+      return true;
+    } else {
+      console.error('❌ Failed to send meeting notification:', response.status, response.statusText);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error sending meeting notification:', error);
+    return false;
+  }
+};
+
 // Extended TaskData interface for calendar display
 interface CalendarTaskData extends TaskData {
   scheduledDate?: string;
@@ -462,8 +547,29 @@ export default function CalendarPage() {
                 : task
             ));
             
+            // Send notification with Google Meet link
+            await sendMeetingNotification({
+              title: newMeeting.title,
+              description: newMeeting.description,
+              startDate: start,
+              endDate: end,
+              meetLink: googleEvent.meetLink,
+              project: newMeeting.project,
+              owner: newMeeting.assignee
+            });
+            
             // Show notification
             alert(`Meeting scheduled with Google Meet!\nJoin link: ${googleEvent.meetLink}`);
+          } else {
+            // Send notification without Google Meet link
+            await sendMeetingNotification({
+              title: newMeeting.title,
+              description: newMeeting.description,
+              startDate: start,
+              endDate: end,
+              project: newMeeting.project,
+              owner: newMeeting.assignee
+            });
           }
         }
       } catch (e) {
@@ -500,6 +606,26 @@ export default function CalendarPage() {
       
       setTasks(prev => [...prev, localMeeting]);
       console.log('Created local meeting as fallback:', localMeeting);
+      
+      // Send notification for fallback meeting (without Google Meet link)
+      if (selectedDate) {
+        const [startHourStr, startMinuteStr] = (startDate || '09:00').split(':');
+        const start = new Date(selectedDate);
+        start.setHours(parseInt(startHourStr || '9', 10), parseInt(startMinuteStr || '0', 10), 0, 0);
+        
+        const durationHours = Math.max(parseFloat(String(workHours)) || 1, 0.5);
+        const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);
+        
+        await sendMeetingNotification({
+          title: localMeeting.title,
+          description: localMeeting.description,
+          startDate: start,
+          endDate: end,
+          project: localMeeting.project,
+          owner: localMeeting.assignee
+        });
+      }
+      
       handleCloseTaskForm();
       
       // Show a warning instead of error
