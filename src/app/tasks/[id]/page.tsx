@@ -12,6 +12,9 @@ const TASK_NOTIFICATION_ENDPOINT = 'https://brmh.in/notify/46af115b-0704-463d-a1
 // Function to send task creation notification
 const sendTaskNotification = async (taskData: TaskData) => {
   try {
+    console.log('🔍 Starting task notification process for:', taskData.title);
+    console.log('🔍 Endpoint:', TASK_NOTIFICATION_ENDPOINT);
+    
     // Format dates
     const formatDate = (dateString: string) => {
       if (!dateString) return 'Not specified';
@@ -39,6 +42,8 @@ const sendTaskNotification = async (taskData: TaskData) => {
     message += `Comments: ${taskData.comments || 'None'}\n\n`;
     message += `Please review and take necessary action.`;
 
+    console.log('🔍 Message to send:', message);
+
     // Send the notification
     const response = await fetch(TASK_NOTIFICATION_ENDPOINT, {
       method: 'POST',
@@ -50,11 +55,16 @@ const sendTaskNotification = async (taskData: TaskData) => {
       })
     });
 
+    console.log('🔍 Response status:', response.status);
+    console.log('🔍 Response ok:', response.ok);
+
     if (response.ok) {
-      console.log('✅ Task creation notification sent successfully');
+      const responseData = await response.json();
+      console.log('✅ Task creation notification sent successfully:', responseData);
       return true;
     } else {
-      console.error('❌ Failed to send task notification:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('❌ Failed to send task notification:', response.status, response.statusText, errorText);
       return false;
     }
   } catch (error) {
@@ -337,7 +347,11 @@ export default function TaskDetailPage() {
       if (response.success) {
         // Send task creation notification for subtask
         if (response.data) {
-          await sendTaskNotification(response.data);
+          console.log('📤 Sending subtask creation notification for:', response.data.title);
+          const notificationResult = await sendTaskNotification(response.data);
+          console.log('📤 Notification result:', notificationResult);
+        } else {
+          console.log('❌ Cannot send notification - subtask creation failed or no data:', response);
         }
         
         // Refresh the current task to show the new subtask
