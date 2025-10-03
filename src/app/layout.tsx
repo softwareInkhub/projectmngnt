@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthGuard from "./components/AuthGuard";
 import { UserProvider } from "./contexts/UserContext";
+import SSOInitializer from "./components/SSOInitializer";
 // Shell is mounted from AuthGuard only when authed
 
 const geistSans = Geist({
@@ -28,11 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning={true}>
-        <UserProvider>
-          <AuthGuard>
-            {children}
-          </AuthGuard>
-        </UserProvider>
+        <SSOInitializer>
+          <UserProvider>
+            <AuthGuard>
+              {children}
+            </AuthGuard>
+          </UserProvider>
+        </SSOInitializer>
       </body>
     </html>
   );

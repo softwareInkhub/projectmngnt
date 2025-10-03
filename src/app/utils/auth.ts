@@ -1,31 +1,29 @@
 // Centralized auth utilities for BRMH project management app
 // This app now uses the central auth system at auth.brmh.in
 
+import { SSOUtils } from './sso-utils';
+
 export const isAuthenticated = (): boolean => {
-  const token = localStorage.getItem('access_token');
-  const idToken = localStorage.getItem('id_token');
-  return !!(token && idToken);
+  return SSOUtils.isAuthenticated();
 };
 
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem('access_token');
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('access_token') || SSOUtils.getTokensFromCookies().accessToken || null;
 };
 
 export const getIdToken = (): string | null => {
-  return localStorage.getItem('id_token');
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('id_token') || SSOUtils.getTokensFromCookies().idToken || null;
 };
 
 export const clearAuthData = (): void => {
-  // Clear all authentication tokens
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('id_token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('user_id');
-  localStorage.removeItem('user_name');
-  localStorage.removeItem('user_email');
-  
-  // Clear all session data
-  sessionStorage.clear();
-  
-  console.log('✅ Auth data cleared');
+  SSOUtils.logout();
+};
+
+// Initialize SSO on app load
+export const initializeSSO = (): void => {
+  if (typeof window !== 'undefined') {
+    SSOUtils.syncTokensFromCookies();
+  }
 };
