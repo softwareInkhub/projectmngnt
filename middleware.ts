@@ -18,16 +18,26 @@ export function middleware(req: NextRequest) {
   // Check for auth token in cookies (set by backend)
   const idToken = req.cookies.get('id_token')?.value;
   const accessToken = req.cookies.get('access_token')?.value;
+  const refreshToken = req.cookies.get('refresh_token')?.value;
   
-  console.log('[Middleware] Checking authentication:', {
+  // Also check for camelCase versions for backward compatibility
+  const idTokenAlt = req.cookies.get('idToken')?.value;
+  const accessTokenAlt = req.cookies.get('accessToken')?.value;
+  
+  const hasAnyToken = !!(idToken || accessToken || refreshToken || idTokenAlt || accessTokenAlt);
+  
+  console.log('[ProjectMngnt Middleware] Auth check:', {
     pathname,
-    hasIdTokenCookie: !!idToken,
-    hasAccessTokenCookie: !!accessToken,
-    cookies: req.cookies.getAll().map(c => c.name)
+    hasIdToken: !!idToken,
+    hasAccessToken: !!accessToken,
+    hasRefreshToken: !!refreshToken,
+    hasIdTokenAlt: !!idTokenAlt,
+    hasAccessTokenAlt: !!accessTokenAlt,
+    allCookies: req.cookies.getAll().map(c => `${c.name}=${c.value?.substring(0, 20)}...`)
   });
   
-  if (idToken || accessToken) {
-    console.log('[Middleware] User authenticated via cookies, allowing access');
+  if (hasAnyToken) {
+    console.log('[ProjectMngnt Middleware] ✅ User authenticated via cookies, allowing access');
     return NextResponse.next();
   }
 
@@ -38,7 +48,7 @@ export function middleware(req: NextRequest) {
 
   // Redirect to central auth page with return URL
   const nextUrl = encodeURIComponent(href);
-  console.log('[Middleware] No auth token found, redirecting to central auth:', nextUrl);
+  console.log('[ProjectMngnt Middleware] ❌ No auth token found, redirecting to central auth:', nextUrl);
   return NextResponse.redirect(`https://auth.brmh.in/login?next=${nextUrl}`);
 }
 

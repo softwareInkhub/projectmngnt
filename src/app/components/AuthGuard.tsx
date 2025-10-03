@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import ClientLayout from "./ClientLayout";
 import { SSOUtils } from "../utils/sso-utils";
@@ -10,35 +10,48 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isAuthed, setIsAuthed] = useState<boolean>(false);
+  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
+    // Only run auth check once
+    if (hasCheckedRef.current) {
+      return;
+    }
+
     const onAuthCheck = () => {
+      console.log('[AuthGuard] Starting auth check for path:', pathname);
+      
       // Allow public routes
       if (pathname?.startsWith('/oauth2callback') || pathname?.startsWith('/api')) {
+        console.log('[AuthGuard] Public route detected, allowing access');
         setIsAuthed(true);
         setCheckingAuth(false);
+        hasCheckedRef.current = true;
         return;
       }
 
       // Check authentication using SSO utils
       const authed = SSOUtils.isAuthenticated();
-      console.log('[AuthGuard] Authentication check:', { authed, pathname });
+      console.log('[AuthGuard] Authentication status:', { authed, pathname });
       
       if (!authed) {
         console.log('[AuthGuard] Not authenticated, redirecting to centralized auth');
         const nextUrl = encodeURIComponent(window.location.href);
         window.location.href = `https://auth.brmh.in/login?next=${nextUrl}`;
+        hasCheckedRef.current = true;
         return;
       }
       
+      console.log('[AuthGuard] User is authenticated, granting access');
       setIsAuthed(authed);
       setCheckingAuth(false);
+      hasCheckedRef.current = true;
     };
 
     // Small delay to ensure SSO initialization is complete
-    const timer = setTimeout(onAuthCheck, 100);
+    const timer = setTimeout(onAuthCheck, 200);
     return () => clearTimeout(timer);
-  }, [pathname, router]);
+  }, []); // Only run once on mount
 
   if (checkingAuth) {
     return (
