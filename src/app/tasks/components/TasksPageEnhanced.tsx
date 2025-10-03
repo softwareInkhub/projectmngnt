@@ -272,6 +272,7 @@ export default function TasksPageEnhanced({
     }, 30000); // 30 seconds
     
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notificationQueue.length]);
 
   // Calculate dropdown position

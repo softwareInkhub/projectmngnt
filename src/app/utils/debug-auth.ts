@@ -69,7 +69,7 @@ export function getCookie(name: string): string | null {
   return null;
 }
 
-export function logAuthDebugInfo(): void {
+export function logAuthDebugInfo(): AuthDebugInfo {
   const debugInfo = getAuthDebugInfo();
   console.group('🔍 Auth Debug Info');
   console.log('📅 Timestamp:', debugInfo.timestamp);
@@ -110,7 +110,14 @@ export function clearAllAuthData(): void {
   console.log('✅ All auth data cleared');
 }
 
-export function testAuthFlow(): void {
+export function testAuthFlow(): {
+  hasAnyTokens: boolean;
+  hasConsistentTokens: boolean;
+  hasUserInfo: boolean;
+  isLocalhost: boolean;
+  isBrmhDomain: boolean;
+  hasValidJWT: boolean;
+} {
   console.group('🧪 Testing Auth Flow');
   
   const debugInfo = getAuthDebugInfo();

@@ -51,6 +51,7 @@ export default function AcceptInvitePage({
     }
 
     loadInvite();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const loadInvite = async () => {
