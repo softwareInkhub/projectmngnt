@@ -73,7 +73,7 @@ export async function handleGoogleCalendarCallback(currentUserId: string) {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string;
   const codeVerifier = sessionStorage.getItem('gc_code_verifier') || '';
   const savedState = sessionStorage.getItem('gc_state') || '';
-  const redirectUri = sessionStorage.getItem('gc_redirect_uri') || `${window.location.origin}/authPage/oauth2callback`;
+  const redirectUri = sessionStorage.getItem('gc_redirect_uri') || `${window.location.origin}/oauth2callback`;
 
   const url = new URL(window.location.href);
   const code = url.searchParams.get('code');

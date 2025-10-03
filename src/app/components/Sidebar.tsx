@@ -16,7 +16,6 @@ import {
   X,
   LogOut
 } from 'lucide-react';
-import { logout } from '../utils/auth';
 
 interface SidebarProps {
   activeTab: number;
@@ -99,11 +98,19 @@ export default function Sidebar({
         <button
           onClick={async () => {
             try {
-              await logout();
-              window.location.href = '/authPage';
+              // Clear local storage
+              localStorage.removeItem('access_token');
+              localStorage.removeItem('id_token');
+              localStorage.removeItem('refresh_token');
+              localStorage.removeItem('user_id');
+              localStorage.removeItem('user_name');
+              sessionStorage.clear();
+              
+              // Redirect to central auth logout
+              window.location.href = 'https://auth.brmh.in/login';
             } catch (error) {
               console.error('Logout failed:', error);
-              window.location.href = '/authPage';
+              window.location.href = 'https://auth.brmh.in/login';
             }
           }}
           className="w-full flex flex-col items-center gap-1 py-2 rounded-xl text-red-600 hover:bg-red-50 transition-colors"

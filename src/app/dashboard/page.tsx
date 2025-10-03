@@ -66,49 +66,27 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuthentication = async () => {
+    const initializeDashboard = async () => {
       try {
-        const accessToken = localStorage.getItem('access_token');
-        const idToken = localStorage.getItem('id_token');
         const uid = localStorage.getItem('user_id') || 'demo-user-123';
         const uname = localStorage.getItem('user_name') || 'Demo User';
         
-        console.log('Auth check - User ID:', uid);
-        console.log('Auth check - User Name:', uname);
+        console.log('Dashboard - User ID:', uid);
+        console.log('Dashboard - User Name:', uname);
         
         setCurrentUserId(uid);
         setCurrentUserName(uname);
-        
-        // Check if user has valid tokens (not mock tokens)
-        if (accessToken && idToken && accessToken !== 'mock-token-disabled') {
-          setIsAuthenticated(true);
-        } else {
-          router.push('/authPage');
-        }
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error('Auth check error:', error);
-        router.push('/authPage');
+        console.error('Dashboard initialization error:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuthentication();
-  }, [router]);
-
-  // Listen for auth success events from auth page
-  useEffect(() => {
-    const handleAuthSuccess = () => {
-      console.log('Auth success event received, redirecting to dashboard...');
-      setIsAuthenticated(true);
-    };
-
-    window.addEventListener('auth-success', handleAuthSuccess);
-    
-    return () => {
-      window.removeEventListener('auth-success', handleAuthSuccess);
-    };
+    initializeDashboard();
   }, []);
+
 
   // If needed, you can trigger the invite modal via a custom event elsewhere
   useEffect(() => {

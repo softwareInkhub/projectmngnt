@@ -39,7 +39,6 @@ import NewTabPage from "./NewTabPage";
 import CreateSprintPage from "./CreateSprintPage";
 // import CreateDepartmentPage from "./CreateDepartmentPage";
 import CreateStoryPage from "./CreateStoryPage";
-import { logout } from '../utils/auth';
 import Image from 'next/image';
 import { useUser } from '../contexts/UserContext';
 
@@ -502,11 +501,19 @@ export default function ClientLayout({ children }: { children?: React.ReactNode 
             <button 
               onClick={async () => {
                 try {
-                  await logout();
-                  window.location.href = '/authPage';
+                  // Clear local storage
+                  localStorage.removeItem('access_token');
+                  localStorage.removeItem('id_token');
+                  localStorage.removeItem('refresh_token');
+                  localStorage.removeItem('user_id');
+                  localStorage.removeItem('user_name');
+                  sessionStorage.clear();
+                  
+                  // Redirect to central auth logout
+                  window.location.href = 'https://auth.brmh.in/login';
                 } catch (error) {
                   console.error('Logout failed:', error);
-                  window.location.href = '/authPage';
+                  window.location.href = 'https://auth.brmh.in/login';
                 }
               }}
               className="flex flex-col items-center gap-0 p-1 rounded-lg transition-colors hover:bg-red-50 text-red-600"

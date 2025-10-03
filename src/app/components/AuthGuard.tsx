@@ -12,20 +12,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const onAuthCheck = () => {
-      // Allow unauthenticated access to the auth page itself
-      if (pathname?.startsWith('/authPage')) {
-        setIsAuthed(false);
-        setCheckingAuth(false);
-        return;
-      }
-
       const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       const idToken = typeof window !== 'undefined' ? localStorage.getItem('id_token') : null;
-      const authed = !!accessToken && !!idToken && accessToken !== 'mock-token-disabled';
+      const authed = !!accessToken && !!idToken;
       setIsAuthed(authed);
-      if (!authed) {
-        router.push('/authPage');
-      }
       setCheckingAuth(false);
     };
 
@@ -43,10 +33,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // On auth routes, show the page content without shell
-  if (pathname?.startsWith('/authPage')) return <>{children}</>;
-
-  // On app routes, only render shell when authed
+  // Only render shell when authed
   if (!isAuthed) return null;
 
   return (
