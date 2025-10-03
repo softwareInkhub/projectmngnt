@@ -8,7 +8,6 @@ import {
   Bell,
   User
 } from 'lucide-react';
-import { logout } from '../../utils/auth';
 
 interface AdminNavbarProps {
   onMenuClick: () => void;
