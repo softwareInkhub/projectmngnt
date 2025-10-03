@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserData } from '../utils/userApi';
+import { logAuthDebugInfo } from '../utils/debug-auth';
 
 interface UserContextType {
   currentUser: UserData | null;
@@ -38,6 +39,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
+
+      // Log debug info to help troubleshoot
+      logAuthDebugInfo();
 
       const token = localStorage.getItem('access_token');
       const idToken = localStorage.getItem('id_token');

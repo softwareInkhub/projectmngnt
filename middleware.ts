@@ -15,12 +15,19 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for auth token in cookies
+  // Check for auth token in cookies (set by backend)
   const idToken = req.cookies.get('id_token')?.value;
   const accessToken = req.cookies.get('access_token')?.value;
   
+  console.log('[Middleware] Checking authentication:', {
+    pathname,
+    hasIdTokenCookie: !!idToken,
+    hasAccessTokenCookie: !!accessToken,
+    cookies: req.cookies.getAll().map(c => c.name)
+  });
+  
   if (idToken || accessToken) {
-    console.log('[Middleware] User authenticated, allowing access');
+    console.log('[Middleware] User authenticated via cookies, allowing access');
     return NextResponse.next();
   }
 
@@ -31,7 +38,7 @@ export function middleware(req: NextRequest) {
 
   // Redirect to central auth page with return URL
   const nextUrl = encodeURIComponent(href);
-  console.log('[Middleware] No auth token found, redirecting to central auth');
+  console.log('[Middleware] No auth token found, redirecting to central auth:', nextUrl);
   return NextResponse.redirect(`https://auth.brmh.in/login?next=${nextUrl}`);
 }
 
