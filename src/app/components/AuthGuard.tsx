@@ -31,11 +31,15 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       }
 
       // Check authentication using SSO utils
+      // Note: If middleware let the request through, httpOnly cookies are valid
+      // The auth_valid flag will be set by middleware if httpOnly cookies exist
       const authed = SSOUtils.isAuthenticated();
       console.log('[AuthGuard] Authentication status:', { authed, pathname });
       
       if (!authed) {
         console.log('[AuthGuard] Not authenticated, redirecting to centralized auth');
+        // Note: This shouldn't happen if middleware is working correctly
+        // Middleware should have already redirected before reaching here
         const nextUrl = encodeURIComponent(window.location.href);
         window.location.href = `https://auth.brmh.in/login?next=${nextUrl}`;
         hasCheckedRef.current = true;

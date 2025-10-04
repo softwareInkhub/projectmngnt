@@ -38,7 +38,21 @@ export function middleware(req: NextRequest) {
   
   if (hasAnyToken) {
     console.log('[ProjectMngnt Middleware] ✅ User authenticated via cookies, allowing access');
-    return NextResponse.next();
+    
+    // Create response and set a non-httpOnly auth flag cookie so client-side knows user is authenticated
+    const response = NextResponse.next();
+    
+    // Set a client-readable flag (not httpOnly) so client-side code knows auth is valid
+    response.cookies.set('auth_valid', '1', {
+      path: '/',
+      domain: '.brmh.in',
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      httpOnly: false, // Important: client-side can read this
+    });
+    
+    return response;
   }
 
   // Avoid redirect loops for callback routes

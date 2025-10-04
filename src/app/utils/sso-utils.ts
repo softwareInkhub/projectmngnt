@@ -4,11 +4,15 @@
 export class SSOUtils {
   /**
    * Check if user is authenticated by checking both cookies and localStorage
+   * Note: If cookies are httpOnly, we check for the auth_valid flag set by middleware
    */
   static isAuthenticated(): boolean {
     if (typeof window === 'undefined') return false;
     
-    // Check cookies first (primary SSO method)
+    // Check for auth_valid flag (set by middleware when httpOnly cookies are present)
+    const authValidFlag = this.getCookieValue('auth_valid');
+    
+    // Check cookies (may not work if httpOnly)
     const cookieIdToken = this.getCookieValue('id_token');
     const cookieAccessToken = this.getCookieValue('access_token');
     
@@ -16,7 +20,11 @@ export class SSOUtils {
     const localIdToken = localStorage.getItem('id_token');
     const localAccessToken = localStorage.getItem('access_token');
     
-    return !!(cookieIdToken || cookieAccessToken || (localIdToken && localAccessToken));
+    // Return true if:
+    // 1. auth_valid flag is set (middleware validated httpOnly cookies), OR
+    // 2. We can read tokens directly from cookies (not httpOnly), OR
+    // 3. Tokens exist in localStorage
+    return !!(authValidFlag || cookieIdToken || cookieAccessToken || (localIdToken && localAccessToken));
   }
 
   /**
@@ -118,6 +126,7 @@ export class SSOUtils {
     document.cookie = `access_token=; domain=${domain}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     document.cookie = `id_token=; domain=${domain}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     document.cookie = `refresh_token=; domain=${domain}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    document.cookie = `auth_valid=; domain=${domain}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     
     console.log('[SSOUtils] Cleared all auth data, redirecting to login');
     
@@ -131,15 +140,13 @@ export class SSOUtils {
   static async fetchUserProfile(backendUrl: string): Promise<any> {
     const accessToken = localStorage.getItem('access_token') || this.getCookieValue('access_token');
     
-    if (!accessToken) {
-      throw new Error('No access token available');
-    }
-
+    // Note: Even if we can't read the token (httpOnly), the fetch will send httpOnly cookies automatically
     const response = await fetch(`${backendUrl}/auth/profile`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': accessToken ? `Bearer ${accessToken}` : '',
         'Content-Type': 'application/json'
-      }
+      },
+      credentials: 'include' // Important: sends httpOnly cookies automatically
     });
 
     if (!response.ok) {
