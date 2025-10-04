@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserData } from '../utils/userApi';
 import { logAuthDebugInfo } from '../utils/debug-auth';
+import { logAuthDebugReport } from '../utils/auth-debugger';
 
 interface UserContextType {
   currentUser: UserData | null;
@@ -40,8 +41,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      // Log debug info to help troubleshoot
-      logAuthDebugInfo();
+      // Log comprehensive debug info to help troubleshoot
+      logAuthDebugReport();
+
+      // First, try to sync tokens from cookies to localStorage
+      // This handles the case where tokens are httpOnly and need to be synced
+      const { SSOUtils } = await import('../utils/sso-utils');
+      SSOUtils.syncTokensFromCookies();
 
       const token = localStorage.getItem('access_token');
       const idToken = localStorage.getItem('id_token');
@@ -53,7 +59,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       console.log('🔄 fetchCurrentUser - id token exists:', !!idToken);
       console.log('🔄 fetchCurrentUser - user info exists:', !!userId, !!userName);
       
-      if (!token || !idToken) {
+      // Check if we have tokens in localStorage OR if auth_valid flag is set (indicating httpOnly cookies exist)
+      const authValidFlag = SSOUtils.getCookieValue('auth_valid');
+      const authValidLocalFlag = SSOUtils.getCookieValue('auth_valid_local');
+      
+      if ((!token || !idToken) && !authValidFlag && !authValidLocalFlag) {
         console.log('❌ No valid tokens found');
         setCurrentUser(null);
         setLoading(false);
@@ -138,10 +148,33 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     fetchCurrentUser();
   };
 
-  // Fetch user data when component mounts
+  // Fetch user data when component mounts or SSO initializes
   useEffect(() => {
-    console.log('🔄 UserContext useEffect - calling fetchCurrentUser');
-    fetchCurrentUser();
+    const handleSSOInitialized = () => {
+      console.log('🔄 UserContext - SSO initialized, calling fetchCurrentUser');
+      fetchCurrentUser();
+    };
+
+    // Check if SSO is already initialized
+    const ssoInitialized = typeof document !== 'undefined' && document.documentElement.getAttribute('data-sso-initialized');
+    if (ssoInitialized) {
+      console.log('🔄 UserContext useEffect - SSO already initialized, calling fetchCurrentUser');
+      fetchCurrentUser();
+    } else {
+      // Listen for the SSO initialization event
+      window.addEventListener('sso-initialized', handleSSOInitialized);
+      
+      // Fallback timeout in case event doesn't fire
+      const timer = setTimeout(() => {
+        console.log('🔄 UserContext useEffect - timeout fallback, calling fetchCurrentUser');
+        fetchCurrentUser();
+      }, 1500);
+      
+      return () => {
+        window.removeEventListener('sso-initialized', handleSSOInitialized);
+        clearTimeout(timer);
+      };
+    }
   }, []);
 
   // Listen for storage changes (when user logs in/out)

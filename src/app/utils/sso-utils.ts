@@ -21,6 +21,14 @@ export class SSOUtils {
     const localIdToken = localStorage.getItem('id_token');
     const localAccessToken = localStorage.getItem('access_token');
     
+    // Debug: Log all cookie values
+    console.log('[SSOUtils] Raw cookie values:', {
+      authValid: authValidFlag,
+      authValidLocal: authValidLocalFlag,
+      cookieIdToken: cookieIdToken ? 'EXISTS' : 'NULL',
+      cookieAccessToken: cookieAccessToken ? 'EXISTS' : 'NULL',
+    });
+    
     // Return true if:
     // 1. auth_valid flag is set (middleware validated httpOnly cookies), OR
     // 2. We can read tokens directly from cookies (not httpOnly), OR
@@ -77,14 +85,19 @@ export class SSOUtils {
     
     const tokens = this.getTokensFromCookies();
     
+    let synced = false;
+    
     if (tokens.accessToken) {
       localStorage.setItem('access_token', tokens.accessToken);
+      synced = true;
     }
     if (tokens.idToken) {
       localStorage.setItem('id_token', tokens.idToken);
+      synced = true;
     }
     if (tokens.refreshToken) {
       localStorage.setItem('refresh_token', tokens.refreshToken);
+      synced = true;
     }
 
     // Extract user info from ID token if available
@@ -101,6 +114,10 @@ export class SSOUtils {
         console.error('[SSOUtils] Error extracting user info from ID token:', error);
       }
     }
+    
+    if (!synced) {
+      console.log('[SSOUtils] No tokens found in cookies to sync (may be httpOnly)');
+    }
   }
 
   /**
@@ -112,8 +129,11 @@ export class SSOUtils {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) {
-      return parts.pop()?.split(';').shift();
+      const cookieValue = parts.pop()?.split(';').shift();
+      console.log(`[SSOUtils] Cookie ${name}:`, cookieValue ? 'EXISTS' : 'NULL');
+      return cookieValue;
     }
+    console.log(`[SSOUtils] Cookie ${name}: NOT FOUND`);
     return undefined;
   }
 

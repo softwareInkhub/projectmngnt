@@ -52,9 +52,28 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       hasCheckedRef.current = true;
     };
 
-    // Small delay to ensure SSO initialization is complete
-    const timer = setTimeout(onAuthCheck, 200);
-    return () => clearTimeout(timer);
+    // Listen for SSO initialization event
+    const handleSSOInitialized = () => {
+      console.log('[AuthGuard] SSO initialization complete, running auth check');
+      onAuthCheck();
+    };
+
+    // Check if SSO is already initialized
+    const ssoInitialized = window.document.documentElement.getAttribute('data-sso-initialized');
+    if (ssoInitialized) {
+      onAuthCheck();
+    } else {
+      // Listen for the SSO initialization event
+      window.addEventListener('sso-initialized', handleSSOInitialized);
+      
+      // Fallback timeout in case event doesn't fire
+      const timer = setTimeout(onAuthCheck, 1000);
+      
+      return () => {
+        window.removeEventListener('sso-initialized', handleSSOInitialized);
+        clearTimeout(timer);
+      };
+    }
   }, []); // Only run once on mount
 
   if (checkingAuth) {
