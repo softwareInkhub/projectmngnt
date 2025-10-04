@@ -26,16 +26,21 @@ export class SSOUtils {
 
   /**
    * Check if user is authenticated via cookies (primary method for SSO)
-   * Note: If cookies are httpOnly, we check for the auth_valid flag set by middleware
+   * Note: Since backend cookies are httpOnly, we rely on the auth_valid flag set by middleware
    */
   static isAuthenticated(): boolean {
     if (typeof document === 'undefined') return false;
     
     const cookies = this.getCookies();
     
-    // Check for httpOnly token existence via auth_valid flag (set by middleware)
-    // or check for directly readable tokens (if not httpOnly)
-    return !!(cookies.auth_valid || cookies.access_token || cookies.id_token);
+    // Primary check: auth_valid flag set by middleware (since tokens are httpOnly)
+    // Also check for auth_valid_local which is set after successful sync
+    if (cookies.auth_valid || cookies.auth_valid_local) {
+      return true;
+    }
+    
+    // Fallback: check if tokens are directly readable (backward compatibility)
+    return !!(cookies.access_token || cookies.id_token);
   }
 
   /**
@@ -54,15 +59,35 @@ export class SSOUtils {
   }
 
   /**
-   * Get tokens from cookies
+   * Get tokens from cookies (or localStorage for httpOnly cookies)
+   * Note: Since backend cookies are httpOnly, we can't read them directly
+   * We rely on localStorage after sync or backend endpoints
    */
   static getTokens(): SSOTokens {
     const cookies = this.getCookies();
-    return {
+    
+    // Try cookies first (if they're not httpOnly)
+    const cookieTokens = {
       accessToken: cookies.access_token,
       idToken: cookies.id_token,
       refreshToken: cookies.refresh_token,
     };
+    
+    // If cookies are present, return them
+    if (cookieTokens.accessToken || cookieTokens.idToken) {
+      return cookieTokens;
+    }
+    
+    // Fallback to localStorage (populated by syncTokensFromCookies on server-side or after successful auth)
+    if (typeof localStorage !== 'undefined') {
+      return {
+        accessToken: localStorage.getItem('access_token') || undefined,
+        idToken: localStorage.getItem('id_token') || undefined,
+        refreshToken: localStorage.getItem('refresh_token') || undefined,
+      };
+    }
+    
+    return {};
   }
 
   /**
@@ -91,44 +116,51 @@ export class SSOUtils {
 
   /**
    * Sync tokens from cookies to localStorage (for apps that expect localStorage)
+   * Since cookies are httpOnly, we fetch user info from backend /auth/me endpoint
    */
-  static syncTokensFromCookies(): void {
+  static async syncTokensFromCookies(): Promise<void> {
     return this.syncTokensToLocalStorage();
   }
 
   /**
    * Sync tokens from cookies to localStorage (for apps that expect localStorage)
+   * Since cookies are httpOnly, we fetch user info from backend /auth/me endpoint
    */
-  static syncTokensToLocalStorage(): void {
+  static async syncTokensToLocalStorage(): Promise<void> {
     if (typeof window === 'undefined') return;
 
-    const tokens = this.getTokens();
-    const user = this.getUser();
-
     try {
-      // Store tokens in both formats for compatibility
-      if (tokens.accessToken) {
-        localStorage.setItem('access_token', tokens.accessToken);
-        localStorage.setItem('accessToken', tokens.accessToken);
-      }
-      if (tokens.idToken) {
-        localStorage.setItem('id_token', tokens.idToken);
-        localStorage.setItem('idToken', tokens.idToken);
-      }
-      if (tokens.refreshToken) {
-        localStorage.setItem('refresh_token', tokens.refreshToken);
-        localStorage.setItem('refreshToken', tokens.refreshToken);
-      }
+      // Since cookies are httpOnly, we can't read them directly
+      // Instead, call the backend /auth/me endpoint which will use the httpOnly cookies
+      const response = await fetch(`${this.API_BASE_URL}/auth/me`, {
+        method: 'GET',
+        credentials: 'include', // Important: sends httpOnly cookies
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      // Store user info
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('user_id', user.sub);
-        if (user.email) localStorage.setItem('user_email', user.email);
-        if (user.name) localStorage.setItem('user_name', user.name);
+      if (response.ok) {
+        const data = await response.json();
+        const user = data.user;
+        
+        if (user) {
+          // Store user info in localStorage
+          localStorage.setItem('user', JSON.stringify(user));
+          localStorage.setItem('user_id', user.sub);
+          if (user.email) localStorage.setItem('user_email', user.email);
+          if (user.name) localStorage.setItem('user_name', user.name);
+          
+          // Set a local flag that we've synced successfully
+          document.cookie = 'auth_valid_local=1; path=/; domain=.brmh.in; secure; samesite=lax; max-age=3600';
+          
+          console.log('[SSO] Successfully synced user info from backend');
+        }
+      } else {
+        console.warn('[SSO] Failed to fetch user info from backend:', response.status);
       }
     } catch (error) {
-      console.error('[SSO] Failed to sync tokens to localStorage:', error);
+      console.error('[SSO] Failed to sync tokens from backend:', error);
     }
   }
 
@@ -210,12 +242,13 @@ export class SSOUtils {
   static clearCookies(): void {
     if (typeof document === 'undefined') return;
 
-    const cookiesToClear = ['access_token', 'id_token', 'refresh_token', 'auth_valid'];
+    const cookiesToClear = ['access_token', 'id_token', 'refresh_token', 'auth_valid', 'auth_valid_local'];
     cookiesToClear.forEach(cookieName => {
       // Clear for current domain
       document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-      // Clear for .brmh.in domain
-      document.cookie = `${cookieName}=; domain=${this.COOKIE_DOMAIN}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      // Clear for .brmh.in domain with both lax and none sameSite
+      document.cookie = `${cookieName}=; domain=${this.COOKIE_DOMAIN}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=lax`;
+      document.cookie = `${cookieName}=; domain=${this.COOKIE_DOMAIN}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=none`;
     });
   }
 
@@ -289,27 +322,33 @@ export class SSOUtils {
 
   /**
    * Initialize SSO for an app (call this on app startup)
+   * Works with httpOnly cookies set by backend
    */
   static async initialize(): Promise<{ isAuthenticated: boolean; user: SSOUser | null }> {
-    // Check if authenticated via cookies
+    // Check if authenticated via auth_valid flag (set by middleware for httpOnly cookies)
     const isAuthenticated = this.isAuthenticated();
     
     if (isAuthenticated) {
-      // Sync tokens to localStorage for backward compatibility
-      this.syncTokensToLocalStorage();
+      // Sync user info from backend (since cookies are httpOnly)
+      await this.syncTokensToLocalStorage();
       
-      // Validate token
-      const isValid = await this.validateToken();
-      if (!isValid) {
-        // Try to refresh
-        const refreshed = await this.refreshTokens();
-        if (!refreshed) {
-          this.clearCookies();
-          return { isAuthenticated: false, user: null };
+      // Get user from localStorage after sync
+      const userFromStorage = typeof localStorage !== 'undefined' ? localStorage.getItem('user') : null;
+      let user: SSOUser | null = null;
+      
+      if (userFromStorage) {
+        try {
+          user = JSON.parse(userFromStorage);
+        } catch (e) {
+          console.error('[SSO] Failed to parse user from localStorage:', e);
         }
       }
       
-      const user = this.getUser();
+      // Fallback: try to parse from ID token if available
+      if (!user) {
+        user = this.getUser();
+      }
+      
       return { isAuthenticated: true, user };
     }
 
@@ -318,19 +357,30 @@ export class SSOUtils {
 
   /**
    * Validate token with backend
+   * Works with httpOnly cookies - no token parameter needed
    */
   static async validateToken(token?: string): Promise<boolean> {
-    const tokenToValidate = token || this.getTokens().accessToken;
-    if (!tokenToValidate) return false;
-
     try {
-      const response = await fetch(`${this.API_BASE_URL}/auth/validate`, {
-        method: 'POST',
+      // If a specific token is provided, use it
+      if (token) {
+        const response = await fetch(`${this.API_BASE_URL}/auth/validate`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        return response.ok;
+      }
+      
+      // Otherwise, rely on httpOnly cookies sent automatically
+      const response = await fetch(`${this.API_BASE_URL}/auth/me`, {
+        method: 'GET',
+        credentials: 'include', // Sends httpOnly cookies
         headers: {
-          'Authorization': `Bearer ${tokenToValidate}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
       });
       return response.ok;
     } catch (error) {
@@ -342,3 +392,4 @@ export class SSOUtils {
 
 // Export for backward compatibility
 export const AuthService = SSOUtils;
+

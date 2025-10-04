@@ -27,11 +27,12 @@ export function middleware(req: NextRequest) {
     const response = NextResponse.next();
     
     // Set a client-readable flag (not httpOnly) so client-side code knows auth is valid
+    // Use sameSite: 'none' for cross-subdomain cookies with secure: true
     response.cookies.set('auth_valid', '1', {
       path: '/',
       domain: '.brmh.in',
       secure: true,
-      sameSite: 'lax',
+      sameSite: 'none', // Changed from 'lax' to 'none' for cross-domain
       maxAge: 60 * 60 * 24 * 7, // 7 days
       httpOnly: false, // Important: client-side can read this
     });
