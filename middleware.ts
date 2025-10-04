@@ -19,23 +19,33 @@ export function middleware(req: NextRequest) {
   // Check for SSO auth tokens in cookies (primary method)
   const idToken = req.cookies.get('id_token')?.value;
   const accessToken = req.cookies.get('access_token')?.value;
+  const refreshToken = req.cookies.get('refresh_token')?.value;
+  
+  console.log('[ProjectMngnt Middleware] Cookie check:', {
+    hasIdToken: !!idToken,
+    hasAccessToken: !!accessToken,
+    hasRefreshToken: !!refreshToken,
+    path: pathname
+  });
   
   if (idToken || accessToken) {
-    console.log('[ProjectMngnt Middleware] User authenticated via SSO cookies, allowing access');
+    console.log('[ProjectMngnt Middleware] ✅ User authenticated via SSO cookies, allowing access');
     
     // Create response and set a non-httpOnly auth flag cookie so client-side knows user is authenticated
     const response = NextResponse.next();
     
     // Set a client-readable flag (not httpOnly) so client-side code knows auth is valid
-    // Use sameSite: 'none' for cross-subdomain cookies with secure: true
+    // Use sameSite: 'lax' for same-site subdomains (works better than 'none')
     response.cookies.set('auth_valid', '1', {
       path: '/',
       domain: '.brmh.in',
       secure: true,
-      sameSite: 'none', // Changed from 'lax' to 'none' for cross-domain
+      sameSite: 'lax', // 'lax' works for same-site subdomains and is more compatible
       maxAge: 60 * 60 * 24 * 7, // 7 days
       httpOnly: false, // Important: client-side can read this
     });
+    
+    console.log('[ProjectMngnt Middleware] ✅ Set auth_valid flag for client-side');
     
     return response;
   }

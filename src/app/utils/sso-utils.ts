@@ -33,14 +33,35 @@ export class SSOUtils {
     
     const cookies = this.getCookies();
     
+    // Log for debugging
+    const hasAuthValid = !!cookies.auth_valid;
+    const hasAuthValidLocal = !!cookies.auth_valid_local;
+    const hasAccessToken = !!cookies.access_token;
+    const hasIdToken = !!cookies.id_token;
+    
+    console.log('[SSO] isAuthenticated check:', {
+      hasAuthValid,
+      hasAuthValidLocal,
+      hasAccessToken,
+      hasIdToken,
+      allCookieNames: Object.keys(cookies)
+    });
+    
     // Primary check: auth_valid flag set by middleware (since tokens are httpOnly)
     // Also check for auth_valid_local which is set after successful sync
     if (cookies.auth_valid || cookies.auth_valid_local) {
+      console.log('[SSO] Authenticated via auth flags');
       return true;
     }
     
     // Fallback: check if tokens are directly readable (backward compatibility)
-    return !!(cookies.access_token || cookies.id_token);
+    if (cookies.access_token || cookies.id_token) {
+      console.log('[SSO] Authenticated via readable tokens');
+      return true;
+    }
+    
+    console.log('[SSO] Not authenticated - no auth flags or tokens found');
+    return false;
   }
 
   /**
@@ -152,7 +173,8 @@ export class SSOUtils {
           if (user.name) localStorage.setItem('user_name', user.name);
           
           // Set a local flag that we've synced successfully
-          document.cookie = 'auth_valid_local=1; path=/; domain=.brmh.in; secure; samesite=lax; max-age=3600';
+          // Use same settings as middleware for consistency
+          document.cookie = 'auth_valid_local=1; path=/; domain=.brmh.in; secure; samesite=lax; max-age=' + (60 * 60 * 24 * 7); // 7 days
           
           console.log('[SSO] Successfully synced user info from backend');
         }
