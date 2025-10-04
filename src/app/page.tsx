@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 
-export default function Home() {
+export default async function Home() {
   // Check for auth tokens in cookies (server-side)
-  const idToken = cookies().get('id_token')?.value;
-  const accessToken = cookies().get('access_token')?.value;
-  const refreshToken = cookies().get('refresh_token')?.value;
+  const cookieStore = await cookies();
+  const idToken = cookieStore.get('id_token')?.value;
+  const accessToken = cookieStore.get('access_token')?.value;
+  const refreshToken = cookieStore.get('refresh_token')?.value;
   
   // If authenticated, redirect to dashboard
   if (idToken || accessToken || refreshToken) {
