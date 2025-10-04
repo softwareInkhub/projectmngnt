@@ -16,46 +16,29 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for auth token in cookies (set by backend)
+  // Check for SSO auth tokens in cookies (primary method) - same as Inkhub_admin_Himanshu
   const idToken = req.cookies.get('id_token')?.value;
   const accessToken = req.cookies.get('access_token')?.value;
-  const refreshToken = req.cookies.get('refresh_token')?.value;
   
   // Also check for camelCase versions for backward compatibility
   const idTokenAlt = req.cookies.get('idToken')?.value;
   const accessTokenAlt = req.cookies.get('accessToken')?.value;
   
-  const hasAnyToken = !!(idToken || accessToken || refreshToken || idTokenAlt || accessTokenAlt);
+  const hasAnyToken = !!(idToken || accessToken || idTokenAlt || accessTokenAlt);
   
-  // Get all cookies for debugging
-  const allCookies = req.cookies.getAll();
-  const cookieNames = allCookies.map(c => c.name);
-  
-  console.log('[ProjectMngnt Middleware] ==================');
   console.log('[ProjectMngnt Middleware] Auth check for:', pathname);
-  console.log('[ProjectMngnt Middleware] URL:', href);
-  console.log('[ProjectMngnt Middleware] All cookie names:', cookieNames);
   console.log('[ProjectMngnt Middleware] Has id_token:', !!idToken);
   console.log('[ProjectMngnt Middleware] Has access_token:', !!accessToken);
-  console.log('[ProjectMngnt Middleware] Has refresh_token:', !!refreshToken);
-  console.log('[ProjectMngnt Middleware] Total cookies:', allCookies.length);
-  
-  // Log first 50 chars of each cookie
-  allCookies.forEach(c => {
-    console.log(`[ProjectMngnt Middleware] Cookie: ${c.name} = ${c.value?.substring(0, 50)}...`);
-  });
-  
   console.log('[ProjectMngnt Middleware] Has ANY token?', hasAnyToken);
-  console.log('[ProjectMngnt Middleware] ==================');
   
   if (hasAnyToken) {
-    console.log('[ProjectMngnt Middleware] ✅ User authenticated via cookies, allowing access');
+    console.log('[ProjectMngnt Middleware] ✅ User authenticated via SSO cookies, allowing access');
     
     // Create response and set a non-httpOnly auth flag cookie so client-side knows user is authenticated
     const response = NextResponse.next();
     
     // Set a client-readable flag (not httpOnly) so client-side code knows auth is valid
-    // Set with dot-domain for cross-subdomain access
+    // Set with dot-domain for cross-subdomain access - same as Inkhub_admin_Himanshu
     response.cookies.set('auth_valid', '1', {
       path: '/',
       domain: '.brmh.in',
@@ -74,7 +57,7 @@ export function middleware(req: NextRequest) {
       httpOnly: false,
     });
     
-    console.log('[ProjectMngnt Middleware] 🍪 Set auth_valid cookies (both .brmh.in and local domain)');
+    console.log('[ProjectMngnt Middleware] 🍪 Set auth_valid cookies');
     
     return response;
   }
@@ -85,12 +68,8 @@ export function middleware(req: NextRequest) {
   }
 
   // Redirect to central auth page with return URL
-  // Default to dashboard if no specific page was requested
-  const returnUrl = pathname === '/' 
-    ? 'https://projectmanagement.brmh.in/dashboard'
-    : href;
-  const nextUrl = encodeURIComponent(returnUrl);
-  console.log('[ProjectMngnt Middleware] ❌ No auth token found, redirecting to central auth:', nextUrl);
+  const nextUrl = encodeURIComponent(href);
+  console.log('[ProjectMngnt Middleware] ❌ No auth token found, redirecting to centralized auth');
   return NextResponse.redirect(`https://auth.brmh.in/login?next=${nextUrl}`);
 }
 

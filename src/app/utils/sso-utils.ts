@@ -25,7 +25,19 @@ export class SSOUtils {
     // 1. auth_valid flag is set (middleware validated httpOnly cookies), OR
     // 2. We can read tokens directly from cookies (not httpOnly), OR
     // 3. Tokens exist in localStorage
-    return !!(authValidFlag || authValidLocalFlag || cookieIdToken || cookieAccessToken || (localIdToken && localAccessToken));
+    const isAuth = !!(authValidFlag || authValidLocalFlag || cookieIdToken || cookieAccessToken || (localIdToken && localAccessToken));
+    
+    console.log('[SSOUtils] Authentication check:', {
+      authValidFlag: !!authValidFlag,
+      authValidLocalFlag: !!authValidLocalFlag,
+      cookieIdToken: !!cookieIdToken,
+      cookieAccessToken: !!cookieAccessToken,
+      localIdToken: !!localIdToken,
+      localAccessToken: !!localAccessToken,
+      isAuth
+    });
+    
+    return isAuth;
   }
 
   /**

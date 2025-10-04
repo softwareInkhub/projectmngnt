@@ -1,210 +1,204 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { SSOUtils } from '../utils/sso-utils';
 
 export default function DebugAuthPage() {
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [authInfo, setAuthInfo] = useState<any>(null);
+  const [cookies, setCookies] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Get all cookies
-    const allCookies = document.cookie.split(';').map(c => c.trim());
-    
-    // Parse cookies into object
-    const cookieObj: Record<string, string> = {};
-    allCookies.forEach(cookie => {
-      const [name, ...valueParts] = cookie.split('=');
-      cookieObj[name] = valueParts.join('=');
-    });
-
-    // Get localStorage
-    const localStorageData: Record<string, string> = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        localStorageData[key] = localStorage.getItem(key) || '';
+    const allCookies: Record<string, string> = {};
+    document.cookie.split(';').forEach(cookie => {
+      const [key, value] = cookie.trim().split('=');
+      if (key && value) {
+        allCookies[key] = decodeURIComponent(value);
       }
-    }
+    });
+    setCookies(allCookies);
 
-    // Check for specific auth cookies
-    const authCookies = {
-      id_token: cookieObj['id_token'] ? '✅ Present' : '❌ Missing',
-      access_token: cookieObj['access_token'] ? '✅ Present' : '❌ Missing',
-      refresh_token: cookieObj['refresh_token'] ? '✅ Present' : '❌ Missing',
-      auth_valid: cookieObj['auth_valid'] ? '✅ Present' : '❌ Missing',
-      auth_valid_local: cookieObj['auth_valid_local'] ? '✅ Present' : '❌ Missing',
-    };
-
-    setDebugInfo({
-      allCookies,
-      cookieObj,
-      authCookies,
-      localStorageData,
-      cookieCount: allCookies.filter(c => c).length,
-      timestamp: new Date().toISOString(),
+    // Get auth info
+    const isAuth = SSOUtils.isAuthenticated();
+    const tokens = SSOUtils.getTokensFromCookies();
+    const user = SSOUtils.getCurrentUser();
+    
+    setAuthInfo({
+      isAuthenticated: isAuth,
+      tokens: {
+        hasAccessToken: !!tokens.accessToken,
+        hasIdToken: !!tokens.idToken,
+        hasRefreshToken: !!tokens.refreshToken,
+        accessTokenLength: tokens.accessToken?.length || 0,
+        idTokenLength: tokens.idToken?.length || 0,
+      },
+      user,
+      localStorage: {
+        accessToken: !!localStorage.getItem('access_token'),
+        idToken: !!localStorage.getItem('id_token'),
+        refreshToken: !!localStorage.getItem('refresh_token'),
+      }
     });
   }, []);
 
-  const handleRefresh = () => {
+  const handleSyncTokens = () => {
+    SSOUtils.syncTokensFromCookies();
     window.location.reload();
   };
 
-  const handleClearAll = () => {
-    // Clear all cookies
-    ['id_token', 'access_token', 'refresh_token', 'auth_valid', 'auth_valid_local'].forEach(name => {
-      document.cookie = `${name}=; domain=.brmh.in; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-      document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-    });
-    localStorage.clear();
-    sessionStorage.clear();
-    alert('Cleared all auth data! Refreshing...');
-    window.location.reload();
+  const handleLogout = async () => {
+    await SSOUtils.logout();
   };
-
-  const handleTestLogin = () => {
-    window.location.href = 'https://auth.brmh.in/login?next=https://projectmanagement.brmh.in/debug-auth';
-  };
-
-  if (!debugInfo) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading debug info...</div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🔍 Auth Debug Panel
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Timestamp: {debugInfo.timestamp}
-          </p>
+        <h1 className="text-3xl font-bold mb-8">Authentication Debug Page</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Authentication Status */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Authentication Status</h2>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Is Authenticated:</span>
+                <span className={`font-bold ${authInfo?.isAuthenticated ? 'text-green-600' : 'text-red-600'}`}>
+                  {authInfo?.isAuthenticated ? 'YES' : 'NO'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Auth Valid Flag:</span>
+                <span className={cookies.auth_valid ? 'text-green-600' : 'text-red-600'}>
+                  {cookies.auth_valid ? 'SET' : 'NOT SET'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Auth Valid Local:</span>
+                <span className={cookies.auth_valid_local ? 'text-green-600' : 'text-red-600'}>
+                  {cookies.auth_valid_local ? 'SET' : 'NOT SET'}
+                </span>
+              </div>
+            </div>
+          </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 mb-6">
+          {/* Token Information */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Token Information</h2>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Access Token:</span>
+                <span className={authInfo?.tokens?.hasAccessToken ? 'text-green-600' : 'text-red-600'}>
+                  {authInfo?.tokens?.hasAccessToken ? `YES (${authInfo.tokens.accessTokenLength} chars)` : 'NO'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>ID Token:</span>
+                <span className={authInfo?.tokens?.hasIdToken ? 'text-green-600' : 'text-red-600'}>
+                  {authInfo?.tokens?.hasIdToken ? `YES (${authInfo.tokens.idTokenLength} chars)` : 'NO'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Refresh Token:</span>
+                <span className={authInfo?.tokens?.hasRefreshToken ? 'text-green-600' : 'text-red-600'}>
+                  {authInfo?.tokens?.hasRefreshToken ? 'YES' : 'NO'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* User Information */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">User Information</h2>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>User ID:</span>
+                <span>{authInfo?.user?.id || 'Not available'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Email:</span>
+                <span>{authInfo?.user?.email || 'Not available'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Name:</span>
+                <span>{authInfo?.user?.name || 'Not available'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* LocalStorage Information */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">LocalStorage</h2>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Access Token:</span>
+                <span className={authInfo?.localStorage?.accessToken ? 'text-green-600' : 'text-red-600'}>
+                  {authInfo?.localStorage?.accessToken ? 'YES' : 'NO'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>ID Token:</span>
+                <span className={authInfo?.localStorage?.idToken ? 'text-green-600' : 'text-red-600'}>
+                  {authInfo?.localStorage?.idToken ? 'YES' : 'NO'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Refresh Token:</span>
+                <span className={authInfo?.localStorage?.refreshToken ? 'text-green-600' : 'text-red-600'}>
+                  {authInfo?.localStorage?.refreshToken ? 'YES' : 'NO'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* All Cookies */}
+        <div className="bg-white p-6 rounded-lg shadow mt-6">
+          <h2 className="text-xl font-semibold mb-4">All Cookies</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {Object.entries(cookies).map(([key, value]) => (
+              <div key={key} className="flex justify-between text-sm">
+                <span className="font-mono">{key}:</span>
+                <span className="font-mono text-gray-600">
+                  {value.length > 50 ? `${value.substring(0, 50)}...` : value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="bg-white p-6 rounded-lg shadow mt-6">
+          <h2 className="text-xl font-semibold mb-4">Actions</h2>
+          <div className="flex gap-4">
             <button
-              onClick={handleRefresh}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              onClick={handleSyncTokens}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              🔄 Refresh
+              Sync Tokens from Cookies
             </button>
             <button
-              onClick={handleClearAll}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             >
-              🗑️ Clear All Auth Data
+              Logout
             </button>
             <button
-              onClick={handleTestLogin}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
             >
-              🔐 Test Login Flow
+              Refresh Page
             </button>
           </div>
+        </div>
 
-          {/* Auth Cookie Status */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">
-              📋 Auth Cookie Status
-            </h2>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              {Object.entries(debugInfo.authCookies).map(([name, status]) => (
-                <div key={name} className="flex items-center justify-between">
-                  <span className="font-mono text-sm text-gray-700">{name}</span>
-                  <span className={status.includes('✅') ? 'text-green-600' : 'text-red-600'}>
-                    {status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Summary */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">
-              📊 Summary
-            </h2>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-gray-700">
-                <strong>Total Cookies:</strong> {debugInfo.cookieCount}
-              </p>
-              <p className="text-gray-700">
-                <strong>localStorage Items:</strong> {Object.keys(debugInfo.localStorageData).length}
-              </p>
-            </div>
-          </div>
-
-          {/* All Cookies */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">
-              🍪 All Cookies (as seen by JavaScript)
-            </h2>
-            <div className="bg-gray-900 rounded-lg p-4 overflow-auto max-h-60">
-              <pre className="text-green-400 text-xs font-mono">
-                {JSON.stringify(debugInfo.cookieObj, null, 2)}
-              </pre>
-            </div>
-            <p className="text-sm text-gray-600 mt-2">
-              ⚠️ Note: HttpOnly cookies (id_token, access_token, refresh_token) will NOT appear here if they are properly set as httpOnly.
-            </p>
-          </div>
-
-          {/* localStorage */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">
-              💾 localStorage
-            </h2>
-            <div className="bg-gray-900 rounded-lg p-4 overflow-auto max-h-60">
-              <pre className="text-blue-400 text-xs font-mono">
-                {JSON.stringify(debugInfo.localStorageData, null, 2)}
-              </pre>
-            </div>
-          </div>
-
-          {/* Raw Cookie String */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">
-              🔤 Raw Cookie String
-            </h2>
-            <div className="bg-gray-900 rounded-lg p-4 overflow-auto">
-              <pre className="text-yellow-400 text-xs font-mono break-all">
-                {document.cookie || '(empty)'}
-              </pre>
-            </div>
-          </div>
-
-          {/* Instructions */}
-          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">💡 Expected Behavior:</h3>
-            <ul className="list-disc list-inside text-blue-800 text-sm space-y-1">
-              <li>
-                <strong>If logged in:</strong> You should see <code>auth_valid</code> and <code>auth_valid_local</code> as ✅ Present
-              </li>
-              <li>
-                <strong>HttpOnly tokens:</strong> <code>id_token</code>, <code>access_token</code>, <code>refresh_token</code> will show as ❌ Missing (this is correct - they're httpOnly)
-              </li>
-              <li>
-                <strong>If NOT logged in:</strong> All cookies will show as ❌ Missing
-              </li>
-            </ul>
-          </div>
-
-          {/* Diagnostic Steps */}
-          <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h3 className="font-semibold text-yellow-900 mb-2">🔧 Diagnostic Steps:</h3>
-            <ol className="list-decimal list-inside text-yellow-800 text-sm space-y-1">
-              <li>Click "Test Login Flow" to go through authentication</li>
-              <li>After login, you should be redirected back here</li>
-              <li>Check if <code>auth_valid</code> cookies appear</li>
-              <li>If they don't appear, check the browser console and terminal logs</li>
-            </ol>
-          </div>
+        {/* Raw Data */}
+        <div className="bg-white p-6 rounded-lg shadow mt-6">
+          <h2 className="text-xl font-semibold mb-4">Raw Data</h2>
+          <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
+            {JSON.stringify({ authInfo, cookies }, null, 2)}
+          </pre>
         </div>
       </div>
     </div>
   );
 }
-
