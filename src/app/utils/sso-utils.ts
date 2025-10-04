@@ -9,8 +9,9 @@ export class SSOUtils {
   static isAuthenticated(): boolean {
     if (typeof window === 'undefined') return false;
     
-    // Check for auth_valid flag (set by middleware when httpOnly cookies are present)
+    // Check for auth_valid flags (set by middleware when httpOnly cookies are present)
     const authValidFlag = this.getCookieValue('auth_valid');
+    const authValidLocalFlag = this.getCookieValue('auth_valid_local');
     
     // Check cookies (may not work if httpOnly)
     const cookieIdToken = this.getCookieValue('id_token');
@@ -24,7 +25,7 @@ export class SSOUtils {
     // 1. auth_valid flag is set (middleware validated httpOnly cookies), OR
     // 2. We can read tokens directly from cookies (not httpOnly), OR
     // 3. Tokens exist in localStorage
-    return !!(authValidFlag || cookieIdToken || cookieAccessToken || (localIdToken && localAccessToken));
+    return !!(authValidFlag || authValidLocalFlag || cookieIdToken || cookieAccessToken || (localIdToken && localAccessToken));
   }
 
   /**
@@ -127,6 +128,7 @@ export class SSOUtils {
     document.cookie = `id_token=; domain=${domain}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     document.cookie = `refresh_token=; domain=${domain}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     document.cookie = `auth_valid=; domain=${domain}; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    document.cookie = `auth_valid_local=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     
     console.log('[SSOUtils] Cleared all auth data, redirecting to login');
     
