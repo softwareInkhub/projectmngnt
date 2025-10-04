@@ -132,7 +132,7 @@ export function generateAuthDebugReport(): AuthDebugReport {
   };
 }
 
-export function logAuthDebugReport(): void {
+export function logAuthDebugReport(): AuthDebugReport {
   const report = generateAuthDebugReport();
   
   console.group('🔍 Comprehensive Auth Debug Report');
