@@ -6,10 +6,11 @@ const PUBLIC_FILE = /\.(.*)$/;
 export function middleware(req: NextRequest) {
   const { pathname, href } = req.nextUrl;
 
-  // Allow public files and API routes
+  // Allow public files, API routes, and debug page
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
+    pathname.startsWith('/debug-auth') ||  // Allow debug page without auth
     PUBLIC_FILE.test(pathname)
   ) {
     return NextResponse.next();
@@ -26,15 +27,26 @@ export function middleware(req: NextRequest) {
   
   const hasAnyToken = !!(idToken || accessToken || refreshToken || idTokenAlt || accessTokenAlt);
   
-  console.log('[ProjectMngnt Middleware] Auth check:', {
-    pathname,
-    hasIdToken: !!idToken,
-    hasAccessToken: !!accessToken,
-    hasRefreshToken: !!refreshToken,
-    hasIdTokenAlt: !!idTokenAlt,
-    hasAccessTokenAlt: !!accessTokenAlt,
-    allCookies: req.cookies.getAll().map(c => `${c.name}=${c.value?.substring(0, 20)}...`)
+  // Get all cookies for debugging
+  const allCookies = req.cookies.getAll();
+  const cookieNames = allCookies.map(c => c.name);
+  
+  console.log('[ProjectMngnt Middleware] ==================');
+  console.log('[ProjectMngnt Middleware] Auth check for:', pathname);
+  console.log('[ProjectMngnt Middleware] URL:', href);
+  console.log('[ProjectMngnt Middleware] All cookie names:', cookieNames);
+  console.log('[ProjectMngnt Middleware] Has id_token:', !!idToken);
+  console.log('[ProjectMngnt Middleware] Has access_token:', !!accessToken);
+  console.log('[ProjectMngnt Middleware] Has refresh_token:', !!refreshToken);
+  console.log('[ProjectMngnt Middleware] Total cookies:', allCookies.length);
+  
+  // Log first 50 chars of each cookie
+  allCookies.forEach(c => {
+    console.log(`[ProjectMngnt Middleware] Cookie: ${c.name} = ${c.value?.substring(0, 50)}...`);
   });
+  
+  console.log('[ProjectMngnt Middleware] Has ANY token?', hasAnyToken);
+  console.log('[ProjectMngnt Middleware] ==================');
   
   if (hasAnyToken) {
     console.log('[ProjectMngnt Middleware] ✅ User authenticated via cookies, allowing access');
