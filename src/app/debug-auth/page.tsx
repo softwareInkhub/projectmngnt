@@ -20,8 +20,8 @@ export default function DebugAuthPage() {
 
     // Get auth info
     const isAuth = SSOUtils.isAuthenticated();
-    const tokens = SSOUtils.getTokensFromCookies();
-    const user = SSOUtils.getCurrentUser();
+    const tokens = SSOUtils.getTokens();
+    const user = SSOUtils.getUser();
     
     setAuthInfo({
       isAuthenticated: isAuth,
@@ -42,7 +42,7 @@ export default function DebugAuthPage() {
   }, []);
 
   const handleSyncTokens = () => {
-    SSOUtils.syncTokensFromCookies();
+    SSOUtils.syncTokensToLocalStorage();
     window.location.reload();
   };
 

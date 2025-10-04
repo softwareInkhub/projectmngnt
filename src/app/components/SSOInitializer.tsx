@@ -11,30 +11,16 @@ export default function SSOInitializer({ children }: SSOInitializerProps) {
   useEffect(() => {
     // Initialize SSO on app load
     console.log('[SSOInitializer] Initializing SSO...');
-    
-    // Sync tokens from cookies to localStorage first
     SSOUtils.syncTokensFromCookies();
     
-    // Check authentication status
+    // Check if we have tokens after sync
     const isAuth = SSOUtils.isAuthenticated();
     console.log('[SSOInitializer] Authentication status:', isAuth);
     
     if (isAuth) {
-      const user = SSOUtils.getCurrentUser();
+      const user = SSOUtils.getUser();
       console.log('[SSOInitializer] Current user:', user);
-    } else {
-      console.log('[SSOInitializer] No authentication found, user will be redirected by middleware/AuthGuard');
     }
-    
-    // Set a data attribute to indicate SSO initialization is complete
-    document.documentElement.setAttribute('data-sso-initialized', 'true');
-    
-    // Dispatch a custom event to notify other components that SSO initialization is complete
-    const event = new CustomEvent('sso-initialized', { 
-      detail: { isAuthenticated: isAuth } 
-    });
-    window.dispatchEvent(event);
-    
   }, []);
 
   return <>{children}</>;

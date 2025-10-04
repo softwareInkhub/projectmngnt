@@ -22,7 +22,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       console.log('[AuthGuard] Starting auth check for path:', pathname);
       
       // Allow public routes
-      if (pathname?.startsWith('/oauth2callback') || pathname?.startsWith('/api')) {
+      if (pathname?.startsWith('/oauth2callback') || pathname?.startsWith('/api') || pathname?.startsWith('/debug')) {
         console.log('[AuthGuard] Public route detected, allowing access');
         setIsAuthed(true);
         setCheckingAuth(false);
@@ -31,15 +31,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       }
 
       // Check authentication using SSO utils
-      // Note: If middleware let the request through, httpOnly cookies are valid
-      // The auth_valid flag will be set by middleware if httpOnly cookies exist
       const authed = SSOUtils.isAuthenticated();
       console.log('[AuthGuard] Authentication status:', { authed, pathname });
       
       if (!authed) {
         console.log('[AuthGuard] Not authenticated, redirecting to centralized auth');
-        // Note: This shouldn't happen if middleware is working correctly
-        // Middleware should have already redirected before reaching here
         const nextUrl = encodeURIComponent(window.location.href);
         window.location.href = `https://auth.brmh.in/login?next=${nextUrl}`;
         hasCheckedRef.current = true;
@@ -52,28 +48,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       hasCheckedRef.current = true;
     };
 
-    // Listen for SSO initialization event
-    const handleSSOInitialized = () => {
-      console.log('[AuthGuard] SSO initialization complete, running auth check');
-      onAuthCheck();
-    };
-
-    // Check if SSO is already initialized
-    const ssoInitialized = window.document.documentElement.getAttribute('data-sso-initialized');
-    if (ssoInitialized) {
-      onAuthCheck();
-    } else {
-      // Listen for the SSO initialization event
-      window.addEventListener('sso-initialized', handleSSOInitialized);
-      
-      // Fallback timeout in case event doesn't fire
-      const timer = setTimeout(onAuthCheck, 1000);
-      
-      return () => {
-        window.removeEventListener('sso-initialized', handleSSOInitialized);
-        clearTimeout(timer);
-      };
-    }
+    // Small delay to ensure SSO initialization is complete
+    const timer = setTimeout(onAuthCheck, 200);
+    return () => clearTimeout(timer);
   }, []); // Only run once on mount
 
   if (checkingAuth) {
