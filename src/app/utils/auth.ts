@@ -9,12 +9,12 @@ export const isAuthenticated = (): boolean => {
 
 export const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('access_token') || SSOUtils.getTokensFromCookies().accessToken || null;
+  return localStorage.getItem('access_token') || SSOUtils.getTokens().accessToken || null;
 };
 
 export const getIdToken = (): string | null => {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('id_token') || SSOUtils.getTokensFromCookies().idToken || null;
+  return localStorage.getItem('id_token') || SSOUtils.getTokens().idToken || null;
 };
 
 export const clearAuthData = (): void => {
@@ -24,6 +24,6 @@ export const clearAuthData = (): void => {
 // Initialize SSO on app load
 export const initializeSSO = (): void => {
   if (typeof window !== 'undefined') {
-    SSOUtils.syncTokensFromCookies();
+    SSOUtils.syncTokensToLocalStorage();
   }
 };
