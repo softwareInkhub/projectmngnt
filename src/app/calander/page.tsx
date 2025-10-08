@@ -748,7 +748,7 @@ export default function CalendarPage() {
               </button>
             ) : (
               <button
-                onClick={() => startGoogleCalendarAuth('/oauth2callback')}
+                onClick={() => startGoogleCalendarAuth('/browser-callback')}
                 className="px-3 py-1 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-100"
                 title="Connect Google Calendar"
               >

@@ -23,7 +23,7 @@ const nextConfig = {
     return [
       {
         source: '/authPage/browser-callback',
-        destination: '/authPage/oauth2callback',
+        destination: '/authPage/browser-callback',
       },
       // Keep query parameters
     ];

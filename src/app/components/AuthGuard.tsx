@@ -22,7 +22,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       console.log('[AuthGuard] Starting auth check for path:', pathname);
       
       // Allow public routes
-      if (pathname?.startsWith('/oauth2callback') || pathname?.startsWith('/api') || pathname?.startsWith('/debug')) {
+      if (pathname?.startsWith('/browser-callback') || pathname?.startsWith('/api') || pathname?.startsWith('/debug')) {
         console.log('[AuthGuard] Public route detected, allowing access');
         setIsAuthed(true);
         setCheckingAuth(false);
